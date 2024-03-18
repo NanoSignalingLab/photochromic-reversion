@@ -52,16 +52,20 @@ warnings.filterwarnings('ignore')
 
 if __name__ == '__main__':
     
+    #################################
+    # global variables:
+
+    min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
     dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
-    # f1= input path to file to be analyzed
+    # f1= input path to file to be analyzed (see example below)
     # f2= path where images should be stored (eg. here stored at same location as input file)
+
+    ##################################
     
-    
-  
     f1=r"C:\Users\miche\Desktop\Test_deepSPT\cleaned_trackmate_1473_5_488.csv"
     f2=f1
-
-    f2=f1
+    
+    ##################################
     image_path_lys=f1.split("csv")
     image_path=image_path_lys[0] +"svg"
 
@@ -73,12 +77,12 @@ if __name__ == '__main__':
       
 
         ###################### function to directly load the cleaned trackmate files:
-        def load_file(path2):
+        def load_file(path2, min_track_length):
             df=pd.read_csv(path2)
-            deep_df, list_traces, lys_x, lys_y= make_deep_df(df)
+            deep_df, list_traces, lys_x, lys_y= make_deep_df(df, min_track_length)
             return deep_df, list_traces, lys_x, lys_y
 
-        def make_deep_df(df):
+        def make_deep_df(df, min_track_length):
 
             grouped= df.sort_values(["FRAME"]).groupby("TRACK_ID")
             count2=0
@@ -90,7 +94,7 @@ if __name__ == '__main__':
             for i in grouped["TRACK_ID"].unique():
                 s= grouped.get_group(i[0])
               
-                if s.shape[0]>25: # parameter to set threshold of minimun length of track duration (eg. 25 time points)
+                if s.shape[0]>min_track_length: # parameter to set threshold of minimun length of track duration (eg. 25 time points)
                     count2+=1
                     pos_x=list(s["POSITION_X"])
                     pos_y= list(s["POSITION_Y"])
@@ -112,7 +116,7 @@ if __name__ == '__main__':
             return deep_all_df, list_traces, lys_x, lys_y
         ############################# end function loading
 
-        deep_df, traces, lys_x, lys_y = load_file(f1) # execute this function to load the files
+        deep_df, traces, lys_x, lys_y = load_file(f1, min_track_length) # execute this function to load the files
 
         ############################ run the model:
 
@@ -145,7 +149,7 @@ if __name__ == '__main__':
             model = HiddenMarkovModel.from_json(json_s)
             print(model)
         d = []
-        for t in traces: # 
+        for t in traces: 
             x, y = t[:, 0], t[:, 1]
             SL = np.sqrt((x[1:] - x[:-1]) ** 2 + (y[1:] - y[:-1]) ** 2) * 10 # factor to scale step length (eg. 10)
 
@@ -652,7 +656,7 @@ if __name__ == '__main__':
                     hull=lys_hull2[c2][j]
                     hull_path = Path( points[hull.vertices] )
                     
-                    if hull_path.contains_point((lys_x[i], lys_y[i]))==True: #new
+                    if hull_path.contains_point((lys_x[i], lys_y[i]))==True: 
 
                         interm_lys.append(0)
                         area=lys_area2[c2][j]
@@ -726,13 +730,9 @@ if __name__ == '__main__':
                         plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
                         
-                
-                        
-     
            
         plt.axis('equal') 
         plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
-
         plt.show()
      
         ########################### function to make a nice excel fiel with all the parameters per track:
@@ -743,7 +743,6 @@ if __name__ == '__main__':
             outpath2='\\'.join(outpath1)
             name=lys_string[-1].split(".csv")[0]
             outpath3=outpath2+"\\"+name
-            #print(outpath3)
             print("saving results file in:", outpath3 )
 
             # adding hull area and number of points in clusters
