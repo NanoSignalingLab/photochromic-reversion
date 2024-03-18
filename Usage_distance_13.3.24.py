@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
         ############# function for consecutive features:
         
-        def consecutive(col, seg_len, threshold): #col=stringof cl indf, seg_len=segmentlengh of consecutive, threshold number
+        def consecutive(col, seg_len, threshold): # col= string of cl indf, seg_len=segment length of consecutive, threshold number
             grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
             lys_final=[]
             for i in grouped_plot["tid"].unique():
@@ -178,16 +178,16 @@ if __name__ == '__main__':
                 seg1=seg_len-1
                 seg2=seg_len+1
                 
-                while c3<len(s["pos_x"]): # changeed from c2 to c3
-                    if c3>=len(s["pos_x"])-seg_len: # for 4 consecuteive put -3, changed from c2, cahnge to 6, for11:=-11
-                            lys_six.append([1]*1) # for simplicity
+                while c3<len(s["pos_x"]): 
+                    if c3>=len(s["pos_x"])-seg_len: 
+                            lys_six.append([1]*1) 
                     else:
                             
-                        if sum(s[col][c3:c3+seg2])<threshold: # for 11:= +12
+                        if sum(s[col][c3:c3+seg2])<threshold: 
                             lys_six.append([0]*1)
-                        elif sum(s[col][c3:c3+seg2])>=threshold and sum(s[col][c3:c3+seg_len])<threshold: # for11:=+12, +11
-                            lys_six.append([0]*seg_len) # for11:=11
-                            c3+=seg1 #for11:=10
+                        elif sum(s[col][c3:c3+seg2])>=threshold and sum(s[col][c3:c3+seg_len])<threshold: 
+                            lys_six.append([0]*seg_len) 
+                            c3+=seg1 
                         else:
                             lys_six.append([1]*1)
                     c3+=1
@@ -198,28 +198,9 @@ if __name__ == '__main__':
             lys_final_flat=list(chain.from_iterable(lys_final))
             return lys_final_flat
         
-        ################################################ end function
+        ################# end function for consecutive features
         
-        ################## MSD calc, wasn't really useful as a criterion
-        # msd_diff = []
-        # msd_diff_col = []
-        # for i in lys_msd:
-        #     diff = np.diff(i)
-        #     diff = np.append(diff, 0)
-        #     msd_diff.append(diff)
-
-        #     norm_diff = ((diff-np.min(diff))/(np.max(diff)-np.min(diff)))
-        #     #norm_diff = np.append(norm_diff, 0)
-
-        #     msd_diff_col.append(norm_diff)
-        
-        # flat_msd=np.concatenate(lys_msd)
-        # flat_msd_diff=np.concatenate(msd_diff)
-        # flat_msd_diff_col=np.concatenate(msd_diff_col)
-        ################# End of MSD stuff
-
-
-        ################# Calculate distance and add to df
+        ################# Calculate distance and add to dataframe
         print("Computing distance")
 
         distance = []
@@ -244,9 +225,9 @@ if __name__ == '__main__':
         deep_df["distance"] = distance
         deep_df["distance_flag"] = distance_flag
 
-        ################## End distance calc
+        ################## End distance calculation
 
-        ################# Find consecutive short distances (4 in this case)
+        ################## Find consecutive short distances (4 in this case)
         tresh_l = 9
         c2=0
         dist_final=[]
@@ -256,10 +237,10 @@ if __name__ == '__main__':
             lys_six=[]
             s= grouped_plot.get_group(i[0])
             c3=0
-            while c3<len(s["pos_x"]): # changeed from c2 to c3
+            while c3<len(s["pos_x"]): 
 
                 if c3>=len(s["pos_x"])-tresh_l:
-                    lys_six.append([1]*1) # for simplicity
+                    lys_six.append([1]*1) 
                 else:
                     if sum(s["distance_flag"][c3:c3+tresh_l+1])==0:
                         lys_six.append([0]*1)
@@ -281,7 +262,7 @@ if __name__ == '__main__':
 
         ################### end distance
 
-        ################## calulcate angles:
+        ################### calulcate angles:
 
         def angle3pt(a, b, c):
             ang = math.degrees(
@@ -313,7 +294,7 @@ if __name__ == '__main__':
         deep_df["angle_cont"]=angle_cont_lys
         deep_df['angles_cont_level'] = pd.cut(deep_df["angle_cont"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df['angles_cont_level'] = deep_df['angles_cont_level'].astype(str)
-        final_pal_only_0=dict(zero='#fde624' ,  one= '#380282') # zero=yellow=high angles
+        #final_pal_only_0=dict(zero='#fde624' ,  one= '#380282') # zero=yellow=high angles
 
         ###################### end anlges calc
 
@@ -340,60 +321,16 @@ if __name__ == '__main__':
         print("Computing KDE")
         out, out2 =make_KDE_per_track(lys_x, lys_y)
 
-        #s2= sns.lineplot(data=deep_df, x=deep_df["pos_x"], y=deep_df["pos_y"], hue=deep_df["tid"], sort=False)
-        #plt.show()
-        #plt.close()
-
-
+        
         deep_df["KDE"]=out
         deep_df['KDE_level']=pd.qcut(deep_df["KDE"], 9,labels=["zero" , "one", "two", "three", "four", "five", "six", "seven", "eight"])
         deep_df['KDE_values']=pd.qcut(deep_df["KDE"], 9,labels=False)
         deep_df['KDE_level'] = deep_df['KDE_level'].astype(str)
-        final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
-
-        ## make Juliens KDE plot:
-        #linecollection = []
-        #colors = []
-        #grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-       # c2=0
-        #for i in grouped_plot["tid"].unique():
-        #    s= grouped_plot.get_group(i[0])
-        #    for i in range (len(s["pos_x"])-1):
-
-         #       line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
-         #       color = final_pal[deep_df["KDE_level"][c2]]
-         #       linecollection.append(line)
-         #       colors.append(color)
-
-         #       c2+=1
-         #   c2+=1
-
-        #lc = LineCollection(linecollection, color=colors, lw=1)
-        
-        #rcParams["figure.figsize"]= 10, 10
-        #sns.set(style="ticks", context="talk")
-        #plt.style.use("dark_background")
-        #plt.gca().add_collection(lc)
-        #plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.001)
-        #plt.show()
-        #plt.close()
-
-        ### or:
-        #rcParams["figure.figsize"]= 10, 10
-        #plt.style.use("dark_background")
-        #sns.kdeplot(data=deep_df, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="magma",) # cmap="mako"
-       # s2= sns.lineplot(data=deep_df, x=deep_df["pos_x"], y=deep_df["pos_y"], hue=deep_df["tid"], sort=False)
-        #plt.axis('square')
-
-        #plt.show()
-        #plt.close()
-
-
-
-
+        #final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
 
         
-        # invert KDEvalues: for consistency, low values = good
+
+        # invert KDE values: for consistency, low values = good
         lys_invert=[]
         for i in deep_df["KDE_values"]:
             KDE_invert=8-i
@@ -490,7 +427,7 @@ if __name__ == '__main__':
 
             return inter_flat1, inter_flat2, inter_flat3, inter_flat4
         
-        ################################################## end function
+        ################################################## end intersection function
         print("Computing intersections")
 
         inter_flat1, inter_flat2, inter_flat3, inter_flat4=calc_intersections(lys_x, lys_y)
@@ -520,7 +457,7 @@ if __name__ == '__main__':
    
 
         ########################## get fingertprint states:
-        for i in range(len(lys_states)): ## need to add one value cause states is always one shorter than points!
+        for i in range(len(lys_states)): 
             lys_states[i].append(1)
 
         flat_lys=reduce(operator.concat, lys_states)
@@ -531,9 +468,9 @@ if __name__ == '__main__':
         deep_df['state_level'] = deep_df['state_level'].astype(str)
         
         ### change state 1 to state zero: 
-        deep_df.loc[deep_df['fingerprint_state'] == 1, 'fingerprint_state'] = 0 # change all others to zero first 
+        deep_df.loc[deep_df['fingerprint_state'] == 1, 'fingerprint_state'] = 0 
 
-        ########## find consecutive 0 fingerprints
+        ########## find consecutive zero state fingerprints:
         grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
         c2=0
         lys_final=[]
@@ -541,10 +478,10 @@ if __name__ == '__main__':
             lys_six=[]
             s= grouped_plot.get_group(i[0])
             c3=0
-            while c3<len(s["pos_x"]): # changed from c2 to c3
+            while c3<len(s["pos_x"]): 
 
                 if c3>=len(s["pos_x"])-11:
-                    lys_six.append([1]*1) # for simplicity
+                    lys_six.append([1]*1) 
                 else:
                     if sum(s["fingerprint_state"][c3:c3+12])==0:
                         lys_six.append([0]*1)
@@ -566,21 +503,18 @@ if __name__ == '__main__':
 
         deep_df['state_0_cont_level'] = pd.cut(deep_df["state_0_cont"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df['state_0_cont_level'] = deep_df['state_0_cont_level'].astype(str)
-        #pd.options.display.max_rows=5000
        
-        
+       
         ###########################################
-        ############## plot all features togheter:
+        ############## plot all features togheter (plus convex hull):
         print("plotting all features")
 
 
         deep_df_short=deep_df[["angle_cont", "state_0_cont","dist_cont" ,"intersect_cont" , "KDE_cont"]]
         deep_df_short["sum_rows"] = deep_df_short.sum(axis=1)
-        #print(deep_df_short)
+       
         deep_df_short["row_sums_level"] = pd.cut(deep_df_short["sum_rows"], [0, 1,2, 3, 4,5 ,6], labels=["zero" , "one", "two", "three", "four", "five"], include_lowest=True, ordered= False)
-        #final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
         final_pal=dict(zero= "#ff3300",one= '#fde624',two= '#78d151', three= "#2a788e", four="#404388" , five="#440053") #all colors 
-        #final_pal=dict(zero= "#06fcde",one= "#06fcde",two= "#06fcde", three= "#808080", four="#808080" , five="#808080") #all colors 
 
         deep_df_short["pos_x"]=deep_df["pos_x"]
         deep_df_short["pos_y"]=deep_df["pos_y"]
@@ -609,37 +543,34 @@ if __name__ == '__main__':
         
         rcParams["figure.figsize"]= 11.7, 11.7#8.27
         sns.set(style="ticks", context="talk")
-        #plt.style.use("dark_background")
+       
         plt.gca().add_collection(lc)
         plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
-        #plt.show() #use below to plot togheter with hull
-
-        ########################## calculate convex hull:
-        ## get red and green points: = where 5, 4 or 3 criteria say its cluster
         
-        lys_points2=[] #lys of arrys of points where criteria met
+        ########################## calculate convex hull:
+        # get red and green points: = where 5, 4 or 3 criteria agree for spatial arrest
+        
+        lys_points2=[] 
         
         c2=0
         for j in grouped_plot["tid"].unique():
             flag=0
-           # print(j)
+        
             s= grouped_plot.get_group(j[0])
             lys_points=[]
             for i in range (len(s["pos_x"])-1):
-                #print("i: ", i) 
+               
                 if s["sum_rows"][c2]==0 or s["sum_rows"][c2]==1 or s["sum_rows"][c2]==2:
                     pos_x=s["pos_x"][c2]
                     pos_y=s["pos_y"][c2]
                     m= np.column_stack(( pos_x, pos_y))
                                   
                     if flag==0:
-                        #print("cluster start")
                         pos_all=m
                         flag+=1
                     else:
                         
                         if i == len(s["pos_x"])-2:
-                            #print("LAAAAAAAAAAAAAST POOOOOOOOOOOOOOOOOOOOS CLUUUUUUUUUSTEEEEEEER")
                             pos_all = np.vstack((pos_all,m))
                             lys_points.append(pos_all)
                             flag = 0
@@ -647,19 +578,15 @@ if __name__ == '__main__':
                             pos_all = np.vstack((pos_all,m))
                 else:
                     if flag!=0:
-                        #print("LAAAAAAAAAAAAAST POOOOOOOOOOOOOOOOOOOOS")
                         lys_points.append(pos_all)
                         print(len(lys_points))
                     flag=0
                 c2+=1
-                #flag=0
+              
             lys_points2.append(lys_points)
-           # print(lys_points, "lys_points")
                 
             c2+=1
         
-
-
         ######################### plot points togehter with above lines
         lys_area2=[]
         lys_perimeter2=[]
@@ -671,22 +598,18 @@ if __name__ == '__main__':
             lys_hull=[]
             lys_points_big=[]
             for i in range(len(lys_points2[j])):
-                points=lys_points2[j][i] # points of one cluster
+                points=lys_points2[j][i] 
                 if len(points)>3:
                     
                     hull = ConvexHull(points)
 
                     ratio=hull.area/hull.volume
-                    #print(j, ratio)
                     if ratio<105:
-                        #print("yes", j, ratio)
-                        #print(points)
-
                         lys_points_big.append(points)
                         
                         lys_hull.append(hull)
-                        lys_area.append(hull.volume) #is area
-                        lys_perimeter.append(hull.area) # is perimeter
+                        lys_area.append(hull.volume) 
+                        lys_perimeter.append(hull.area) 
                         for simplex in hull.simplices:
                             plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
 
@@ -695,12 +618,9 @@ if __name__ == '__main__':
             lys_perimeter2.append(lys_perimeter)
             lys_hull2.append(lys_hull)
             lys_points_big2.append(lys_points_big)
-        #print(len(lys_hull2))         
+           
         plt.show()
-        #print(lys_points_big2[21], "lyspointsbig")
 
-
-        #print(len(lys_points_big2))
         ###################################################################
         print("calculating points in hull")
         ################# adding all the points that are additionally in the bounding area as cluster points
@@ -712,81 +632,52 @@ if __name__ == '__main__':
         
         for trackn in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(trackn[0])
-            #print("heerelens",len(s["pos_x"]),"c2: ", c2)
-            #print(s["pos_x"])
-            lys_x=list(s["pos_x"])#new
-            lys_y=list(s["pos_y"])#new
-           # print(trackn)
+            
+            lys_x=list(s["pos_x"])
+            lys_y=list(s["pos_y"])
             sum_rows_temp = list(s["sum_rows"])
 
-            #for i in range(len(s["pos_x"])): # i= index of point in one track, before
-            for i in range(len(lys_x)): #new
+            for i in range(len(lys_x)):
                 interm_lys=[]
                 
-                for j in range(len(lys_points_big2[c2])): # j=index of point in hull of cluster c2
+                for j in range(len(lys_points_big2[c2])): 
 
                     points=lys_points_big2[c2][j]
-                    #print("points_here", points)
-                    #print("c2_points", )
-
-                    #print( "lenpoints", len(points))
+                   
                    
                     hull=lys_hull2[c2][j]
                     hull_path = Path( points[hull.vertices] )
                     
-                    #if hull_path.contains_point((s["pos_x"][i], s["pos_y"][i]))==True: #old
                     if hull_path.contains_point((lys_x[i], lys_y[i]))==True: #new
 
                         interm_lys.append(0)
                         area=lys_area2[c2][j]
-                    # else:
-                    #     for d in points[hull.vertices]:
-                    #         print(d)
-                    #         if (lys_x[i], lys_y[i])==(d[0], d[1]):
-                    #             interm_lys.append(0)
-                    #             area=lys_area2[c2][j]
-
-
-                    #if hull_path.contains_point((27.125, 19.15))==True:
-                       # print("HUUUUULL")
-
-                   # if hull_path.contains_point((19.45, 21.97))==True:
-                        #print("HUUUUULL 2222222222222")
-
-                    #if hull_path.contains_point((19.45, 21.97))==True:
-                        #print("HUUUUULL 2222222222222")
-                
-                #print(len(interm_lys))
+                   
                 if len(interm_lys)>0:
                     lys_the_last.append(0)
                     lys_area_last.append(area)
                 else:
-                   # if (sum_rows_temp[i] < 3):
-                       # print("BUUUUUUUG", sum_rows_temp[i])
+                   
                     lys_the_last.append(1)
                     lys_area_last.append(0)
             c2+=1
         c2+=1
-        #print(lys_the_last, "the last")
-
+       
         deep_df_short["in_hull"]=lys_the_last
         deep_df_short["area"]=lys_area_last
         deep_df_short['in_hull_level'] = pd.cut(deep_df_short["in_hull"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df_short['in_hull_level'] = deep_df_short['in_hull_level'].astype(str)
-        #print(deep_df_short['tid'])
        
         
               
 
         ################################################
-        ### plotting hull and tracks togehter: as clustered vs unclustered
+        ### plotting hull and tracks togehter: as arrested vs not spatially arrested
         
-        #final_pal=dict(zero= "#fde624", one="#440053")
         final_pal=dict(zero= "#06fcde" , one= "#808080")
         linecollection = []
         colors = []
 
-        #rcParams["figure.figsize"]= 11.7,  11.7#8.27
         fig = plt.figure()
         ax = fig.add_subplot()
 
@@ -797,9 +688,7 @@ if __name__ == '__main__':
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
 
-            #plt.text(s["pos_x"][c2], s["pos_y"][c2],"#%d" %i, ha="center")
-
-            #print(s, "this is s")
+           
             for i in range (len(s["pos_x"])-1):
 
                 line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
@@ -813,25 +702,22 @@ if __name__ == '__main__':
         lc = LineCollection(linecollection, color=colors, lw=1)
 
         
-        #plt.style.use("dark_background")
+        
         plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
         plt.gca().add_collection(lc)
 
-        #new version:
         for j in range (len(lys_points2)):
             for i in range(len(lys_points2[j])):
-                points=lys_points2[j][i] # points of one cluster
+                points=lys_points2[j][i] 
                 if len(points)>3:
                     
                     hull = ConvexHull(points)
 
                     ratio=hull.area/hull.volume
                     if ratio<105:
-                        #print("yes", j)
-                        
-
+                       
                         for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) #uncommented before
+                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
 
                         plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
@@ -840,19 +726,11 @@ if __name__ == '__main__':
                         
      
            
-        plt.axis('equal') #makes equal axis
-        ##plt.savefig(str(image_path), format="svg") #tosave nice svg
+        plt.axis('equal') 
+        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
 
         plt.show()
-        #print(deep_df_short)
-
-        #####################################################################
-        ######
-        # extract reelvant parameters of train result:
-        print(train_result)
-        print(len(train_result))
-
-
+     
         ########################### function to make a nice excel fiel with all the parameters per track:
 
         def make_fingerprint_file(f2, train_result): 
@@ -863,7 +741,7 @@ if __name__ == '__main__':
             outpath3=outpath2+"\\"+name
             print(outpath3)
 
-            ##### adding hull area and number of points in clusters
+            # adding hull area and number of points in clusters
             lys_nr_of_clusters=[]
             lys_time_in_clusters=[]
             lys_nr_of_unclustered=[]
@@ -877,14 +755,13 @@ if __name__ == '__main__':
                 clusters=s['in_hull'].value_counts()
                 areas=s["area"].value_counts()
                 lys_interm_area=[]
-                #print(clusters)
 
                 for i in areas.keys():
                     lys_interm_area.append(i)
                 lys_interm_area.sort()
 
                 if len(clusters)>1:
-                    #if track contains points both in clusters and not in clusters, assign each type
+                    # if track contains points both in clusters and not in clusters, assign each type
                     lys_nr_of_clusters.append(clusters[0])
                     lys_nr_of_unclustered.append(clusters[1])
                     lys_time_in_clusters.append(dt*clusters[0])
@@ -893,28 +770,27 @@ if __name__ == '__main__':
                     lys_time_per_cluster.append(dt*clusters[0]/len(lys_interm_area[1:]))
 
                 else:
-                    #if track only has one type of point, the "clusters[i]" object has only one entry, either 0 (points in clusters) or 1 (points not in clusters)
+                    # if track only has one type of point, the "clusters[i]" object has only one entry, either 0 (points in clusters) or 1 (points not in clusters)
                     ind=clusters.index[0]
                     arry=clusters.array
                     lys_mean_area.append(0)
 
                     if ind==1:
-                        #no cluster 
+                        # no cluster 
                         lys_nr_of_clusters.append(0)
                         lys_nr_of_unclustered.append(arry[0])
                         lys_time_in_clusters.append(dt*0)
                         lys_time_per_cluster.append(0)
                         lys_sum_clusters.append(0)
                     else:
-                        #print(arry)
-                        #all points of track are cluster points
+                        # all points of track are cluster points
                         lys_nr_of_clusters.append(arry[0])
                         lys_nr_of_unclustered.append(0)
                         lys_time_in_clusters.append(dt*arry[0])
                         lys_time_per_cluster.append(dt*arry[0])
                         lys_sum_clusters.append(1)
                
-            ############## adding the fingerprint outputs:
+            # adding the fingerprint outputs:
             counter=0
             for i in train_result:
                 counter+=1
@@ -923,33 +799,28 @@ if __name__ == '__main__':
                     
                 else:
                     new_finger1=np.vstack((new_finger1, i))
-            print(new_finger1)    
-          
-            print(new_finger1[0], "zero")
+            
             fingerprints_df_out_1=pd.DataFrame(new_finger1, columns=["alpha", "beta", "pval", "efficiency", "fractaldim", "gaussianity", "kurtosis", "msd_ratio", "trappedness", "t0", "t1", "t2", "t3","lifetime", "length_of_track",  "mean_steplength","msd" ])
-            print(fingerprints_df_out_1)
+         
             fingerprints_df_out=fingerprints_df_out_1[["alpha", "beta", "pval", "efficiency", "fractaldim", "gaussianity", "kurtosis", "msd_ratio", "trappedness","length_of_track",  "mean_steplength","msd"]]
-            print(fingerprints_df_out)
+
             fingerprints_df_out["nr_of_spatially_arrested_points_per_track"]=lys_nr_of_clusters
             fingerprints_df_out["nr_of_non-arrested_points_per_track"]=lys_nr_of_unclustered
             fingerprints_df_out["tot_time_of_spatial_arrest_per_track"]=lys_time_in_clusters
             fingerprints_df_out["mean_area_spatial_arrest_events"]=lys_mean_area
             fingerprints_df_out["nr_of_spatial_arrest_events_per_track"]=lys_sum_clusters
             fingerprints_df_out["average_duration_of_spatial_arrest_events_per_track"]=lys_time_per_cluster
-            print(fingerprints_df_out[["nr_of_non-arrested_points_per_track", "nr_of_spatially_arrested_points_per_track", "length_of_track"]])
 
 
-            #print(lys_time_per_cluster)
-######below uncomment again once done
-            #outpath4=outpath3+"_fingerprint_results"+".xlsx"
-            #writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
-            #fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
-            #writer.close()
+            outpath4=outpath3+"_fingerprint_results"+".xlsx"
+            writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
+            fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+            writer.close()
             return fingerprints_df_out
         
         ############################### end function 
         
-        make_fingerprint_file(f2, train_result) # run this to mkae excel
+        make_fingerprint_file(f2, train_result) # run function to make excel with all parameters
 
         ################################
 
