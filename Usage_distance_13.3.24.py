@@ -50,65 +50,17 @@ import os
 
 if __name__ == '__main__':
     # decide if you want a temporal resolution for relevant D estimation
-    dt = 0.05  # s ##changed from 1/30 to 0.05
+    dt = 0.05  # frame rate in seconds
+    # f1= input path to file to be analyzed
+    # f2= path where images should be stored (eg. here stored at same location as input file)
     
-    
-    f1=r"C:\Users\bcgvm01\Documents\Deep_SPT\tracks\tracks to check time in t0\Long_tracks_cell7_1476.csv"
-    f1=r"C:\Users\bcgvm01\Documents\Deep_SPT\tracks\tracks to check time in t0\cleaned_trackmate_1476-1.csv"
-    f1=r"C:\Users\bcgvm01\Documents\Deep_SPT\tracks\tracks to check time in t0\cleaned_trackmate_1476-1_488.csv"
-
-    f1=r"C:\Users\bcgvm01\Documents\Deep_SPT\tracks\ROP6_cleaned\cleaned_trackmate_1476-3_IAA_488.csv" # problem
-    f2=r"C:\Users\bcgvm01\Documents\Deep_SPT\tracks\ROP6_cleaned\cleaned_trackmate_1476-3_IAA_488.csv" #problem
-
-    f1=r"C:\Users\bcgvm01\Documents\Deep_SPT\tracks\ROP6_cleaned\cleaned_trackmate_1475_7_25w488.csv"
-    f1=r"D:\TIRFM\Michelle von arx\1.2.24\atbak1_flg22_root\trackmate\cleaned_setting1\cleaned_trackmate_p1_004.csv"
-    f1=r"D:\Data for fingerprinting\1475_cleaned\cleaned_trackmate_1475_1_488.csv"
-    f1=r"D:\Data for fingerprinting\1475_cleaned\cleaned_trackmate_1475_4_488.csv"
-    f1=r"D:\Data for fingerprinting\1475_cleaned\cleaned_trackmate_1475_5_488.csv"
-    f1=r"D:\Data for fingerprinting\1475_cleaned\cleaned_trackmate_1475_6_488.csv" #weird one
-    f1=r"D:\Data for fingerprinting\1475_cleaned\cleaned_trackmate_1475_7_488.csv"
-    f1=r"D:\Data for fingerprinting\1475_cleaned\cleaned_trackmate_1475_8_488.csv"
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-3_IAA_488.csv" #problem
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-4_IAA_488.csv"
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-5_488.csv"
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-6_IAA_488.csv"
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-7_IAA_488.csv"
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-9_IAA_488.csv"
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-10_IAA_488.csv"
-
-    f1=r"D:\Data for fingerprinting\1475_cleaned\cleaned_trackmate_1475_3_488.csv" #one with time0.05
-    #tested:
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-10_IAA_488.csv" #one weird cluster triangle
-    f1=r"D:\Data for fingerprinting\ROP6_cleaned\cleaned_trackmate_1476-9_IAA_488.csv"
-    f1=r"D:\Data for fingerprinting\tracks to check time in t0\c_1942-3_488.csv"
-    f1=r"D:\Data for fingerprinting\tracks to check time in t0\c_1942-5_488.csv"
-    f1=r"D:\Data for fingerprinting\1475_cleaned\cleaned_trackmate_1475_1_488.csv" # one cluster that is hulled but not higlighted, wtf if change min len to 75, its higlightd
-    f1=r"D:\Data for fingerprinting\tracks to check time in t0\cleaned_trackmate_1473_5_488.csv"
-    f1=r"D:\Data for fingerprinting\tracks to check time in t0\cleaned_trackmate_1474_3_1uW488.csv"
-    f1=r"D:\Data for fingerprinting\tracks to check time in t0\cleaned_trackmate_1476-1_488.csv"
-    f1=r"D:\Data for fingerprinting\tracks to check time in t0\cleaned_trackmate_1477_1_25w488.csv"
-    f1=r"D:\Data for fingerprinting\1477_cleaned\cleaned_trackmate_1477_2_488.csv"
-####### data:
-    f1=r"D:\Data for fingerprinting\1474_cleaned\cleaned_trackmate_1474_36_488.csv" #has one weird hull!!
-    f1=r"X:\labs\Lab_Gronnier\Manuscripts\2024_LT_single molecule\Data\Data for fingerprinting\Data_fingerprint_new\ROP6_cleaned\cleaned_trackmate_1476-10_IAA_488.csv"
-    f1=r"D:\TIRFM\Michelle von arx\1.2.24\atbak1_flg22_root\trackmate\cleaned_setting2\cleaned_trackmate_p2_001.csv" # weird cluster!
-    f1=r"D:\TIRFM\Michelle von arx\1.2.24\atbak1_flg22_root\trackmate\cleaned_setting2\cleaned_trackmate_p2_009.csv" # weird cluser!
-    f1=r"D:\TIRFM\Michelle von arx\1.2.24\atbak1_mock_root\trackmate\cleaned_setting2\cleaned_trackmate_p2_008.csv"
-    f1=r"D:\Data for fingerprinting\1474_cleaned\cleaned_trackmate_1474_36_488.csv" #has one weird hull!!
   
-    f1=r"X:\labs\Lab_Gronnier\Manuscripts\2024_LT_single molecule\Data\Data for fingerprinting\Data_fingerprint_new\1942_cleaned\cleaned_trackmate_1942_31_488.csv"
+    f1=r"C:\Users\miche\Desktop\Test_deepSPT\cleaned_trackmate_1473_5_488.csv"
     f2=f1
-
-
-
-
 
     f2=f1
     image_path_lys=f1.split("csv")
-    #print(image_path_lys[0], "here")
     image_path=image_path_lys[0] +"svg"
-
-
 
     """Compute fingerprints"""
     if not os.path.isfile("X_fingerprints.npy"): 
@@ -133,10 +85,9 @@ if __name__ == '__main__':
             lys_y=[]
 
             for i in grouped["TRACK_ID"].unique():
-                 # removedcount2+=1
                 s= grouped.get_group(i[0])
-                #print(s)
-                if s.shape[0]>110: # can set how long the minimum tracks should be 75
+              
+                if s.shape[0]>25: # parameter to set threshold of minimun length of track duration (eg. 25 time points)
                     count2+=1
                     pos_x=list(s["POSITION_X"])
                     pos_y= list(s["POSITION_Y"])
@@ -158,7 +109,7 @@ if __name__ == '__main__':
             return deep_all_df, list_traces, lys_x, lys_y
         ############################# end function loading
 
-        deep_df, traces, lys_x, lys_y = load_file(f1) # execute this to load the files
+        deep_df, traces, lys_x, lys_y = load_file(f1) # execute this function to load the files
 
         ############################ run the model:
 
@@ -193,7 +144,7 @@ if __name__ == '__main__':
         d = []
         for t in traces: # 
             x, y = t[:, 0], t[:, 1]
-            SL = np.sqrt((x[1:] - x[:-1]) ** 2 + (y[1:] - y[:-1]) ** 2) * 10 # We added this to scale our tracks
+            SL = np.sqrt((x[1:] - x[:-1]) ** 2 + (y[1:] - y[:-1]) ** 2) * 10 # factor to scale step length (eg. 10)
 
             d.append((x, y, SL, dt))
           
@@ -204,23 +155,18 @@ if __name__ == '__main__':
        
 
         train_result = []
-        lys_states=[] # I added
+        lys_states=[]
         lys_msd=[]
-        for t in tqdm(d): # t=is one track, make states per one step for plotting
+        for t in tqdm(d): # t = one track, make states per one step for plotting
             
             train_result.append(ThirdAppender(t, model=model)) 
             states = GetStatesWrapper(t, model)
             lys_states.append(states)
 
-            #msd_ = GetMSDWrapper(t)
-            #print(len(msd_))
-            #lys_msd.append(msd_)
-        
-        #np.save("X_fingerprints", train_result) # uncomment this befor usig it, if we want to use their pre-computed  x
         
         ##################################################
 
-        ############# function for consecutive ones:
+        ############# function for consecutive features:
         
         def consecutive(col, seg_len, threshold): #col=stringof cl indf, seg_len=segmentlengh of consecutive, threshold number
             grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
