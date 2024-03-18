@@ -42,6 +42,8 @@ from statistics import mean
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
 import os
+import warnings
+warnings.filterwarnings('ignore')
 
        
 
@@ -49,10 +51,11 @@ import os
 
 
 if __name__ == '__main__':
-    # decide if you want a temporal resolution for relevant D estimation
-    dt = 0.05  # frame rate in seconds
+    
+    dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
     # f1= input path to file to be analyzed
     # f2= path where images should be stored (eg. here stored at same location as input file)
+    
     
   
     f1=r"C:\Users\miche\Desktop\Test_deepSPT\cleaned_trackmate_1473_5_488.csv"
@@ -328,8 +331,6 @@ if __name__ == '__main__':
         deep_df['KDE_level'] = deep_df['KDE_level'].astype(str)
         #final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
 
-        
-
         # invert KDE values: for consistency, low values = good
         lys_invert=[]
         for i in deep_df["KDE_values"]:
@@ -432,13 +433,13 @@ if __name__ == '__main__':
 
         inter_flat1, inter_flat2, inter_flat3, inter_flat4=calc_intersections(lys_x, lys_y)
 
-        ### add all intersections:
+        ## add all intersections:
         deep_df["intersect1"]=inter_flat1
         deep_df["intersect2"]=inter_flat2
         deep_df["intersect3"]=inter_flat3
         deep_df["intersect4"]=inter_flat4
 
-        ### put all intersections together:
+        ## put all intersections together:
         lys_all=[]
         for i in range(len(deep_df["pos_x"])):
             if deep_df["intersect1"][i]==0 or deep_df["intersect2"][i]==0 or deep_df["intersect3"][i]==0 or deep_df["intersect4"][i]==0:
@@ -463,11 +464,11 @@ if __name__ == '__main__':
         flat_lys=reduce(operator.concat, lys_states)
         deep_df["fingerprint_state"]=flat_lys
 
-        ### all fingerprint states
+        ## all fingerprint states
         deep_df['state_level'] = pd.cut(deep_df["fingerprint_state"], [-1.0, 0.0, 1.0, 2.0,  3.0], labels=["zero" , "one", "two", "three"], include_lowest=True, ordered= False)
         deep_df['state_level'] = deep_df['state_level'].astype(str)
         
-        ### change state 1 to state zero: 
+        ## change state 1 to state zero: 
         deep_df.loc[deep_df['fingerprint_state'] == 1, 'fingerprint_state'] = 0 
 
         ########## find consecutive zero state fingerprints:
@@ -541,11 +542,13 @@ if __name__ == '__main__':
 
         lc = LineCollection(linecollection, color=colors, lw=1)
         
-        rcParams["figure.figsize"]= 11.7, 11.7#8.27
+        fig = plt.figure()
+        ax = fig.add_subplot()
         sns.set(style="ticks", context="talk")
        
         plt.gca().add_collection(lc)
         plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
+       
         
         ########################## calculate convex hull:
         # get red and green points: = where 5, 4 or 3 criteria agree for spatial arrest
@@ -579,7 +582,7 @@ if __name__ == '__main__':
                 else:
                     if flag!=0:
                         lys_points.append(pos_all)
-                        print(len(lys_points))
+                    
                     flag=0
                 c2+=1
               
@@ -618,7 +621,8 @@ if __name__ == '__main__':
             lys_perimeter2.append(lys_perimeter)
             lys_hull2.append(lys_hull)
             lys_points_big2.append(lys_points_big)
-           
+
+        plt.axis('equal') 
         plt.show()
 
         ###################################################################
@@ -739,7 +743,8 @@ if __name__ == '__main__':
             outpath2='\\'.join(outpath1)
             name=lys_string[-1].split(".csv")[0]
             outpath3=outpath2+"\\"+name
-            print(outpath3)
+            #print(outpath3)
+            print("saving results file in:", outpath3 )
 
             # adding hull area and number of points in clusters
             lys_nr_of_clusters=[]
