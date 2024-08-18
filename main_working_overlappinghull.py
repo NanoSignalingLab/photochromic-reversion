@@ -45,24 +45,19 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
-       
-
-
-
-
 if __name__ == '__main__':
     
     #################################
     # global variables:
 
-    min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
+    min_track_length=130# parameter to set threshold of minimun length of track duration (eg. 25 time points)
     dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
     # f1= input path to file to be analyzed (see example below)
     # f2= path where images should be stored (eg. here stored at same location as input file)
 
     ##################################
     
-    f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\confinement_8_tracks.csv"
+    f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\Long_tracks_cell7_1476.csv"
     f2=f1
     
     ##################################
@@ -471,6 +466,89 @@ if __name__ == '__main__':
         ## all fingerprint states
         deep_df['state_level'] = pd.cut(deep_df["fingerprint_state"], [-1.0, 0.0, 1.0, 2.0,  3.0], labels=["zero" , "one", "two", "three"], include_lowest=True, ordered= False)
         deep_df['state_level'] = deep_df['state_level'].astype(str)
+        final_pal=dict(zero= "#008000",one= '#FF8C00',two= '#FD1F21', three="#3C3CFF" ) #all colors 
+
+
+
+
+        ################## plt original diffusional fingerprint:
+
+        linecollection = []
+        colors = []
+        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
+        c2=0
+        
+        c2=0
+        for i in grouped_plot["tid"].unique():
+            s= grouped_plot.get_group(i[0])
+            for i in range (len(s["pos_x"])-1):
+
+                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
+                color = final_pal[deep_df["state_level"][c2]]
+                linecollection.append(line)
+                colors.append(color)
+
+                c2+=1
+            c2+=1
+
+        lc = LineCollection(linecollection, color=colors, lw=1)
+        
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        sns.set(style="ticks", context="talk")
+       
+        plt.gca().add_collection(lc)
+        plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.001)
+        plt.axis('equal') 
+        plt.savefig(r"C:\Users\miche\Desktop\presi_surf_BAK1\fingerprint.tiff", dpi=2400)
+
+        plt.show()
+        ##### holw track jsut balck:
+        final_pal=dict(zero= "#000000",one= '#000000',two= '#000000', three="#000000" ) #all colors 
+        linecollection = []
+        colors = []
+        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
+        c2=0
+        
+        c2=0
+        for i in grouped_plot["tid"].unique():
+            s= grouped_plot.get_group(i[0])
+            for i in range (len(s["pos_x"])-1):
+
+                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
+                color = final_pal[deep_df["state_level"][c2]]
+                linecollection.append(line)
+                colors.append(color)
+
+                c2+=1
+            c2+=1
+
+        lc = LineCollection(linecollection, color=colors, lw=1)
+        
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        sns.set(style="ticks", context="talk")
+       
+        plt.gca().add_collection(lc)
+        plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.001)
+        plt.axis('equal') 
+        plt.savefig(r"C:\Users\miche\Desktop\presi_surf_BAK1\fingerprint_raw_track.tiff", dpi=2400)
+        plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         
         ## change state 1 to state zero: 
         deep_df.loc[deep_df['fingerprint_state'] == 1, 'fingerprint_state'] = 0 
@@ -599,11 +677,13 @@ if __name__ == '__main__':
         lys_perimeter2=[]
         lys_hull2 = []
         lys_points_big2=[]
+        lys_hull_path2=[]
         for j in range (len(lys_points2)):
             lys_area=[]
             lys_perimeter=[]
             lys_hull=[]
             lys_points_big=[]
+            lys_hull_path=[]
             for i in range(len(lys_points2[j])):
                 points=lys_points2[j][i] 
                 if len(points)>3:
@@ -613,6 +693,8 @@ if __name__ == '__main__':
                     ratio=hull.area/hull.volume
                     if ratio<105:
                         lys_points_big.append(points)
+                        hull_path = Path( points[hull.vertices] )
+                        lys_hull_path.append([hull_path])
                         
                         lys_hull.append(hull)
                         lys_area.append(hull.volume) 
@@ -625,8 +707,11 @@ if __name__ == '__main__':
             lys_perimeter2.append(lys_perimeter)
             lys_hull2.append(lys_hull)
             lys_points_big2.append(lys_points_big)
+            lys_hull_path2.append(lys_hull_path)
 
         plt.axis('equal') 
+        plt.savefig(r"C:\Users\miche\Desktop\presi_surf_BAK1\fingerprint_all_features.tiff", dpi=2400)
+
         plt.show()
 
         ###################################################################
@@ -636,6 +721,11 @@ if __name__ == '__main__':
         lys_the_last=[]
         lys_area_last=[]
         
+        
+
+       ##chekc this:  iter_segments
+
+    
         c2=0
         
         for trackn in grouped_plot["tid"].unique():
@@ -647,23 +737,25 @@ if __name__ == '__main__':
 
             for i in range(len(lys_x)):
                 interm_lys=[]
-                
+               
                 for j in range(len(lys_points_big2[c2])): 
 
                     points=lys_points_big2[c2][j]
-                   
                    
                     hull=lys_hull2[c2][j]
                     hull_path = Path( points[hull.vertices] )
                     
                     if hull_path.contains_point((lys_x[i], lys_y[i]))==True: 
-
+                        
                         interm_lys.append(0)
                         area=lys_area2[c2][j]
-                   
+                       
+                           
                 if len(interm_lys)>0:
                     lys_the_last.append(0)
                     lys_area_last.append(area)
+                    
+                       
                 else:
                    
                     lys_the_last.append(1)
@@ -672,12 +764,89 @@ if __name__ == '__main__':
         c2+=1
        
         deep_df_short["in_hull"]=lys_the_last
+        
         deep_df_short["area"]=lys_area_last
         deep_df_short['in_hull_level'] = pd.cut(deep_df_short["in_hull"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df_short['in_hull_level'] = deep_df_short['in_hull_level'].astype(str)
        
         
-              
+        ##### working on overlapping hull:
+        ########### try getting overalpping hulls below added:
+        #print(lys_hull_path[0], "this hull path0")
+       # print(lys_hull_path[1], "this hull path1")
+        #print(len(lys_hull_path))
+        #print(lys_hull_path)
+
+        """ print(lys_points_big2, "his lyspointsbig2")
+        print(lys_hull2, "this lys:hull")
+        print(lys_hull_path2, "this hullpath2")
+        print(len(lys_hull_path2), "this len hullpath2")
+        print(lys_hull_path2[0][0][0], "0.0")
+        print(lys_hull_path2[0][0], "0")
+        print(lys_hull_path2[0][1][0], "1")
+        print(len(lys_hull_path2[0]), "here len")
+        print(lys_hull_path2[0])
+        print(len(lys_hull_path2[1]), "here len2")
+        print(lys_hull_path2[1])
+        print(len(lys_hull_path2[2]), "here len3")
+
+
+
+        ## cehck this: intersects_path(other, filled=True) 
+        #print(hull_path1.intersects_path(hull_path2, filled=True), "here")
+        
+        lys_hull_intersections=[]
+        grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
+        debug_count=0
+        for trackn in grouped_plot["tid"].unique():
+            debug_count+=1
+            s= grouped_plot.get_group(trackn[0])
+            #print(s)
+            #print(s["in_hull"])
+            if all(s["in_hull"]):
+                pass
+            else:
+                if debug_count<2:
+                    #print(trackn)
+                    for i in range(len(lys_hull_path2)-1): #list of all hullpaths per track
+                        #print(i,lys_hull_path2[i] , "first loop")
+                        for j in range (len(lys_hull_path2[i])): #list of one track
+                            #print(j, lys_hull_path2[i][j], "second loop")
+                            for k in range (len(lys_hull_path2[i+1])):
+                                #print(j, lys_hull_path2[i][j][0], "third loop track1")
+                                #print(k, lys_hull_path2[i+1][k][0], "third loop all others")
+
+                                #plt.plot(lys_hull_path2[i][j][0].vertices[:,0], lys_hull_path2[i][j][0].vertices[:,1], "o", color="blue")
+                                #plt.plot(lys_hull_path2[i+1][k][0].vertices[:,0], lys_hull_path2[i+1][k][0].vertices[:,1], "o", color="red")
+                                #plt.show()
+                                #print(lys_hull_path2[i][j][0].intersects_path(lys_hull_path2[i+1][k][0], filled=True), "here")
+                                if lys_hull_path2[i][j][0].intersects_path(lys_hull_path2[i+1][k][0], filled=True)==True:
+                                    print("found it")
+                                    break
+            
+
+
+        p1=np.array([[1, 1], [1, 2],[2, 2], [2, 1] ]) 
+        p2=np.array([[1.2, 2.5], [1.3, 2.5], [2.5, 2.5], [2.5, 1.5]])
+        hull1 = ConvexHull(p1)
+        hull2 = ConvexHull(p2)  
+        plt.plot(p1[:,0], p1[:,1], 'o')
+        for simplex in hull1.simplices:
+            plt.plot(p1[simplex, 0], p1[simplex, 1], 'k-')
+        plt.plot(p2[:,0], p2[:,1], 'o')
+        for simplex in hull2.simplices:
+            plt.plot(p2[simplex, 0], p2[simplex, 1], 'k-')
+        
+        plt.show()
+        hull_path1=Path( p1[hull1.vertices] )
+        hull_path2=Path( p2[hull2.vertices] )
+
+
+
+        print(hull_path2.intersects_path(hull_path1, filled=True), "heere testi")
+        if hull_path2.intersects_path(hull_path1, filled=True)==True:
+            print("yes test 2")
+ """
 
         ################################################
         ### plotting hull and tracks togehter: as arrested vs not spatially arrested
@@ -732,8 +901,34 @@ if __name__ == '__main__':
                         
            
         plt.axis('equal') 
-        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
+        #plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
+        plt.savefig(r"C:\Users\miche\Desktop\presi_surf_BAK1\fingerprint_final.tiff", dpi=2400)
+
         plt.show()
+
+
+        sns.set(style="ticks", context="talk")
+        for j in range (len(lys_points2)):
+            for i in range(len(lys_points2[j])):
+                points=lys_points2[j][i] 
+                if len(points)>3:
+                    
+                    hull = ConvexHull(points)
+
+                    ratio=hull.area/hull.volume
+                    if ratio<105:
+                        for simplex in hull.simplices:
+                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
+                        plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
+                        #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
+                        
+           
+        plt.axis('equal') 
+        sns.set_palette("Spectral")
+        s1= sns.lineplot(data=deep_df_short, x=deep_df_short["pos_x"], y=deep_df_short["pos_y"], palette="bright", hue= deep_df_short["tid"], legend="full", lw=0.35, sort=False)# to plot each track in a differetn colour
+        plt.show()
+
+
      
         ########################### function to make a nice excel fiel with all the parameters per track:
 
@@ -824,7 +1019,7 @@ if __name__ == '__main__':
         
         ############################### end function 
         
-        make_fingerprint_file(f2, train_result) # run function to make excel with all parameters
+        #make_fingerprint_file(f2, train_result) # run function to make excel with all parameters
 
         ################################
 
@@ -841,56 +1036,3 @@ if __name__ == '__main__':
 
 
 
-            
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              
-        
-
-
-
-
-
-
-
-
-
-
-
-      
-        
-
-
-                
-
-
-
-
-        
-
-
-       
-
-
-
-
-
-
-
-
-
-
-    

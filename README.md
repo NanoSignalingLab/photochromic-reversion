@@ -1,1 +1,2 @@
 # photochromic-reversion
+This pipeline was developed to analyze the transient spatial arrest of individual molecules and builds on the previously published diffusional fingerprinting method (Pinholt et al., 2021). Based on various features such as the diffusional fingerprint, step length, angles, KDE, intersections 
