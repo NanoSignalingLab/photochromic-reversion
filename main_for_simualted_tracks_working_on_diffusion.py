@@ -53,6 +53,10 @@ if __name__ == '__main__':
     
     #################################
     # global variables:
+    # remove seeds after testing:!
+    import stochastic
+    stochastic.random.seed(3)
+    np.random.seed(7)
 
     min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
     dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
@@ -132,7 +136,7 @@ if __name__ == '__main__':
         return df_final_parameters_out
     ##########################
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=100
+        N=10
         T=100
         D=0.001
         DS2=1
@@ -512,6 +516,7 @@ if __name__ == '__main__':
         print("Computing angles")
 
         angle_cont_lys=consecutive("angles", 10, 600, deep_df)
+        
         deep_df["angle_cont"]=angle_cont_lys
         deep_df['angles_cont_level'] = pd.cut(deep_df["angle_cont"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df['angles_cont_level'] = deep_df['angles_cont_level'].astype(str)
@@ -1108,15 +1113,60 @@ if __name__ == '__main__':
         ################################
         ## function calcualting accuracy:
 
-        ###  TODO curate sim da: all the things where pm is confine dbit for less than5 points -> make unconfiend!!!!!
+        ###   curate sim da: all the things where pm is confine dbit for less than5 points -> make unconfiend!!!!!
+    def make_GT_consecutive(deep_df):
+        deep_df[deep_df==1]=0
+        deep_df[deep_df==2]=1
+        
+        grouped_plot= deep_df.sort_values(["POSITION_T"]).groupby("TRACK_ID")
+        c2=0
+        lys_final=[]
+        for i in grouped_plot["TRACK_ID"].unique():
+            lys_six=[]
+            s= grouped_plot.get_group(i[0])
+            #print(s)
+            c3=0
+            while c3<len(s["POSITION_X"]): 
+
+                if c3>=len(s["POSITION_X"])-5: #was 11
+                    if sum(s["pm2"][c3:])==0:
+                        lys_six.append([0]*1) 
+                    else:
+                        lys_six.append([1]*1) 
+                        
+                    #print("herrrreee", lys_six)
+                else:
+                    if sum(s["pm2"][c3:c3+6])==0: # was +12
+                    # print("nooooow 22222222")
+                        lys_six.append([0]*1)
+                    elif sum(s["pm2"][c3:c3+6])!=0 and sum(s["pm2"][c3:c3+5])==0: # was +12 adn +11
+                        lys_six.append([0]*5) #was *11
+                        c2+=4 # was 10
+                        c3+=4 #was10
+                    else:
+                        lys_six.append([1]*1)
+                c2+=1
+                c3+=1
+            lys_six_flat=list(chain.from_iterable(lys_six))
+            lys_final.append(lys_six_flat)
+            #print(lys_final)
+            c2+=1
+            c3=0
+        lys_final_flat=list(chain.from_iterable(lys_final))
+        return lys_final_flat
+        #print(lys_final_flat)
 
 
+    #lys_GT=make_GT_consecutive( sim_tracks)
 
 
 
         #####################################
 
     def calculate_accuracy(sim_tracks, finger_tracks, mean_msd_df):
+        lys_GT=make_GT_consecutive( sim_tracks) # added consecutive in clsuters
+        sim_tracks["GT"]  =lys_GT   
+        ###cahnge all the  21 angain cause now its zero and 1
         arry_sim=sim_tracks["pm2"] # if 1= confined, 2= not
         arry_finger=finger_tracks["in_hull"] # if 0= confined, 1=not
         both_confined=0
