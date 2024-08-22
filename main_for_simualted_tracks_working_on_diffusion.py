@@ -42,6 +42,8 @@ from statistics import mean
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
 import os
+from os import listdir
+from os.path import isfile, join
 import warnings
 import andi_datasets
 from andi_datasets.models_phenom import models_phenom
@@ -84,7 +86,30 @@ if __name__ == '__main__':
         plotting_final_image(deep_df_short2,lys_points2, image_path)
         make_fingerprint_file(f2, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
 
+    #### add wrapper for muliple csv files in one folder, make one result excel per file:
 
+    def wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag):
+        onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
+        for i in onlyfiles:
+            
+            if i.endswith(".csv"):
+                path=os.path.join(folderpath1, i)
+                print(path)
+                ##insert all teh stuff here:
+                image_path_lys=path.split("csv")
+                image_path=image_path_lys[0] +"svg"
+                tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
+                mean_msd_df=msd_mean_track(msd_df, dt)
+                train_result, states, lys_states = run_traces_wrapper(traces, dt)
+                deep_df2=computing_distance_wrapper(deep_df1)
+                deep_df3=calculate_angles_wrapper(deep_df2)
+                deep_df4=calculate_KDE_wrapper(lys_x, lys_y, deep_df3)
+                deep_df5=calculate_intersections_wrapper(lys_x, lys_y, deep_df4)
+                deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
+                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
+                plotting_final_image(deep_df_short2,lys_points2, image_path)
+                make_fingerprint_file(path, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
 
 
 
@@ -869,9 +894,9 @@ if __name__ == '__main__':
             lys_perimeter2.append(lys_perimeter)
             lys_hull2.append(lys_hull)
             lys_points_big2.append(lys_points_big)
-            print("lys_points len",len(lys_points_big))
+            #print("lys_points len",len(lys_points_big))
             if len(lys_points_big)>0:
-                print("lys_msd_clsuter",lys_msd_cluster)
+                #print("lys_msd_clsuter",lys_msd_cluster)
                 msd_mean = mean(lys_msd_cluster)
                 logD_mean=mean(lys_logD_cluster)
             else:
@@ -1091,18 +1116,10 @@ if __name__ == '__main__':
 
         #print(fingerprints_df_out)
 
-    
         outpath4=outpath3+"_fingerprint_results"+".xlsx"
         writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
         fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
         writer.close()
-
-        #### for simulated stuff want the whole excel:
-        #outpath5=outpath3+"_fingerprint_tracks"+".xlsx"
-       # writer = pd.ExcelWriter(outpath5 , engine='xlsxwriter')
-        #print(outpath4, outpath5)
-        #deep_df_short.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
-       # writer.close()
 
         return fingerprints_df_out
     
@@ -1294,18 +1311,29 @@ if __name__ == '__main__':
 
     ########################
     # run final wrapper functions:
+
     ## for one file woth tracks:
     # f1= input, f2=outputpath, (can be the same), min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
     # wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
+
+    ## for folder with multiple real tracks:
+    # folderpath1= paht to folder, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
+    #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+    plotting_flag=0
+    dt=0.05
+    folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\13.8.24_At_BAK1_mut_PSK\BAK1_BL\testing_wrapperfunction"
+    wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+
     ## for simulating tracks based on parameters stored in a file:
     # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
     # f1= input path to values for sim, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1= plotting)
-    plotting_flag=0
-    dt=0.1
+    #plotting_flag=0
+    #dt=0.1
     #wrapper_one_file(f1, f2, min_track_length, dt,plotting_flag ) 
-    f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\test_values - Kopie.csv"
+   # f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\test_values - Kopie.csv"
     
-    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
+   # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
+
 
 
 
