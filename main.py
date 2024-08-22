@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     ##################################
     
-    f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\confinement_8_tracks.csv"
+    f1=r"C:\Users\miche\Downloads\c_P01_027.csv"
     f2=f1
     
     ##################################

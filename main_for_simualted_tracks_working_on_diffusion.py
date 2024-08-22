@@ -1115,8 +1115,8 @@ if __name__ == '__main__':
 
         ###   curate sim da: all the things where pm is confine dbit for less than5 points -> make unconfiend!!!!!
     def make_GT_consecutive(deep_df):
-        deep_df[deep_df==1]=0
-        deep_df[deep_df==2]=1
+        deep_df[deep_df==1]=0 # cluster
+        deep_df[deep_df==2]=1 # no cluster
         
         grouped_plot= deep_df.sort_values(["POSITION_T"]).groupby("TRACK_ID")
         c2=0
@@ -1129,7 +1129,7 @@ if __name__ == '__main__':
             while c3<len(s["POSITION_X"]): 
 
                 if c3>=len(s["POSITION_X"])-5: #was 11
-                    if sum(s["pm2"][c3:])==0:
+                    if sum(s["pm2"][c3:])==0: # added to catch last 4 if in cluster as well
                         lys_six.append([0]*1) 
                     else:
                         lys_six.append([1]*1) 
