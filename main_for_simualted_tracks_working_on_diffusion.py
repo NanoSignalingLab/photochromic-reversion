@@ -161,7 +161,7 @@ if __name__ == '__main__':
         return df_final_parameters_out
     ##########################
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=10
+        N=100
         T=100
         D=0.001
         DS2=1
@@ -1131,11 +1131,11 @@ if __name__ == '__main__':
         ## function calcualting accuracy:
 
         ###   curate sim da: all the things where pm is confine dbit for less than5 points -> make unconfiend!!!!!
-    def make_GT_consecutive(deep_df):
-        deep_df[deep_df==1]=0 # cluster
-        deep_df[deep_df==2]=1 # no cluster
+    def make_GT_consecutive(sim_tracks):
+        sim_tracks["pm2"]= sim_tracks["pm2"].replace(1,0)
+        sim_tracks["pm2"]= sim_tracks["pm2"].replace(2,1)
         
-        grouped_plot= deep_df.sort_values(["POSITION_T"]).groupby("TRACK_ID")
+        grouped_plot= sim_tracks.sort_values(["POSITION_T"]).groupby("TRACK_ID")
         c2=0
         lys_final=[]
         for i in grouped_plot["TRACK_ID"].unique():
@@ -1146,7 +1146,7 @@ if __name__ == '__main__':
             while c3<len(s["POSITION_X"]): 
 
                 if c3>=len(s["POSITION_X"])-5: #was 11
-                    if sum(s["pm2"][c3:])==0: # added to catch last 4 if in cluster as well
+                    if sum(s["pm2"][c3:])==0:
                         lys_six.append([0]*1) 
                     else:
                         lys_six.append([1]*1) 
@@ -1170,21 +1170,22 @@ if __name__ == '__main__':
             c2+=1
             c3=0
         lys_final_flat=list(chain.from_iterable(lys_final))
-        return lys_final_flat
-        #print(lys_final_flat)
+        
+        sim_tracks["GT"]=lys_final_flat
+        return sim_tracks
 
 
-    #lys_GT=make_GT_consecutive( sim_tracks)
 
+    
+   
 
 
         #####################################
 
     def calculate_accuracy(sim_tracks, finger_tracks, mean_msd_df):
-        lys_GT=make_GT_consecutive( sim_tracks) # added consecutive in clsuters
-        sim_tracks["GT"]  =lys_GT   
+        sim_tracks2=make_GT_consecutive( sim_tracks) # added consecutive in clsuters
         ###cahnge all the  21 angain cause now its zero and 1
-        arry_sim=sim_tracks["pm2"] # if 1= confined, 2= not
+        arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
         arry_finger=finger_tracks["in_hull"] # if 0= confined, 1=not
         both_confined=0
         both_unconfined=0
@@ -1195,7 +1196,7 @@ if __name__ == '__main__':
         sim_cluster_logD=np.log10(min(sim_tracks["DIFFUSION"]))
         
         for i in range(0,len(arry_sim)):
-            if arry_sim[i]==1.0: # confined
+            if arry_sim[i]==0: # confined
                 if arry_finger[i]==0:
                     both_confined+=1
                     sim_total_confined+=1
@@ -1223,13 +1224,13 @@ if __name__ == '__main__':
         percent_correct=((both_confined+both_unconfined)/len(arry_sim))*100 # this is officially accuracy
        
         from sklearn import metrics
-        arry_finger[arry_finger==1]=2
-        arry_finger[arry_finger==0]=1
-        arry_sim_int=arry_sim.astype(int)
-        print("heere",arry_finger)
-        print("sim", arry_sim_int)
+        #arry_finger[arry_finger==1]=2
+        #arry_finger[arry_finger==0]=1
+        #arry_sim_int=arry_sim.astype(int)
+        #print("heere",arry_finger)
+        #print("sim", arry_sim_int)
 
-        precision, recall, fbeta, support=metrics.precision_recall_fscore_support(arry_sim_int, arry_finger)
+        precision, recall, fbeta, support=metrics.precision_recall_fscore_support(arry_sim, arry_finger, pos_label=0)
         precision_confined=precision[0]
         precision_unconfined=precision[1]
         recall_confined=recall[0]
@@ -1319,20 +1320,18 @@ if __name__ == '__main__':
     ## for folder with multiple real tracks:
     # folderpath1= paht to folder, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
     #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
-    plotting_flag=0
-    dt=0.05
-    folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\13.8.24_At_BAK1_mut_PSK\BAK1_BL\testing_wrapperfunction"
-    wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+    #plotting_flag=0
+    #dt=0.05
+    #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
+   # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
 
     ## for simulating tracks based on parameters stored in a file:
     # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
     # f1= input path to values for sim, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1= plotting)
-    #plotting_flag=0
-    #dt=0.1
-    #wrapper_one_file(f1, f2, min_track_length, dt,plotting_flag ) 
-   # f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\test_values - Kopie.csv"
-    
-   # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
+    plotting_flag=0
+    dt=0.1
+    f1=r"C:\Users\miche\Desktop\simualted tracks\test_values3.csv"
+    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
 
 
 
