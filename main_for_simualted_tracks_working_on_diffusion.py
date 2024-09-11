@@ -57,8 +57,8 @@ if __name__ == '__main__':
     # global variables:
     # remove seeds after testing:!
     import stochastic
-    stochastic.random.seed(3)
-    np.random.seed(7)
+    #stochastic.random.seed(3)
+    #np.random.seed(7)
 
     min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
     dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
@@ -1418,8 +1418,8 @@ if __name__ == '__main__':
     # f1= input path to values for sim, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1= plotting)
     plotting_flag=0
     dt=0.1
-    plotting_saving_nice_image_flag=1
-    f1=r"c:\Users\miche\Desktop\simualted tracks\simulated_tracks_files\nice_values_6.9.24.csv"
+    plotting_saving_nice_image_flag=0
+    f1=r"C:\Users\miche\Desktop\simualted tracks\final_sim_values_short_sim3.csv"
     read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag)
 
    
