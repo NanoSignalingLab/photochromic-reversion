@@ -55,7 +55,11 @@ if __name__ == '__main__':
     
     #################################
     # global variables:
-   
+    # remove seeds after testing:!
+    import stochastic
+    #stochastic.random.seed(3)
+    #np.random.seed(7)
+
     min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
     dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
     # f1= input path to file to be analyzed (see example below)
@@ -116,8 +120,12 @@ if __name__ == '__main__':
 
 
     ####################
-    def read_in_values_and_execute(f1,min_track_length, dt, plotting_flag ):
+    def read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag ):
         df_values=pd.read_csv(f1)
+        image_path_lys=f1.split("csv")
+        image_path=image_path_lys[0]
+    
+
         df_values= df_values.iloc[: , 1:]
         
         for index, row in df_values.iterrows():
@@ -134,8 +142,13 @@ if __name__ == '__main__':
             deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
             grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
             deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
-            list_accuracy=calculate_accuracy(sim_tracks, deep_df_short2, mean_msd_df)
+            sim_tracks_2=make_GT_consecutive(sim_tracks)
+            list_accuracy=calculate_accuracy(sim_tracks_2, deep_df_short2, mean_msd_df)
+            if plotting_saving_nice_image_flag==1:
+                image_path1=image_path+str(index)+".tiff"
+                plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
 
+                
             if index==0:
                 list_final_accuracy=[list_accuracy]
             else:
@@ -1127,7 +1140,8 @@ if __name__ == '__main__':
         ## function calcualting accuracy:
 
         ###   curate sim da: all the things where pm is confine dbit for less than5 points -> make unconfiend!!!!!
-    def make_GT_consecutive(sim_tracks):
+    def make_GT_consecutive(sim_tracks_test):
+        sim_tracks = sim_tracks_test
         sim_tracks["pm2"]= sim_tracks["pm2"].replace(1,0)
         sim_tracks["pm2"]= sim_tracks["pm2"].replace(2,1)
         
@@ -1169,27 +1183,28 @@ if __name__ == '__main__':
         
         sim_tracks["GT"]=lys_final_flat
         return sim_tracks
-
-
+    ######
 
     
-   
 
 
         #####################################
 
-    def calculate_accuracy(sim_tracks, finger_tracks, mean_msd_df):
-        sim_tracks2=make_GT_consecutive( sim_tracks) # added consecutive in clsuters
+    def calculate_accuracy(sim_tracks2, finger_tracks, mean_msd_df):
+        print("calculate accuracy",sim_tracks2["pm2"])
+        #sim_tracks2=make_GT_consecutive( sim_tracks) # added consecutive in clsuters
         ###cahnge all the  21 angain cause now its zero and 1
         arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
         arry_finger=finger_tracks["in_hull"] # if 0= confined, 1=not
+        #print("heere arryfinger", arry_finger)
+        #print("heere array_sim", arry_sim)
         both_confined=0
         both_unconfined=0
         sim_confined=0
         sim_unconfined=0
         sim_total_confined=0
         sim_total_unconfined=0
-        sim_cluster_logD=np.log10(min(sim_tracks["DIFFUSION"]))
+        sim_cluster_logD=np.log10(min(sim_tracks2["DIFFUSION"]))
         
         for i in range(0,len(arry_sim)):
             if arry_sim[i]==0: # confined
@@ -1288,7 +1303,7 @@ if __name__ == '__main__':
         percent_sim_unconfined=(sim_unconfined/len(arry_sim))*100
 
         logD_means_sim = []
-        grouped_plot= sim_tracks.sort_values(["FRAME"]).groupby("TRACK_ID")
+        grouped_plot= sim_tracks2.sort_values(["FRAME"]).groupby("TRACK_ID")
         for i in grouped_plot["TRACK_ID"].unique():
             s= grouped_plot.get_group(i[0])
 
@@ -1306,9 +1321,6 @@ if __name__ == '__main__':
             logD_cluster_difference.append(abs(logD_mean_cluster_finger[i]-sim_cluster_logD))
         logD_mean_diff=mean(logD_difference)
         logD_mean_cluster_diff=mean(logD_cluster_difference)
-
-
-        
 
 
 
@@ -1329,7 +1341,7 @@ if __name__ == '__main__':
         print("fbeta_unconfiend",fbeta_confined) 
         print("support_confined",support_confined)
         print("support_unconfined", support_unconfined)
-        print("log D differnce", logD_mean_diff)
+        print("log D difference", logD_mean_diff)
         print("cluster logD differnce", logD_mean_cluster_diff)
 
        
@@ -1339,6 +1351,86 @@ if __name__ == '__main__':
         return list_accuracy
 
         #calculate_accuracy(tracks_input, deep_df_short)
+    
+    ## insert plotting for GT and finger here:
+    def plot_GT_and_finger(sim_tracks2, finger_tracks, image_path1):
+       
+        arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
+        arry_finger=finger_tracks["in_hull"] #
+
+        finger_tracks["compairison_level"]=[0]*len(arry_sim)
+
+
+## make new one: "zero both confined", "one"= both unconfined, "two = sim_confined", "three= finger confined"
+
+        for i in range(0,len(arry_sim)):
+                if arry_sim[i]==0: # confined
+                    if arry_finger[i]==0:
+                    
+                        finger_tracks["compairison_level"][i]="zero"
+                        #both_confined+=1
+                        #sim_total_confined+=1
+
+                    else:
+                        finger_tracks["compairison_level"][i]="two"
+                        #sim_confined+=1
+                        #sim_total_confined+=1
+
+                else: # not confined
+                    
+
+                    if arry_finger[i]==1:
+                        finger_tracks["compairison_level"][i]="one"
+                        #both_unconfined+=1
+                        #sim_total_unconfined+=1
+
+                    else:
+                        finger_tracks["compairison_level"][i]="three"
+
+                        #sim_unconfined+=1
+                        #sim_total_unconfined+=1
+
+
+        #final_pal=dict(zero= "#06fcde" , one= "#808080")
+        final_pal=dict(zero= "#78d151",one= '#2a788e',two= '#ff3300', three= "#fde624") #all colors 
+        # zero= both confined = green= #78d151
+        # one= both unconfined= blue= #2a788e
+        # two= sim_only_confined= red= 
+        # three= finger_onyl_confiend= #fde624
+
+        linecollection = []
+        colors = []
+
+        fig = plt.figure()
+        ax = fig.add_subplot()
+
+        sns.set(style="ticks", context="talk")
+
+        grouped_plot= finger_tracks.sort_values(["pos_t"]).groupby("tid")
+        c2=0
+        for i in grouped_plot["tid"].unique():
+            s= grouped_plot.get_group(i[0])
+
+        
+            for i in range (len(s["pos_x"])-1):
+
+                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
+                color = final_pal[finger_tracks["compairison_level"][c2]]
+                linecollection.append(line)
+                colors.append(color)
+
+                c2+=1
+            c2+=1
+
+        lc = LineCollection(linecollection, color=colors, lw=1)
+
+        
+        plt.scatter(finger_tracks["pos_x"], finger_tracks["pos_y"], s=0.001)
+        plt.gca().add_collection(lc)
+        plt.axis('equal') 
+        #plt.savefig(str(image_path1), format="tiff") # uncomment this to save nice svg
+
+        plt.show()
 
     ############################################
     # run final wrapper functions:
@@ -1370,11 +1462,15 @@ if __name__ == '__main__':
     ## for simulating tracks based on parameters stored in a file:
     # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
     # f1= input path to values for sim, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1= plotting)
-    #plotting_flag=0
-    #dt=0.1
-    #f1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\final_sim_values3.csv"
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\shrot_sim_N500\final_sim_values_short_sim3_N500.csv"
-    #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
+    plotting_flag=0
+    dt=0.1
+    plotting_saving_nice_image_flag=0
+    f1=r"C:\Users\miche\Desktop\simualted tracks\final_sim_values_short_sim3.csv"
+    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag)
+
+   
+    
+
 
 
 
