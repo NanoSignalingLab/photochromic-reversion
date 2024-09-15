@@ -55,11 +55,7 @@ if __name__ == '__main__':
     
     #################################
     # global variables:
-    # remove seeds after testing:!
-    import stochastic
-    stochastic.random.seed(3)
-    np.random.seed(7)
-
+   
     min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
     dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
     # f1= input path to file to be analyzed (see example below)
@@ -161,7 +157,7 @@ if __name__ == '__main__':
         return df_final_parameters_out
     ##########################
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=100
+        N=500
         T=100
         D=0.001
         DS2=1
@@ -1224,6 +1220,7 @@ if __name__ == '__main__':
         percent_correct=((both_confined+both_unconfined)/len(arry_sim))*100 # this is officially accuracy
        
         from sklearn import metrics
+        from math import nan
         #arry_finger[arry_finger==1]=2
         #arry_finger[arry_finger==0]=1
         #arry_sim_int=arry_sim.astype(int)
@@ -1231,14 +1228,47 @@ if __name__ == '__main__':
         #print("sim", arry_sim_int)
 
         precision, recall, fbeta, support=metrics.precision_recall_fscore_support(arry_sim, arry_finger, pos_label=0)
-        precision_confined=precision[0]
-        precision_unconfined=precision[1]
-        recall_confined=recall[0]
-        recall_unconfined=recall[1]
-        fbeta_confined=fbeta[0]
-        fbeta_confined=fbeta[1]
-        support_confined=support[0]
-        support_unconfined=support[0]
+        try:
+            precision_confined=precision[0]
+        except IndexError:
+            precision_confined=nan
+
+        try:
+            precision_unconfined=precision[1]
+        except IndexError:
+            precision_unconfined=nan
+
+        try:
+            recall_confined=recall[0]
+        except IndexError:
+            recall_confined=nan
+
+        try:
+            recall_unconfined=recall[1]
+        except IndexError:
+            recall_unconfined=nan
+
+        try:
+            fbeta_confined=fbeta[0]
+        except IndexError:
+            fbeta_confined=nan
+
+        try:
+            fbeta_confined=fbeta[1]
+        except IndexError:
+            fbeta_confined=nan
+
+        try:
+            support_confined=support[0]
+        except IndexError:
+            support_confined=nan
+        
+        try:
+            support_unconfined=support[0]
+        except IndexError:
+            support_unconfined=nan
+        
+
 
 
         if sim_total_confined!=0:
@@ -1310,28 +1340,41 @@ if __name__ == '__main__':
 
         #calculate_accuracy(tracks_input, deep_df_short)
 
-    ########################
+    ############################################
     # run final wrapper functions:
 
     ## for one file woth tracks:
     # f1= input, f2=outputpath, (can be the same), min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
-    # wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
+    #f1=r"X:\labs\Lab_Gronnier\Michelle\TIRFM\10.9.24_At_FLS2_MADs\FLS_BAK1_3187-1\plant1_cleaned\cleaned_trackmate_p1_009_allspots.csv"
+    #f2=f1
+    #plotting_flag=0
+    #dt=0.05
+
+
+    #wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
+    ############################################
 
     ## for folder with multiple real tracks:
     # folderpath1= paht to folder, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
     #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
-    #plotting_flag=0
-    #dt=0.05
+    #
+    plotting_flag=0
+    dt=0.05
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
-   # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+    folderpath1=r"X:\labs\Lab_Gronnier\Michelle\TIRFM\10.9.24_At_FLS2_MADs\FLS_BAK1_3187-1\plant1_cleaned"
+
+    wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+
+    ############################################
 
     ## for simulating tracks based on parameters stored in a file:
     # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
     # f1= input path to values for sim, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1= plotting)
-    plotting_flag=0
-    dt=0.1
-    f1=r"C:\Users\miche\Desktop\simualted tracks\test_values3.csv"
-    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
+    #plotting_flag=0
+    #dt=0.1
+    #f1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\final_sim_values3.csv"
+    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\shrot_sim_N500\final_sim_values_short_sim3_N500.csv"
+    #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
 
 
 
