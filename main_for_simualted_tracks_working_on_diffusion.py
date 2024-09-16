@@ -170,7 +170,7 @@ if __name__ == '__main__':
         return df_final_parameters_out
     ##########################
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=500
+        N=10
         T=100
         D=0.001
         DS2=1
@@ -1176,6 +1176,7 @@ if __name__ == '__main__':
                 c3+=1
             lys_six_flat=list(chain.from_iterable(lys_six))
             lys_final.append(lys_six_flat)
+            #print("this lys_six", lys_six_flat)
             #print(lys_final)
             c2+=1
             c3=0
@@ -1184,9 +1185,7 @@ if __name__ == '__main__':
         sim_tracks["GT"]=lys_final_flat
         return sim_tracks
     ######
-
-    
-
+    ##below include calucaltion of numner of clsuters per track!
 
         #####################################
 
@@ -1204,7 +1203,7 @@ if __name__ == '__main__':
         sim_unconfined=0
         sim_total_confined=0
         sim_total_unconfined=0
-        sim_cluster_logD=np.log10(min(sim_tracks2["DIFFUSION"]))
+        sim_cluster_logD=np.log10(min(sim_tracks2["DIFFUSION"]))+1 # add 1 logD for conversion back to microns
         
         for i in range(0,len(arry_sim)):
             if arry_sim[i]==0: # confined
@@ -1236,12 +1235,7 @@ if __name__ == '__main__':
        
         from sklearn import metrics
         from math import nan
-        #arry_finger[arry_finger==1]=2
-        #arry_finger[arry_finger==0]=1
-        #arry_sim_int=arry_sim.astype(int)
-        #print("heere",arry_finger)
-        #print("sim", arry_sim_int)
-
+       
         precision, recall, fbeta, support=metrics.precision_recall_fscore_support(arry_sim, arry_finger, pos_label=0)
         try:
             precision_confined=precision[0]
@@ -1303,26 +1297,127 @@ if __name__ == '__main__':
         percent_sim_unconfined=(sim_unconfined/len(arry_sim))*100
 
         logD_means_sim = []
+        ### new
+        
+        lys_total_clusters=[]
+        lys_total_clusters_interm=[]
+        ####
+        c2=0
         grouped_plot= sim_tracks2.sort_values(["FRAME"]).groupby("TRACK_ID")
+
         for i in grouped_plot["TRACK_ID"].unique():
+            change_counter=0
+            beginn_counter=0
+            value_counter=0
+            total_clusters=0
+           
+            #lys_total_clusters_interm=[]
             s= grouped_plot.get_group(i[0])
 
-            logD_mean = mean(np.log10(s["DIFFUSION"]))
+            ###insert sim clsuter counting here:
+            #print("heeere", s["GT"])
+
+            for j in range(len(s["GT"])):
+                #print("this is j", j, "this i", i, "this is c2", c2)
+                if value_counter==0:
+                    if s["GT"][c2]==0:
+                        beginn_counter+=1
+                        #print("heere", s["GT"][c2])
+               
+                else:
+                    if s["GT"][c2]==0:
+                        if s["GT"][c2-1]!=0:
+                            #print("heere2", s["GT"][c2])
+                            change_counter+=1
+                c2+=1
+            #c2+1
+                value_counter+=1
+
+            if beginn_counter!=0:
+                total_clusters+=1
+            total_clusters+=change_counter
+            
+            lys_total_clusters_interm.append(total_clusters)
+            #print("cluster_counter", total_clusters)
+            #print("lys_interm clsuters", lys_total_clusters_interm)
+        
+        lys_total_clusters.append(lys_total_clusters_interm)
+        #print("lys_total_clusters",lys_total_clusters)
+        #print(sum(lys_total_clusters))
+        
+
+        ## end
+        count3=0
+        lys_nr_of_cluster_points=[]
+        lys_time_in_clusters=[]
+        lys_nr_of_unclustered_points=[]
+        lys_time_per_cluster=[]
+        for i in grouped_plot["TRACK_ID"].unique():
+            
+            #print("here is i", i, count3)
+            #print(lys_total_clusters[0][count3])
+            s= grouped_plot.get_group(i[0])
+
+            logD_mean = mean(np.log10(s["DIFFUSION"]))+1 #add +1 since conversion from pixel back to microns
             logD_means_sim.append(logD_mean)
 
-        print("unique values",set(logD_means_sim))
+            clusters=s['GT'].value_counts()
+            
+            #print("this is clsuters",clusters)
+            if len(clusters)>1:
+                # if track contains points both in clusters and not in clusters, assign each type
+                lys_nr_of_cluster_points.append(clusters[0])
+                lys_nr_of_unclustered_points.append(clusters[1])
+                lys_time_in_clusters.append(dt*clusters[0])
+                #lys_sum_clusters.append(len(lys_interm_area[1:]))
+                lys_time_per_cluster.append(dt*clusters[0]/lys_total_clusters[0][count3])
+
+            else:
+                # if track only has one type of point, the "clusters[i]" object has only one entry, either 0 (points in clusters) or 1 (points not in clusters)
+                ind=clusters.index[0]
+                arry=clusters.array
+
+                if ind==1:
+                    # no cluster 
+                    lys_nr_of_cluster_points.append(0)
+                    lys_nr_of_unclustered_points.append(arry[0])
+                    lys_time_in_clusters.append(dt*0)
+                    lys_time_per_cluster.append(0)
+                    #lys_sum_clusters.append(0)
+                else:
+                    # all points of track are cluster points
+                    lys_nr_of_cluster_points.append(arry[0])
+                    lys_nr_of_unclustered_points.append(0)
+                    lys_time_in_clusters.append(dt*arry[0])
+                    lys_time_per_cluster.append(dt*arry[0])
+                    #lys_sum_clusters.append(1)
+        
+            count3+=1
+
+
+
+        ###########################
+
+        #print("unique values",set(logD_means_sim))
         logD_means_finger=list(mean_msd_df["logD"])
         logD_mean_cluster_finger=list(mean_msd_df["cluster_logD"])
         logD_difference=[]
         logD_cluster_difference=[]
-
+        print("logD sim",logD_means_sim)
+        print("log_D sim_clsuter",sim_cluster_logD )
+        print("logD_finger_tracks",logD_means_finger )
+        print("logD_finger_clsuter", logD_mean_cluster_finger)
         for i in range(len(logD_means_sim)):
             logD_difference.append(abs(logD_means_finger[i]-logD_means_sim[i]))
-            logD_cluster_difference.append(abs(logD_mean_cluster_finger[i]-sim_cluster_logD))
+            if logD_mean_cluster_finger[i]!=0:
+                logD_cluster_difference.append(abs(logD_mean_cluster_finger[i]-sim_cluster_logD))
+
+        #for i in range(len(logD_means_sim)):
+            #logD_difference.append(abs(logD_means_finger[i]-logD_means_sim[i]))
+            #logD_cluster_difference.append(abs(logD_mean_cluster_finger[i]-sim_cluster_logD))
         logD_mean_diff=mean(logD_difference)
         logD_mean_cluster_diff=mean(logD_cluster_difference)
-
-
+        print("differnce", logD_cluster_difference)
 
         print("percent_both_confined", percent_both_confined)
         print("percent_both_unconfined", percent_both_unconfined)
@@ -1343,6 +1438,9 @@ if __name__ == '__main__':
         print("support_unconfined", support_unconfined)
         print("log D difference", logD_mean_diff)
         print("cluster logD differnce", logD_mean_cluster_diff)
+        print("mean total clusters per_track", mean(lys_total_clusters[0]))
+        print("mean_time_in_clusters", mean(lys_time_in_clusters))
+        print("time_per_cluster", mean(lys_time_per_cluster))
 
        
         list_accuracy=[percent_both_confined, percent_both_unconfined, percent_correct, percent_correct_confined, percent_correct_unconfined,percent_sim_confined, percent_sim_unconfined,
@@ -1450,12 +1548,12 @@ if __name__ == '__main__':
     # folderpath1= paht to folder, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
     #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
     #
-    plotting_flag=0
-    dt=0.05
+    #plotting_flag=0
+    #dt=0.05
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
-    folderpath1=r"X:\labs\Lab_Gronnier\Michelle\TIRFM\10.9.24_At_FLS2_MADs\FLS_BAK1_3187-1\plant1_cleaned"
+    #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\TIRFM\10.9.24_At_FLS2_MADs\FLS_BAK1_3187-1\plant1_cleaned"
 
-    wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+    #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
 
     ############################################
 
@@ -1465,7 +1563,7 @@ if __name__ == '__main__':
     plotting_flag=0
     dt=0.1
     plotting_saving_nice_image_flag=0
-    f1=r"C:\Users\miche\Desktop\simualted tracks\final_sim_values_short_sim3.csv"
+    f1=r"C:\Users\miche\Desktop\simualted tracks\test_values3.csv"
     read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag)
 
    
