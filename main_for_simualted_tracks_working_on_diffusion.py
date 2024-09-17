@@ -155,7 +155,7 @@ if __name__ == '__main__':
                 list_final_accuracy.append(list_accuracy)
             
         
-        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff" ])
+        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track" ])
   
         df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
         path_out_accuracy_lys=f1.split(".csv")
@@ -1394,6 +1394,10 @@ if __name__ == '__main__':
         
             count3+=1
 
+        mean_total_clusters_per_track=mean(lys_total_clusters[0])
+        total_time_in_clusters=mean(lys_time_in_clusters)
+        mean_time_per_cluster_per_track=mean(lys_time_per_cluster)
+
 
 
         ###########################
@@ -1438,13 +1442,13 @@ if __name__ == '__main__':
         print("support_unconfined", support_unconfined)
         print("log D difference", logD_mean_diff)
         print("cluster logD differnce", logD_mean_cluster_diff)
-        print("mean total clusters per_track", mean(lys_total_clusters[0]))
-        print("mean_time_in_clusters", mean(lys_time_in_clusters))
-        print("time_per_cluster", mean(lys_time_per_cluster))
+        print("mean total clusters per_track", mean_total_clusters_per_track)
+        print("total time in clusters per track", total_time_in_clusters)
+        print("mean time per_cluster",mean_time_per_cluster_per_track )
 
        
         list_accuracy=[percent_both_confined, percent_both_unconfined, percent_correct, percent_correct_confined, percent_correct_unconfined,percent_sim_confined, percent_sim_unconfined,
-                      precision_confined,  precision_unconfined,recall_confined, recall_unconfined,  fbeta_confined,fbeta_confined,fbeta_confined, support_confined, support_unconfined, logD_mean_diff, logD_mean_cluster_diff ]
+                      precision_confined,  precision_unconfined,recall_confined, recall_unconfined,  fbeta_confined,fbeta_confined,fbeta_confined, support_confined, support_unconfined, logD_mean_diff, logD_mean_cluster_diff, mean_total_clusters_per_track, total_time_in_clusters, mean_time_per_cluster_per_track ]
 
         return list_accuracy
 
