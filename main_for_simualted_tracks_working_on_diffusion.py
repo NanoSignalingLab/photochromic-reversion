@@ -155,7 +155,7 @@ if __name__ == '__main__':
                 list_final_accuracy.append(list_accuracy)
             
         
-        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track" ])
+        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" ])
   
         df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
         path_out_accuracy_lys=f1.split(".csv")
@@ -170,7 +170,7 @@ if __name__ == '__main__':
         return df_final_parameters_out
     ##########################
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=10
+        N=100
         T=100
         D=0.001
         DS2=1
@@ -1352,6 +1352,7 @@ if __name__ == '__main__':
         lys_time_in_clusters=[]
         lys_nr_of_unclustered_points=[]
         lys_time_per_cluster=[]
+        lys_all_points_in_clusters=[]
         for i in grouped_plot["TRACK_ID"].unique():
             
             #print("here is i", i, count3)
@@ -1371,6 +1372,7 @@ if __name__ == '__main__':
                 lys_time_in_clusters.append(dt*clusters[0])
                 #lys_sum_clusters.append(len(lys_interm_area[1:]))
                 lys_time_per_cluster.append(dt*clusters[0]/lys_total_clusters[0][count3])
+                lys_all_points_in_clusters.append(clusters[0])
 
             else:
                 # if track only has one type of point, the "clusters[i]" object has only one entry, either 0 (points in clusters) or 1 (points not in clusters)
@@ -1397,6 +1399,10 @@ if __name__ == '__main__':
         mean_total_clusters_per_track=mean(lys_total_clusters[0])
         total_time_in_clusters=mean(lys_time_in_clusters)
         mean_time_per_cluster_per_track=mean(lys_time_per_cluster)
+        if len(lys_nr_of_cluster_points)>0:
+            mean_clustered_points=mean(lys_nr_of_cluster_points)
+        else:
+            mean_clustered_points=lys_nr_of_cluster_points[0]
 
 
 
@@ -1448,7 +1454,7 @@ if __name__ == '__main__':
 
        
         list_accuracy=[percent_both_confined, percent_both_unconfined, percent_correct, percent_correct_confined, percent_correct_unconfined,percent_sim_confined, percent_sim_unconfined,
-                      precision_confined,  precision_unconfined,recall_confined, recall_unconfined,  fbeta_confined,fbeta_confined,fbeta_confined, support_confined, support_unconfined, logD_mean_diff, logD_mean_cluster_diff, mean_total_clusters_per_track, total_time_in_clusters, mean_time_per_cluster_per_track ]
+                      precision_confined,  precision_unconfined,recall_confined, recall_unconfined,  fbeta_confined,fbeta_confined,fbeta_confined, support_confined, support_unconfined, logD_mean_diff, logD_mean_cluster_diff, mean_total_clusters_per_track, total_time_in_clusters, mean_time_per_cluster_per_track,mean_clustered_points ]
 
         return list_accuracy
 
@@ -1567,7 +1573,7 @@ if __name__ == '__main__':
     plotting_flag=0
     dt=0.1
     plotting_saving_nice_image_flag=0
-    f1=r"C:\Users\miche\Desktop\simualted tracks\test_values3.csv"
+    f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag)
 
    
