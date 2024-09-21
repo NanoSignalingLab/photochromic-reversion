@@ -54,22 +54,15 @@ warnings.filterwarnings('ignore')
 if __name__ == '__main__':
     
     #################################
-    # global variables:
-    # remove seeds after testing:!
+   
     import stochastic
     #stochastic.random.seed(3)
     #np.random.seed(7)
 
-    min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
-    dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
-    # f1= input path to file to be analyzed (see example below)
-    # f2= path where images should be stored (eg. here stored at same location as input file)
-
+    
     ##################################
     # if we have csv with tracks: for 1 file only:
-    f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\Long_tracks_cell6-3_1476.csv"
-    f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\confinement_0_tracks.csv"
-    f2=f1
+    
     def wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag): # works I guess
         image_path_lys=f1.split("csv")
         image_path=image_path_lys[0] +"svg"
@@ -124,7 +117,6 @@ if __name__ == '__main__':
         df_values=pd.read_csv(f1)
         image_path_lys=f1.split("csv")
         image_path=image_path_lys[0]
-        print("this is image_path", image_path)
     
 
         df_values= df_values.iloc[: , 1:]
@@ -151,7 +143,6 @@ if __name__ == '__main__':
             if tracks_saving_flag==1:
                 path_out_simulated_tracks_lys=f1.split(".csv")
                 path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
-                print("sim_tracks_patjh",path_out_simualted_tracks )
                 sim_tracks_2.to_csv(path_out_simualted_tracks)
                 
             if index==0:
@@ -1549,38 +1540,62 @@ if __name__ == '__main__':
 
     ############################################
     # run final wrapper functions:
+    ############################################
+    ## for one file with spt-tracks:
 
-    ## for one file woth tracks:
-    # f1= input, f2=outputpath, (can be the same), min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\TIRFM\10.9.24_At_FLS2_MADs\FLS_BAK1_3187-1\plant1_cleaned\cleaned_trackmate_p1_009_allspots.csv"
+    # f1= input path to file to be analyzed (see example below)
+    # f2= outpath where images should be stored (eg. here stored at same location as input file)
+    # min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
+    # dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
+    # plotting_flag =0 (0= no plotting, 1=plotting)
+    # function:
+    # wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
+
+    # example:
+    #f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\Long_tracks_cell6-3_1476.csv"
+    #f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\confinement_0_tracks.csv"
     #f2=f1
-    #plotting_flag=0
     #dt=0.05
-
+    #plotting_flag=0
+    #min_track_length=25
 
     #wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
     ############################################
-
     ## for folder with multiple real tracks:
-    # folderpath1= paht to folder, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
-    #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
-    #
-    #plotting_flag=0
+
+    # folderpath1 = path to folder, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
+    # function:
+    # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+    
+    # example:
     #dt=0.05
+    #plotting_flag=0
+    #min_track_length=25
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\11.9.24_At_BRI1\BRI1_BL\plant4_cleaned"
 
     #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
 
     ############################################
-
     ## for simulating tracks based on parameters stored in a file:
-    # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
-    # f1= input path to values for sim, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1= plotting)
+
+    # f1= input path to values for sim (a .csv file)
+    # dt=0.1 
+    # plotting_flag=0
+    # min_track_length=25
+    # plotting_saving_nice_image_flag=0 (0=no saving, 1=saving)
+    # tracks_saving_flag=0 (0= no saving, 1=saving tracks.csv)
+    # function:
+    # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
+    
+    # example:
+
     plotting_flag=0
     dt=0.1
+    min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=1
+    
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\test_values_1.csv"
     read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
