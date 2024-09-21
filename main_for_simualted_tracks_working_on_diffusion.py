@@ -120,10 +120,11 @@ if __name__ == '__main__':
 
 
     ####################
-    def read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag ):
+    def read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag ):
         df_values=pd.read_csv(f1)
         image_path_lys=f1.split("csv")
         image_path=image_path_lys[0]
+        print("this is image_path", image_path)
     
 
         df_values= df_values.iloc[: , 1:]
@@ -147,7 +148,11 @@ if __name__ == '__main__':
             if plotting_saving_nice_image_flag==1:
                 image_path1=image_path+str(index)+".tiff"
                 plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
-
+            if tracks_saving_flag==1:
+                path_out_simulated_tracks_lys=f1.split(".csv")
+                path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
+                print("sim_tracks_patjh",path_out_simualted_tracks )
+                sim_tracks_2.to_csv(path_out_simualted_tracks)
                 
             if index==0:
                 list_final_accuracy=[list_accuracy]
@@ -170,7 +175,7 @@ if __name__ == '__main__':
         return df_final_parameters_out
     ##########################
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=100
+        N=10
         T=100
         D=0.001
         DS2=1
@@ -211,6 +216,8 @@ if __name__ == '__main__':
                     arry_final=np.vstack((arry_final, arry_temp))
                 
                 tracks_df=pd.DataFrame(arry_final, columns=["POSITION_X", "POSITION_Y", "pm1", "DIFFUSION","pm2", "TRACK_ID", "POSITION_T", "FRAME"])
+
+        
         return tracks_df
 
 
@@ -1561,7 +1568,7 @@ if __name__ == '__main__':
     #plotting_flag=0
     #dt=0.05
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
-    #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\TIRFM\10.9.24_At_FLS2_MADs\FLS_BAK1_3187-1\plant1_cleaned"
+    #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\11.9.24_At_BRI1\BRI1_BL\plant4_cleaned"
 
     #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
 
@@ -1573,8 +1580,10 @@ if __name__ == '__main__':
     plotting_flag=0
     dt=0.1
     plotting_saving_nice_image_flag=0
-    f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
-    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag)
+    tracks_saving_flag=1
+    #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
+    f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\test_values_1.csv"
+    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
    
     
