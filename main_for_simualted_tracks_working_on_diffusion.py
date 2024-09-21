@@ -47,6 +47,8 @@ from os.path import isfile, join
 import warnings
 import andi_datasets
 from andi_datasets.models_phenom import models_phenom
+from sklearn import metrics
+from math import nan
 
 
 warnings.filterwarnings('ignore')
@@ -79,7 +81,8 @@ if __name__ == '__main__':
         plotting_final_image(deep_df_short2,lys_points2, image_path)
         make_fingerprint_file(f2, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
 
-    #### add wrapper for muliple csv files in one folder, make one result excel per file:
+    ####################################
+    # if we have multiple csv with tracks in a folder, makes one results excel per file: 
 
     def wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag):
         onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
@@ -88,7 +91,6 @@ if __name__ == '__main__':
             if i.endswith(".csv"):
                 path=os.path.join(folderpath1, i)
                 print(path)
-                ##insert all teh stuff here:
                 image_path_lys=path.split("csv")
                 image_path=image_path_lys[0] +"svg"
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
@@ -106,19 +108,14 @@ if __name__ == '__main__':
 
 
 
-    ##################################
-    # if we dont: need to simulate tracks with ANDI:
-    # read in only values for grid paramters for simualtion:
+    ##########################################
+    # if we simulate tracks with ANDI and read in only values for grid paramters for simulation:
 
-
-
-    ####################
     def read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag ):
         df_values=pd.read_csv(f1)
         image_path_lys=f1.split("csv")
         image_path=image_path_lys[0]
     
-
         df_values= df_values.iloc[: , 1:]
         
         for index, row in df_values.iterrows():
@@ -162,9 +159,9 @@ if __name__ == '__main__':
 
 
 
-
         return df_final_parameters_out
-    ##########################
+    #############################################
+
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
         N=10
         T=100
@@ -183,7 +180,7 @@ if __name__ == '__main__':
                                                             trans = trans_value, # Boundary transmittance
                                                             alphas=[1, alphas_value])
         return trajs_model5, labels_model5
-    ################################
+    ################################################
     def make_dataset_csv(traj, labels):
         for i in range (0, traj.shape[1]):
                 arry_temp=traj[:, i]
@@ -212,7 +209,7 @@ if __name__ == '__main__':
         return tracks_df
 
 
-    ##################################
+    ############################################
     
 
     #"""Compute fingerprints"""
@@ -221,7 +218,9 @@ if __name__ == '__main__':
         #print("Generating fingerprints")
       
 
-    ###################### function to directly load the cleaned trackmate files:
+    ##############################################
+    # function to directly load the cleaned trackmate files:
+
     def load_file(path2, min_track_length):
         df=pd.read_csv(path2)
         deep_df, list_traces, lys_x, lys_y, msd_df= make_deep_df(df, min_track_length)
@@ -247,7 +246,6 @@ if __name__ == '__main__':
                 lys_x.append(pos_x)
                 lys_y.append(pos_y)
                 m= np.column_stack(( pos_x, pos_y ))
-                ### insert diffusion here
                 msd, rmsd = compute_msd(m)
                 frames= list(s["FRAME"])
                 n= np.column_stack((msd,(frames[1:]),tid[1:]))
@@ -259,8 +257,6 @@ if __name__ == '__main__':
 
                 msd_df=pd.DataFrame(msd_all, columns=["msd", "frame", "track_id"])
 
-
-                ## till here
                 list_traces.append(m)
                 m2=np.column_stack(( tid, pos_x, pos_y, pos_t)) 
 
@@ -272,8 +268,8 @@ if __name__ == '__main__':
         deep_all_df=pd.DataFrame(deep_all, columns=["tid", "pos_x", "pos_y", "pos_t"])
 
         return deep_all_df, list_traces, lys_x, lys_y, msd_df
-    ############################# end function loading
-    ### new function for MSD and diffusion:
+    #############################################
+    # function for MSD and diffusion:
 
     def compute_msd(trajectory):
         totalsize=len(trajectory)
@@ -285,32 +281,8 @@ if __name__ == '__main__':
         rmsd = np.sqrt(msd)
         return msd, rmsd 
     
-    # def make_msd_df(df):
-    #     count2=0 # added
-    #     grouped= df.sort_values(["FRAME"]).groupby("TRACK_ID")
-    #     msd_all=[]
-    #     for i in grouped["TRACK_ID"].unique():
-
-    #         s= grouped.get_group(i[0])
-    #         if s.shape[0]>5: #added
-    #             count2+=1 #added
-    #             frames= list(s["FRAME"])
-    #             tid=list(s["TRACK_ID"])
-    #             #print(frames)
-
-    #             col= s[["POSITION_X", "POSITION_Y"]]
-    #             t= col.to_numpy()
-    #             msd, rmsd = compute_msd(t)
-    #             m= np.column_stack((msd,(frames[1:]),tid[1:]))
-    #             #print(m)
-    #             if(count2== 1):
-    #                 msd_all = m
-    #             else:
-    #                 msd_all = np.vstack((msd_all, m))
-
-    #         msd_df=pd.DataFrame(msd_all, columns=["msd", "frame", "track_id"])
-    # # print(msd_df)
-    #     return msd_df
+    ##############################################
+    # function for logDs:
 
     def logD_from_mean_MSD(MSDs):
 
@@ -344,12 +316,6 @@ if __name__ == '__main__':
         return track_means_df
 
 
-
-
-
-
-
-   
         ############################ run the model:
 
         # if not os.path.isfile("HMMjson"):
@@ -381,7 +347,9 @@ if __name__ == '__main__':
         #     model = HiddenMarkovModel.from_json(json_s)
         #     print(model)
 
-    #### changed:
+    ################################################
+    # function loading HMM model:
+
     def run_traces_wrapper(traces, dt): 
         print("loading HMM model")
         s = "HMMjson"
@@ -411,11 +379,8 @@ if __name__ == '__main__':
             lys_states.append(states)
         return train_result, states, lys_states
 
-
-        #### till here
-        ##################################################
-
-        ############# function for consecutive features:
+    ##################################################
+    # function for consecutive features:
         
     def consecutive(col, seg_len, threshold, deep_df): # col= string of cl indf, seg_len=segment length of consecutive, threshold number
         grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
@@ -515,9 +480,9 @@ if __name__ == '__main__':
 
         return deep_df
 
-        ################### end distance
+    ################### end distance
 
-        ################### calulcate angles:
+    ################### calulcate angles:
 
     def angle3pt(a, b, c):
         ang = math.degrees(
@@ -544,7 +509,7 @@ if __name__ == '__main__':
         lys_angles.append(0)
         deep_df["angles"]=lys_angles
 
-        ######### make consecutive angles:
+        ### make consecutive angles:
         print("Computing angles")
 
         angle_cont_lys=consecutive("angles", 10, 600, deep_df)
@@ -556,9 +521,9 @@ if __name__ == '__main__':
 
         return deep_df
 
-            ###################### end anlges calc
+    ###################### end anlges calc
 
-        ###################### function to calculate KDE:
+    ###################### function to calculate KDE:
     def make_KDE_per_track(lys_x, lys_y):
         lys_z=[]
         lys_z_norm=[]
@@ -577,7 +542,10 @@ if __name__ == '__main__':
         out2 = np.concatenate(lys_z_norm).ravel().tolist()
         return out, out2
         
-        ######################################### end function
+    #################### end function
+
+    #################### function for KDE:
+
     def calculate_KDE_wrapper(lys_x, lys_y, deep_df):
         print("Computing KDE")
         out, out2 =make_KDE_per_track(lys_x, lys_y)
@@ -606,8 +574,8 @@ if __name__ == '__main__':
 
         ########################## KDE done
 
-        ######################### function to calculate intersections:
-        ##### check line intersection: for consistency: 0 = intersection, 1 = not
+    ######################### function to calculate intersections:
+    # check line intersection: for consistency: 0 = intersection, 1 = not
     def calc_intersections(lys_x, lys_y):
 
         lys_x=list(chain.from_iterable(lys_x))
@@ -687,7 +655,7 @@ if __name__ == '__main__':
 
         return inter_flat1, inter_flat2, inter_flat3, inter_flat4
         
-        ################################################## end intersection function
+    ########################## end intersection function
         
     def calculate_intersections_wrapper(lys_x, lys_y, deep_df):
         print("Computing intersections")
@@ -719,7 +687,7 @@ if __name__ == '__main__':
         ########################### end intersections
     
 
-        ########################## get fingertprint states:
+    ########################## get fingertprint states:
 
     def fingerprints_states_wrapper(lys_states, deep_df):
 
@@ -771,8 +739,9 @@ if __name__ == '__main__':
         return deep_df
     
     
-        ###########################################
-        ############## plot all features togheter (plus convex hull):
+    ########################################### end fingerprint states wrapper
+
+    ############## plot all features togheter (plus convex hull):
     def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag): # add ture =1or false =0 for plotting yes or no
         print("plotting all features")
 
@@ -929,7 +898,7 @@ if __name__ == '__main__':
             plt.show()
         return grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df
 
-        ###################################################################
+    ################################################################### end plotting plus convex hull1
         
     def convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short):
         print("calculating points in hull")
@@ -1036,7 +1005,7 @@ if __name__ == '__main__':
         plt.show()
 
      
-        ########################### function to make a nice excel fiel with all the parameters per track:
+    ########################### function to make a nice excel fiel with all the parameters per track:
 
     def make_fingerprint_file(f2, train_result, deep_df_short, dt, mean_msd_df): 
         lys_string=f2.split("\\")
@@ -1120,9 +1089,6 @@ if __name__ == '__main__':
         fingerprints_df_out["logD_cluster"]=mean_msd_df["cluster_logD"]
 
 
-
-        #print(fingerprints_df_out)
-
         outpath4=outpath3+"_fingerprint_results"+".xlsx"
         writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
         fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
@@ -1132,12 +1098,9 @@ if __name__ == '__main__':
     
     ############################### end function 
         
-    
+    ############################### Function for consecutive GT:
+    ##  curate sim da: all the things where pm is confined but for less than5 points -> make unconfiend!
 
-        ################################
-        ## function calcualting accuracy:
-
-        ###   curate sim da: all the things where pm is confine dbit for less than5 points -> make unconfiend!!!!!
     def make_GT_consecutive(sim_tracks_test):
         sim_tracks = sim_tracks_test
         sim_tracks["pm2"]= sim_tracks["pm2"].replace(1,0)
@@ -1159,10 +1122,10 @@ if __name__ == '__main__':
                     else:
                         lys_six.append([1]*1) 
                         
-                    #print("herrrreee", lys_six)
+                    
                 else:
                     if sum(s["pm2"][c3:c3+6])==0: # was +12
-                    # print("nooooow 22222222")
+                    
                         lys_six.append([0]*1)
                     elif sum(s["pm2"][c3:c3+6])!=0 and sum(s["pm2"][c3:c3+5])==0: # was +12 adn +11
                         lys_six.append([0]*5) #was *11
@@ -1182,26 +1145,24 @@ if __name__ == '__main__':
         
         sim_tracks["GT"]=lys_final_flat
         return sim_tracks
-    ######
-    ##below include calucaltion of numner of clsuters per track!
-
-        #####################################
+    
+    
+    ##################################### 
+    # function to calculate accuracy:
 
     def calculate_accuracy(sim_tracks2, finger_tracks, mean_msd_df):
         print("calculate accuracy",sim_tracks2["pm2"])
-        #sim_tracks2=make_GT_consecutive( sim_tracks) # added consecutive in clsuters
-        ###cahnge all the  21 angain cause now its zero and 1
+      
         arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
         arry_finger=finger_tracks["in_hull"] # if 0= confined, 1=not
-        #print("heere arryfinger", arry_finger)
-        #print("heere array_sim", arry_sim)
+       
         both_confined=0
         both_unconfined=0
         sim_confined=0
         sim_unconfined=0
         sim_total_confined=0
         sim_total_unconfined=0
-        sim_cluster_logD=np.log10(min(sim_tracks2["DIFFUSION"]))+1 # add 1 logD for conversion back to microns
+        
         
         for i in range(0,len(arry_sim)):
             if arry_sim[i]==0: # confined
@@ -1222,17 +1183,14 @@ if __name__ == '__main__':
                     sim_unconfined+=1
                     sim_total_unconfined+=1
 
- # both_confined = True postive
- # both_uncofined= True negative
- # sim_confined= False negative
- # sim_unconfined= false postivie
+        # both_confined = True postive
+        # both_uncofined= True negative
+        # sim_confined= False negative
+        # sim_unconfined= false postivie
 
         percent_both_confined=(both_confined/len(arry_sim))*100
         percent_both_unconfined=(both_unconfined/len(arry_sim))*100
         percent_correct=((both_confined+both_unconfined)/len(arry_sim))*100 # this is officially accuracy
-       
-        from sklearn import metrics
-        from math import nan
        
         precision, recall, fbeta, support=metrics.precision_recall_fscore_support(arry_sim, arry_finger, pos_label=0)
         try:
@@ -1276,8 +1234,6 @@ if __name__ == '__main__':
             support_unconfined=nan
         
 
-
-
         if sim_total_confined!=0:
             percent_correct_confined=(both_confined/sim_total_confined)*100
             #precision=(both_confined/(both_confined+sim_unconfined))*100 # this is precision officially
@@ -1294,12 +1250,12 @@ if __name__ == '__main__':
         percent_sim_confined=(sim_confined/len(arry_sim))*100
         percent_sim_unconfined=(sim_unconfined/len(arry_sim))*100
 
-        logD_means_sim = []
-        ### new
+       
+        ########### calculate mean cluster per track:
         
         lys_total_clusters=[]
         lys_total_clusters_interm=[]
-        ####
+        
         c2=0
         grouped_plot= sim_tracks2.sort_values(["FRAME"]).groupby("TRACK_ID")
 
@@ -1309,26 +1265,18 @@ if __name__ == '__main__':
             value_counter=0
             total_clusters=0
            
-            #lys_total_clusters_interm=[]
             s= grouped_plot.get_group(i[0])
 
-            ###insert sim clsuter counting here:
-            #print("heeere", s["GT"])
-
             for j in range(len(s["GT"])):
-                #print("this is j", j, "this i", i, "this is c2", c2)
                 if value_counter==0:
                     if s["GT"][c2]==0:
                         beginn_counter+=1
-                        #print("heere", s["GT"][c2])
                
                 else:
                     if s["GT"][c2]==0:
                         if s["GT"][c2-1]!=0:
-                            #print("heere2", s["GT"][c2])
                             change_counter+=1
                 c2+=1
-            #c2+1
                 value_counter+=1
 
             if beginn_counter!=0:
@@ -1336,21 +1284,19 @@ if __name__ == '__main__':
             total_clusters+=change_counter
             
             lys_total_clusters_interm.append(total_clusters)
-            #print("cluster_counter", total_clusters)
-            #print("lys_interm clsuters", lys_total_clusters_interm)
         
         lys_total_clusters.append(lys_total_clusters_interm)
-        #print("lys_total_clusters",lys_total_clusters)
-        #print(sum(lys_total_clusters))
         
+        ############### end
+        # calucalte mean number of points in clusters, mean time in clusters 
 
-        ## end
         count3=0
         lys_nr_of_cluster_points=[]
         lys_time_in_clusters=[]
         lys_nr_of_unclustered_points=[]
         lys_time_per_cluster=[]
         lys_all_points_in_clusters=[]
+        logD_means_sim = []
         for i in grouped_plot["TRACK_ID"].unique():
             
             #print("here is i", i, count3)
@@ -1360,7 +1306,7 @@ if __name__ == '__main__':
             logD_mean = mean(np.log10(s["DIFFUSION"]))+1 #add +1 since conversion from pixel back to microns
             logD_means_sim.append(logD_mean)
 
-            clusters=s['GT'].value_counts()
+            clusters=s['GT'].value_counts() # number of total clustered/ unclustered points
             
             #print("this is clsuters",clusters)
             if len(clusters)>1:
@@ -1407,6 +1353,7 @@ if __name__ == '__main__':
         ###########################
 
         #print("unique values",set(logD_means_sim))
+        sim_cluster_logD=np.log10(min(sim_tracks2["DIFFUSION"]))+1 # add 1 logD for conversion back to microns
         logD_means_finger=list(mean_msd_df["logD"])
         logD_mean_cluster_finger=list(mean_msd_df["cluster_logD"])
         logD_difference=[]
@@ -1456,9 +1403,8 @@ if __name__ == '__main__':
 
         return list_accuracy
 
-        #calculate_accuracy(tracks_input, deep_df_short)
-    
-    ## insert plotting for GT and finger here:
+    #####################################################
+    ## function for plotting for GT and finger here:
     def plot_GT_and_finger(sim_tracks2, finger_tracks, image_path1):
        
         arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
@@ -1466,8 +1412,7 @@ if __name__ == '__main__':
 
         finger_tracks["compairison_level"]=[0]*len(arry_sim)
 
-
-## make new one: "zero both confined", "one"= both unconfined, "two = sim_confined", "three= finger confined"
+        ## make: "zero"= both confined, "one"= both unconfined, "two" = sim_confined, "three"= finger confined
 
         for i in range(0,len(arry_sim)):
                 if arry_sim[i]==0: # confined
@@ -1496,8 +1441,6 @@ if __name__ == '__main__':
                         #sim_unconfined+=1
                         #sim_total_unconfined+=1
 
-
-        #final_pal=dict(zero= "#06fcde" , one= "#808080")
         final_pal=dict(zero= "#78d151",one= '#2a788e',two= '#ff3300', three= "#fde624") #all colors 
         # zero= both confined = green= #78d151
         # one= both unconfined= blue= #2a788e
