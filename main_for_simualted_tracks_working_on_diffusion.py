@@ -1337,16 +1337,17 @@ if __name__ == '__main__':
                     lys_time_in_clusters.append(dt*arry[0])
                     lys_time_per_cluster.append(dt*arry[0])
                     #lys_sum_clusters.append(1)
+                    lys_all_points_in_clusters.append(clusters[0])
         
             count3+=1
 
         mean_total_clusters_per_track=mean(lys_total_clusters[0])
         total_time_in_clusters=mean(lys_time_in_clusters)
         mean_time_per_cluster_per_track=mean(lys_time_per_cluster)
-        if len(lys_nr_of_cluster_points)>0:
-            mean_clustered_points=mean(lys_nr_of_cluster_points)
+        if len(lys_all_points_in_clusters)>0:
+            mean_clustered_points=mean(lys_all_points_in_clusters)
         else:
-            mean_clustered_points=lys_nr_of_cluster_points[0]
+            mean_clustered_points=lys_all_points_in_clusters[0]
 
 
 
@@ -1537,7 +1538,7 @@ if __name__ == '__main__':
     dt=0.1
     min_track_length=25
     plotting_saving_nice_image_flag=0
-    tracks_saving_flag=1
+    tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\test_values_1.csv"
