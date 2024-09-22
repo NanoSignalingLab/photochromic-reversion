@@ -163,7 +163,7 @@ if __name__ == '__main__':
     #############################################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=10
+        N=100
         T=100
         D=0.001
         DS2=1
@@ -1286,6 +1286,7 @@ if __name__ == '__main__':
             lys_total_clusters_interm.append(total_clusters)
         
         lys_total_clusters.append(lys_total_clusters_interm)
+        print("lystotal clsuters", lys_total_clusters)
         
         ############### end
         # calucalte mean number of points in clusters, mean time in clusters 
@@ -1307,6 +1308,7 @@ if __name__ == '__main__':
             logD_means_sim.append(logD_mean)
 
             clusters=s['GT'].value_counts() # number of total clustered/ unclustered points
+            print("this clsuters0", clusters)
             
             #print("this is clsuters",clusters)
             if len(clusters)>1:
@@ -1316,7 +1318,7 @@ if __name__ == '__main__':
                 lys_time_in_clusters.append(dt*clusters[0])
                 #lys_sum_clusters.append(len(lys_interm_area[1:]))
                 lys_time_per_cluster.append(dt*clusters[0]/lys_total_clusters[0][count3])
-                lys_all_points_in_clusters.append(clusters[0])
+                lys_all_points_in_clusters.append(clusters[0]/lys_total_clusters[0][count3])
 
             else:
                 # if track only has one type of point, the "clusters[i]" object has only one entry, either 0 (points in clusters) or 1 (points not in clusters)
@@ -1337,7 +1339,8 @@ if __name__ == '__main__':
                     lys_time_in_clusters.append(dt*arry[0])
                     lys_time_per_cluster.append(dt*arry[0])
                     #lys_sum_clusters.append(1)
-                    lys_all_points_in_clusters.append(clusters[0])
+                    lys_all_points_in_clusters.append(clusters[0]/lys_total_clusters[0][count3])
+                    
         
             count3+=1
 
@@ -1348,6 +1351,8 @@ if __name__ == '__main__':
             mean_clustered_points=mean(lys_all_points_in_clusters)
         else:
             mean_clustered_points=lys_all_points_in_clusters[0]
+        print("points in clsuter", lys_all_points_in_clusters)
+        print("mean",mean_clustered_points)
 
 
 
@@ -1537,11 +1542,11 @@ if __name__ == '__main__':
     plotting_flag=0
     dt=0.1
     min_track_length=25
-    plotting_saving_nice_image_flag=0
+    plotting_saving_nice_image_flag=1
     tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
-    f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\test_values_1.csv"
+    f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\test_values_2.csv"
     read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
    
