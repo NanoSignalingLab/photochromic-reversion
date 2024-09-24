@@ -29,7 +29,6 @@ from functools import reduce
 import operator 
 from matplotlib import rcParams
 from matplotlib.collections import LineCollection
-from os.path import isfile, join
 from itertools import chain
 import math
 from scipy.stats import gaussian_kde
@@ -58,8 +57,8 @@ if __name__ == '__main__':
     #################################
    
     import stochastic
-    #stochastic.random.seed(3)
-    #np.random.seed(7)
+    stochastic.random.seed(3)
+    np.random.seed(7)
 
     
     ##################################
@@ -163,8 +162,8 @@ if __name__ == '__main__':
     #############################################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=100
-        T=100
+        N=500
+        T=200
         D=0.001
         DS2=1
         L = 1.5*128 #enalrge field ov fiew to avoid boundy effects
@@ -178,6 +177,7 @@ if __name__ == '__main__':
                                                             comp_center = compartments_center,
                                                             r = radius_compartments,
                                                             trans = trans_value, # Boundary transmittance
+                                                            T=T,
                                                             alphas=[1, alphas_value])
         return trajs_model5, labels_model5
     ################################################
@@ -833,6 +833,7 @@ if __name__ == '__main__':
         lys_points_big2=[]
         lys_logD_cluster2=[]
         lys_msd_cluster2=[]
+        
         for j in range (len(lys_points2)):
             lys_area=[]
             lys_perimeter=[]
@@ -840,6 +841,7 @@ if __name__ == '__main__':
             lys_points_big=[]
             lys_logD_cluster=[]
             lys_msd_cluster=[]
+          
             for i in range(len(lys_points2[j])):
                 points=lys_points2[j][i] 
                 if len(points)>5:
@@ -849,7 +851,7 @@ if __name__ == '__main__':
                     ratio=hull.area/hull.volume
                     if ratio<105:
                         lys_points_big.append(points)
-                        ###added here:
+                     
                         if len(points)>5:
                             msd, rmsd = compute_msd(points)
                             mean_msd, logD = logD_from_mean_MSD(msd)
@@ -866,10 +868,13 @@ if __name__ == '__main__':
                                 plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
 
                             plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1)
+             
+
             lys_area2.append(lys_area)
             lys_perimeter2.append(lys_perimeter)
             lys_hull2.append(lys_hull)
             lys_points_big2.append(lys_points_big)
+          
             #print("lys_points len",len(lys_points_big))
             if len(lys_points_big)>0:
                 #print("lys_msd_clsuter",lys_msd_cluster)
@@ -892,6 +897,8 @@ if __name__ == '__main__':
 
         mean_msd_df["cluster_msd"] = lys_msd_cluster2
         mean_msd_df["cluster_logD"]=lys_logD_cluster2
+        #deep_df_short["in_hull1"]=lys_in_hull2
+        #print(deep_df_short)
 
         if plotting_flag==1:
             plt.axis('equal') 
@@ -899,6 +906,8 @@ if __name__ == '__main__':
         return grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df
 
     ################################################################### end plotting plus convex hull1
+   
+
         
     def convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short):
         print("calculating points in hull")
@@ -922,14 +931,22 @@ if __name__ == '__main__':
                 for j in range(len(lys_points_big2[c2])): 
 
                     points=lys_points_big2[c2][j]
-                
-                    hull=lys_hull2[c2][j]
-                    hull_path = Path( points[hull.vertices] )
-                    
-                    if hull_path.contains_point((lys_x[i], lys_y[i]))==True: 
 
+
+                
+                    #hull=lys_hull2[c2][j]
+                    #hull_path = Path( points[hull.vertices] )
+
+                    ### test without below:
+                    if [lys_x[i], lys_y[i]] in points:
                         interm_lys.append(0)
                         area=lys_area2[c2][j]
+
+                    
+                   # if hull_path.contains_point((lys_x[i], lys_y[i]))==True: 
+
+                       # interm_lys.append(0)
+                        #area=lys_area2[c2][j]
                 
                 if len(interm_lys)>0:
                     lys_the_last.append(0)
@@ -1219,9 +1236,9 @@ if __name__ == '__main__':
             fbeta_confined=nan
 
         try:
-            fbeta_confined=fbeta[1]
+            fbeta_unconfined=fbeta[1]
         except IndexError:
-            fbeta_confined=nan
+            fbeta_unconfined=nan
 
         try:
             support_confined=support[0]
@@ -1286,7 +1303,7 @@ if __name__ == '__main__':
             lys_total_clusters_interm.append(total_clusters)
         
         lys_total_clusters.append(lys_total_clusters_interm)
-        print("lystotal clsuters", lys_total_clusters)
+        #print("lystotal clsuters", lys_total_clusters)
         
         ############### end
         # calucalte mean number of points in clusters, mean time in clusters 
@@ -1308,7 +1325,7 @@ if __name__ == '__main__':
             logD_means_sim.append(logD_mean)
 
             clusters=s['GT'].value_counts() # number of total clustered/ unclustered points
-            print("this clsuters0", clusters)
+            #print("this clsuters0", clusters)
             
             #print("this is clsuters",clusters)
             if len(clusters)>1:
@@ -1350,8 +1367,8 @@ if __name__ == '__main__':
         if len(lys_all_points_in_clusters)>0:
             mean_clustered_points=mean(lys_all_points_in_clusters)
         else:
-            mean_clustered_points=lys_all_points_in_clusters[0]
-        print("points in clsuter", lys_all_points_in_clusters)
+            mean_clustered_points=0
+        #print("points in clsuter", lys_all_points_in_clusters)
         print("mean",mean_clustered_points)
 
 
@@ -1364,10 +1381,10 @@ if __name__ == '__main__':
         logD_mean_cluster_finger=list(mean_msd_df["cluster_logD"])
         logD_difference=[]
         logD_cluster_difference=[]
-        print("logD sim",logD_means_sim)
-        print("log_D sim_clsuter",sim_cluster_logD )
-        print("logD_finger_tracks",logD_means_finger )
-        print("logD_finger_clsuter", logD_mean_cluster_finger)
+        #print("logD sim",logD_means_sim)
+        #print("log_D sim_clsuter",sim_cluster_logD )
+        #print("logD_finger_tracks",logD_means_finger )
+        #print("logD_finger_clsuter", logD_mean_cluster_finger)
         for i in range(len(logD_means_sim)):
             logD_difference.append(abs(logD_means_finger[i]-logD_means_sim[i]))
             if logD_mean_cluster_finger[i]!=0:
@@ -1378,7 +1395,7 @@ if __name__ == '__main__':
             #logD_cluster_difference.append(abs(logD_mean_cluster_finger[i]-sim_cluster_logD))
         logD_mean_diff=mean(logD_difference)
         logD_mean_cluster_diff=mean(logD_cluster_difference)
-        print("differnce", logD_cluster_difference)
+        #print("differnce", logD_cluster_difference)
 
         print("percent_both_confined", percent_both_confined)
         print("percent_both_unconfined", percent_both_unconfined)
@@ -1394,14 +1411,14 @@ if __name__ == '__main__':
         print("recall_confined",recall_confined)
         print("recall_unconfined", recall_unconfined)
         print("fbeta_confined",fbeta_confined) # weighted mean of precision and recall: 1 good, 0 = bad
-        print("fbeta_unconfiend",fbeta_confined) 
+        print("fbeta_unconfiend",fbeta_unconfined) 
         print("support_confined",support_confined)
         print("support_unconfined", support_unconfined)
-        print("log D difference", logD_mean_diff)
-        print("cluster logD differnce", logD_mean_cluster_diff)
+        #print("log D difference", logD_mean_diff)
+        #print("cluster logD differnce", logD_mean_cluster_diff)
         print("mean total clusters per_track", mean_total_clusters_per_track)
-        print("total time in clusters per track", total_time_in_clusters)
-        print("mean time per_cluster",mean_time_per_cluster_per_track )
+        #print("total time in clusters per track", total_time_in_clusters)
+        #print("mean time per_cluster",mean_time_per_cluster_per_track )
 
        
         list_accuracy=[percent_both_confined, percent_both_unconfined, percent_correct, percent_correct_confined, percent_correct_unconfined,percent_sim_confined, percent_sim_unconfined,
@@ -1542,11 +1559,11 @@ if __name__ == '__main__':
     plotting_flag=0
     dt=0.1
     min_track_length=25
-    plotting_saving_nice_image_flag=1
+    plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
-    f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\test_values_2.csv"
+    f1=r"C:\Users\miche\Desktop\simualted tracks\plots\plot_values_D0.001_for_mean_clusters_plot.csv"
     read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
    
