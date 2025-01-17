@@ -48,6 +48,7 @@ import andi_datasets
 from andi_datasets.models_phenom import models_phenom
 from sklearn import metrics
 from math import nan
+from hmm_functions import run_model
 
 
 warnings.filterwarnings('ignore')
@@ -159,11 +160,91 @@ if __name__ == '__main__':
 
 
         return df_final_parameters_out
+    
+
+    #### for our own HMM if we simulate groundtruth and tst it on it
+
+    ##calulcat eprecision_ from groundtruth data for our HMM
+    #def calculate_hmm_precision_from_groundtruth_tracks ()
+
+
+
+
+
+
+
+
+
+    def calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag ):
+
+        df_values=pd.read_csv(f1)
+        image_path_lys=f1.split("csv")
+        image_path=image_path_lys[0]
+    
+        df_values= df_values.iloc[: , 1:]
+        
+        for index, row in df_values.iterrows():
+            print("running simulation nr: ", index)
+            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
+            sim_tracks=make_dataset_csv(trajectories, labels)
+            deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks, min_track_length)
+            #print("heere deepdf1", deep_df1)
+            mean_msd_df=msd_mean_track(msd_df, dt)
+            deep_df2= run_traces_wrapper(deep_df1, dt)
+          
+            deep_df3=computing_distance_wrapper(deep_df2)
+            deep_df4=calculate_angles_wrapper(deep_df3)
+            deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
+            deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
+            #deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
+            grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+            deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
+            
+            
+            sim_tracks_2=make_GT_consecutive(sim_tracks)
+            print("heere_sim_tracks_2", sim_tracks_2)
+            list_accuracy=calculate_accuracy(sim_tracks_2, deep_df_short2, mean_msd_df)
+            # insert ehre caluclate accracy wthned hmm.
+
+
+
+
+
+
+            if plotting_saving_nice_image_flag==1:
+                image_path1=image_path+str(index)+".tiff"
+                plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
+            if tracks_saving_flag==1:
+                path_out_simulated_tracks_lys=f1.split(".csv")
+                path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
+                sim_tracks_2.to_csv(path_out_simualted_tracks)
+                
+            if index==0:
+                list_final_accuracy=[list_accuracy]
+            else:
+                list_final_accuracy.append(list_accuracy)
+            
+        
+        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" ])
+  
+        df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
+        path_out_accuracy_lys=f1.split(".csv")
+        path_out_accuracy=path_out_accuracy_lys[0] +"_sim_accuracy_results.xlsx"
+        writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
+        df_final_parameters_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+        writer.close()
+
+
+
+      
+
+
+
     #############################################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=500
-        T=200
+        N=5
+        T=50
         D=0.01
         DS2=1
         L = 1.5*128 #enalrge field ov fiew to avoid boundy effects
@@ -350,34 +431,77 @@ if __name__ == '__main__':
     ################################################
     # function loading HMM model:
 
-    def run_traces_wrapper(traces, dt): 
-        print("loading HMM model")
-        s = "HMMjson"
-        file = open(s, "r")
-        json_s = ""
-        for line in file:
-            json_s += line
-        model = HiddenMarkovModel.from_json(json_s)
-        print(model)
 
-        d = []
-        for t in traces: 
-            x, y = t[:, 0], t[:, 1]
-            SL = np.sqrt((x[1:] - x[:-1]) ** 2 + (y[1:] - y[:-1]) ** 2) * 10 # factor to scale step length (eg. 10)
-            d.append((x, y, SL, dt))
+
+    def run_traces_wrapper(deep_df, dt): 
+
+        with open("model_3.pkl", "rb") as file: 
+            model = pickle.load(file)
+        print("loading HMM model")
+        window_size=10
+        predicted_states_for_df= run_model(model, deep_df,  window_size, dt)
+        ## fill up last 9 missing values with 1:
+        #print("heere len", len(predicted_states_for_df))
+        #print(predicted_states_for_df)
+        #print("here0",predicted_states_for_df[0])
+        #print("here1",predicted_states_for_df[1])
+        #print("here2",predicted_states_for_df[2])
+
+
+
+
+
+
+        predicted_states_flat= list(chain.from_iterable(predicted_states_for_df[2]))
+        #print(len(predicted_states_flat))
+        #print(predicted_states_flat)
+        deep_df["hmm_states"]=predicted_states_flat
+        #print(deep_df)
+        deep_df["hmm_states"]= deep_df["hmm_states"].replace(2,1)
+        deep_df["hmm_states"]= deep_df["hmm_states"].replace(2,0)
+        deep_df["hmm_states"]= deep_df["hmm_states"].replace(3,1)
+
+        print("heere234", deep_df)
+
+
+
+        #df_predict=pd.DataFrame(predicted_states_flat, columns=["states" ])
+        #df_predict["states"]= df_predict["states"].replace(2,1)
+        #df_predict["states"]= df_predict["states"].replace(2,0)
+        #df_predict["states"]= df_predict["states"].replace(3,1)
+        #print(df_predict)
+
+
+
+        #s = "HMMjson"
+        #file = open(s, "r")
+
+        #json_s = ""
+        #for line in file:
+            #json_s += line
+        #model = HiddenMarkovModel.from_json(json_s)
+        #print(model)
+
+        #d = []
+        #for t in traces: 
+           # x, y = t[:, 0], t[:, 1]
+           # SL = np.sqrt((x[1:] - x[:-1]) ** 2 + (y[1:] - y[:-1]) ** 2) * 10 # factor to scale step length (eg. 10)
+           # d.append((x, y, SL, dt))
         
-        print("Computing fingerprints")
-        print(f"Running {len(traces)} traces")
+        #print("Computing fingerprints")
+        #print(f"Running {len(traces)} traces")
     
 
-        train_result = []
-        lys_states=[]
-        for t in tqdm(d): # t = one track, make states per one step for plotting
+        #train_result = []
+        #lys_states=[]
+       # for t in tqdm(d): # t = one track, make states per one step for plotting
             
-            train_result.append(ThirdAppender(t, model=model)) 
-            states = GetStatesWrapper(t, model)
-            lys_states.append(states)
-        return train_result, states, lys_states
+            #train_result.append(ThirdAppender(t, model=model)) 
+            #states = GetStatesWrapper(t, model)
+           # lys_states.append(states)
+
+        #return train_result, states, lys_states
+        return deep_df
 
     ##################################################
     # function for consecutive features:
@@ -746,7 +870,7 @@ if __name__ == '__main__':
         print("plotting all features")
 
 
-        deep_df_short=deep_df[["angle_cont", "state_0_cont","dist_cont" ,"intersect_cont" , "KDE_cont"]]
+        deep_df_short=deep_df[["angle_cont", "hmm_states","dist_cont" ,"intersect_cont" , "KDE_cont"]]
         deep_df_short["sum_rows"] = deep_df_short.sum(axis=1)
     
         deep_df_short["row_sums_level"] = pd.cut(deep_df_short["sum_rows"], [0, 1,2, 3, 4,5 ,6], labels=["zero" , "one", "two", "three", "four", "five"], include_lowest=True, ordered= False)
@@ -1174,6 +1298,7 @@ if __name__ == '__main__':
 
     def calculate_accuracy(sim_tracks2, finger_tracks, mean_msd_df):
         print("calculate accuracy",sim_tracks2["pm2"])
+        #print("arry_predict", arry_predict)
       
         arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
         arry_finger=finger_tracks["in_hull"] # if 0= confined, 1=not
@@ -1569,16 +1694,16 @@ if __name__ == '__main__':
     dt=0.1
     min_track_length=25
     plotting_saving_nice_image_flag=0
-    tracks_saving_flag=1
+    tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\plots\plot_values_D0.001_for_mean_clusters_plot.csv"
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\simulation_parameters_for_Sven\Sven_values_D0.001_N500_T200_test.csv"
-    f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip_test.csv"
-    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
+    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip_test.csv"
+    #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
-   
-    
+    f1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test\D0.001_N500_T200_for_philip_train.csv"
+    calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 
