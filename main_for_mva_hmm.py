@@ -49,6 +49,7 @@ from andi_datasets.models_phenom import models_phenom
 from sklearn import metrics
 from math import nan
 from hmm_functions import run_model
+from hmm_functions import preprocess_and_run_for_real_tracks
 
 
 warnings.filterwarnings('ignore')
@@ -475,7 +476,15 @@ if __name__ == '__main__':
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
-        predicted_states_for_df= run_model(model, deep_df,  window_size, dt)
+
+        predicted_states_for_df=preprocess_and_run_for_real_tracks(model, window_size, deep_df, dt)
+        #print("this is predicted states output:" ,predicted_states_for_df)
+
+
+
+
+
+        #predicted_states_for_df= run_model(model, deep_df,  window_size, dt)
         ## fill up last 9 missing values with 1:
         #print("heere len", len(predicted_states_for_df))
         #print(predicted_states_for_df)
@@ -1754,6 +1763,8 @@ if __name__ == '__main__':
     
 
     folderpath1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test_real_tracks"
+    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
+
     calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
 
 

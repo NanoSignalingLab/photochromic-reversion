@@ -152,7 +152,7 @@ def preprocess_wrapper(window_size, tracks, dt):
 
     preprocessed_tracks = np.array(preprocessed_tracks)
 
-    print("tracks preprocessed",preprocessed_tracks.shape)
+    #print("tracks preprocessed",preprocessed_tracks.shape)
 
     # Step 1: Separate the two feature vectors
     msd = preprocessed_tracks[:, 0, :]
@@ -168,9 +168,71 @@ def preprocess_wrapper(window_size, tracks, dt):
 
     scaled_data = np.stack((scaled_msd, scaled_steplength, scaled_logD), axis=1)
 
-    print(scaled_data.shape)
+    #print(scaled_data.shape)
 
     return preprocessed_tracks, scaled_data, lengths, truths
+
+## trying other preprocess for real data:
+
+
+def preprocess_and_run_for_real_tracks(model, window_size, tracks, dt):
+    
+    predicted_states = []
+    predicted_states_for_df = []
+
+    for i in tracks["tid"].unique():
+        preprocessed_tracks = []
+        lengths = []
+
+
+        sliding_msds, steps, logD= preprocess_tracks_for_main(tracks,i, window_size, dt)
+
+        track_features = [sliding_msds, steps, logD]
+        preprocessed_tracks.append(track_features)
+        lengths.append(len(sliding_msds))
+        preprocessed_tracks = np.array(preprocessed_tracks)
+
+        #print("tracks preprocessed",preprocessed_tracks.shape)
+
+        # Step 1: Separate the two feature vectors
+        msd = preprocessed_tracks[:, 0, :]
+        steplength = preprocessed_tracks[:, 1, :]
+        logD = preprocessed_tracks[:, 2, :]
+
+        # Step 2: Scale each feature vector independently
+        scaler = StandardScaler()
+
+        scaled_msd = scaler.fit_transform(msd)
+        scaled_steplength = scaler.fit_transform(steplength)
+        scaled_logD = scaler.fit_transform(logD)
+
+        scaled_data = np.stack((scaled_msd, scaled_steplength, scaled_logD), axis=1)
+
+        #print(scaled_data.shape)
+        concat_data = np.concatenate(scaled_data, axis = 1)
+        concat_data = concat_data.T
+        lengths = np.array(lengths)
+
+      
+
+        states = model.predict(concat_data)
+        
+        # Append the predicted states for this sequence to the list
+        predicted_states.append(states)
+        arry_fill=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1])
+        states_df=np.hstack((states,arry_fill))
+        #predicted_states_for_df.append(states)
+        #predicted_states_for_df.append([1, 1, 1, 1, 1, 1, 1, 1, 1])
+        #predicted_states_for_df_flat=list(chain.from_iterable(predicted_states))
+        
+        predicted_states_for_df.append(states_df)
+        #print("heere, predicted states", predicted_states_for_df )
+
+    return predicted_states_for_df
+
+
+
+
 
 
 
@@ -190,11 +252,11 @@ def preprocess_wrapper_for_main(window_size, tracks, dt):
         preprocessed_tracks.append(track_features)
         lengths.append(len(sliding_msds))
        #track_features_for_df=[sliding_msds_for_df, steps_for_df, logD_for_df]
-    print(preprocessed_tracks[0])
+    #print(preprocessed_tracks[0])
 
     preprocessed_tracks = np.array(preprocessed_tracks)
 
-    print("tracks preprocessed",preprocessed_tracks.shape)
+    #print("tracks preprocessed",preprocessed_tracks.shape)
 
     # Step 1: Separate the two feature vectors
     msd = preprocessed_tracks[:, 0, :]
@@ -210,7 +272,7 @@ def preprocess_wrapper_for_main(window_size, tracks, dt):
 
     scaled_data = np.stack((scaled_msd, scaled_steplength, scaled_logD), axis=1)
 
-    print(scaled_data.shape)
+    #print(scaled_data.shape)
     return preprocessed_tracks, scaled_data, lengths
 
 
