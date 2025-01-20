@@ -160,19 +160,55 @@ if __name__ == '__main__':
 
 
         return df_final_parameters_out
-    
 
+#############################################
+
+        ## for our own HMM for real tracks in one folder, make one reuslt file perinput file
+    def calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag):
+        onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
+        for i in onlyfiles:
+            
+            if i.endswith(".csv"):
+                path=os.path.join(folderpath1, i)
+                print(path)
+                image_path_lys=path.split("csv")
+                image_path=image_path_lys[0] +"svg"
+                tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
+                mean_msd_df=msd_mean_track(msd_df, dt)
+
+                print("heere deep1",deep_df1)
+
+
+
+
+                deep_df2= run_traces_wrapper(deep_df1, dt)
+                deep_df3=computing_distance_wrapper(deep_df2)
+                deep_df4=calculate_angles_wrapper(deep_df3)
+                deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
+                deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
+
+                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
+
+                plotting_final_image(deep_df_short2,lys_points2, image_path)
+                #make_fingerprint_file(path, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
+
+          
+
+
+
+
+
+
+
+       
+
+
+
+
+
+############################################
     #### for our own HMM if we simulate groundtruth and tst it on it
-
-    ##calulcat eprecision_ from groundtruth data for our HMM
-    #def calculate_hmm_precision_from_groundtruth_tracks ()
-
-
-
-
-
-
-
 
 
     def calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag ):
@@ -238,7 +274,7 @@ if __name__ == '__main__':
 
       
 
-
+##################################################
 
     #############################################
 
@@ -1702,8 +1738,24 @@ if __name__ == '__main__':
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip_test.csv"
     #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
-    f1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test\D0.001_N500_T200_for_philip_train.csv"
-    calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
+
+#### for our own hmm to evaulate while simualting tracks:
+    #f1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test\D0.001_N500_T200_for_philip_train.csv"
+    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
+
+
+
+### fpr files oin a folder with real tracak for our own hmm:
+    plotting_flag=1
+    dt=0.05
+    min_track_length=25
+    plotting_saving_nice_image_flag=1
+    tracks_saving_flag=0
+    
+
+    folderpath1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test_real_tracks"
+    calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+
 
 
 

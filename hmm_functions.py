@@ -190,6 +190,7 @@ def preprocess_wrapper_for_main(window_size, tracks, dt):
         preprocessed_tracks.append(track_features)
         lengths.append(len(sliding_msds))
        #track_features_for_df=[sliding_msds_for_df, steps_for_df, logD_for_df]
+    print(preprocessed_tracks[0])
 
     preprocessed_tracks = np.array(preprocessed_tracks)
 
