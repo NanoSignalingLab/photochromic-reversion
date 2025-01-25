@@ -162,9 +162,9 @@ if __name__ == '__main__':
 
         return df_final_parameters_out
 
-#############################################
+    #############################################
+    # for our own HMM for reading inmultiple csv files with real tracks, make one result excel per file
 
-        ## for our own HMM for real tracks in one folder, make one reuslt file perinput file
     def calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag):
         onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
         for i in onlyfiles:
@@ -208,9 +208,8 @@ if __name__ == '__main__':
 
 
 
-############################################
-    #### for our own HMM if we simulate groundtruth and tst it on it
-
+    ############################################
+    # for our own HMM if we simulate groundtruth and test it on it
 
     def calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag ):
 
@@ -225,7 +224,6 @@ if __name__ == '__main__':
             trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
             sim_tracks=make_dataset_csv(trajectories, labels)
             deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks, min_track_length)
-            #print("heere deepdf1", deep_df1)
             mean_msd_df=msd_mean_track(msd_df, dt)
             deep_df2= run_traces_wrapper(deep_df1, dt)
           
@@ -233,21 +231,13 @@ if __name__ == '__main__':
             deep_df4=calculate_angles_wrapper(deep_df3)
             deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
             deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-            #deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
             grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
             deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
             
             
             sim_tracks_2=make_GT_consecutive(sim_tracks)
-            print("heere_sim_tracks_2", sim_tracks_2)
             list_accuracy=calculate_accuracy(sim_tracks_2, deep_df_short2, mean_msd_df)
-            # insert ehre caluclate accracy wthned hmm.
-
-
-
-
-
-
+        
             if plotting_saving_nice_image_flag==1:
                 image_path1=image_path+str(index)+".tiff"
                 plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
@@ -272,10 +262,7 @@ if __name__ == '__main__':
         writer.close()
 
 
-
-      
-
-##################################################
+    #############################################
 
     #############################################
 
@@ -284,7 +271,7 @@ if __name__ == '__main__':
         T=50
         D=0.01
         DS2=1
-        L = 1.5*128 #enalrge field ov fiew to avoid boundy effects
+        L = 1.5*128 # enalrge field of fiew to avoid boundy effects
         compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
                                                                             r = radius_compartments,
                                                                             L = L)                                
@@ -328,15 +315,8 @@ if __name__ == '__main__':
 
 
     ############################################
-    
-
-    #"""Compute fingerprints"""
-    #if not os.path.isfile("X_fingerprints.npy"): 
-      #  import pickle
-        #print("Generating fingerprints")
-      
-
-    ##############################################
+  
+    ############################################
     # function to directly load the cleaned trackmate files:
 
     def load_file(path2, min_track_length):
@@ -433,42 +413,8 @@ if __name__ == '__main__':
         
         return track_means_df
 
-
-        ############################ run the model:
-
-        # if not os.path.isfile("HMMjson"):
-        #     steplength = []
-        #     for t in traces:
-               
-        #         x, y = t[:, 0], t[:, 1]
-        #         steplength.append(np.sqrt((x[1:] - x[:-1]) ** 2 + (y[1:] - y[:-1]) ** 2))
-        #     print("fitting HMM")
-        #     model = HiddenMarkovModel.from_samples(
-        #         NormalDistribution, n_components=4, X=steplength, n_jobs=3, verbose=True
-        #     )
-            
-        #     print(model)
-        #     model.bake()
-        #     print("Saving HMM model")
-
-        #     s = model.to_json()
-        #     f = open("HMMjson", "w")
-        #     f.write(s)
-        #     f.close()
-        # else:
-        #     print("loading HMM model")
-        #     s = "HMMjson"
-        #     file = open(s, "r")
-        #     json_s = ""
-        #     for line in file:
-        #         json_s += line
-        #     model = HiddenMarkovModel.from_json(json_s)
-        #     print(model)
-
     ################################################
     # function loading HMM model:
-
-
 
     def run_traces_wrapper(deep_df, dt): 
 
@@ -480,26 +426,10 @@ if __name__ == '__main__':
         predicted_states_for_df=preprocess_and_run_for_real_tracks(model, window_size, deep_df, dt)
         #print("this is predicted states output:" ,predicted_states_for_df)
 
-
-
-
-
         #predicted_states_for_df= run_model(model, deep_df,  window_size, dt)
-        ## fill up last 9 missing values with 1:
-        #print("heere len", len(predicted_states_for_df))
-        #print(predicted_states_for_df)
-        #print("here0",predicted_states_for_df[0])
-        #print("here1",predicted_states_for_df[1])
-        #print("here2",predicted_states_for_df[2])
-
-
-
-
-
 
         predicted_states_flat= list(chain.from_iterable(predicted_states_for_df[2]))
-        #print(len(predicted_states_flat))
-        #print(predicted_states_flat)
+      
         deep_df["hmm_states"]=predicted_states_flat
         #print(deep_df)
         deep_df["hmm_states"]= deep_df["hmm_states"].replace(2,1)
@@ -509,43 +439,6 @@ if __name__ == '__main__':
         print("heere234", deep_df)
 
 
-
-        #df_predict=pd.DataFrame(predicted_states_flat, columns=["states" ])
-        #df_predict["states"]= df_predict["states"].replace(2,1)
-        #df_predict["states"]= df_predict["states"].replace(2,0)
-        #df_predict["states"]= df_predict["states"].replace(3,1)
-        #print(df_predict)
-
-
-
-        #s = "HMMjson"
-        #file = open(s, "r")
-
-        #json_s = ""
-        #for line in file:
-            #json_s += line
-        #model = HiddenMarkovModel.from_json(json_s)
-        #print(model)
-
-        #d = []
-        #for t in traces: 
-           # x, y = t[:, 0], t[:, 1]
-           # SL = np.sqrt((x[1:] - x[:-1]) ** 2 + (y[1:] - y[:-1]) ** 2) * 10 # factor to scale step length (eg. 10)
-           # d.append((x, y, SL, dt))
-        
-        #print("Computing fingerprints")
-        #print(f"Running {len(traces)} traces")
-    
-
-        #train_result = []
-        #lys_states=[]
-       # for t in tqdm(d): # t = one track, make states per one step for plotting
-            
-            #train_result.append(ThirdAppender(t, model=model)) 
-            #states = GetStatesWrapper(t, model)
-           # lys_states.append(states)
-
-        #return train_result, states, lys_states
         return deep_df
 
     ##################################################
