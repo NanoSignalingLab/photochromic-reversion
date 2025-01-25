@@ -83,6 +83,10 @@ def scale_data(window_size, tracks, dt):
     preprocessed_tracks = []
     lengths = []
 
+    ids = tracks["tid"].unique()
+    if len(ids) == 1:
+         ids = [ids]
+
     for i in tracks["tid"].unique():
 
         sliding_msds, steps, logD = preprocess_track(tracks,i, window_size, dt)
