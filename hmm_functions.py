@@ -79,23 +79,21 @@ def preprocess_track(tracks, track_id, window_size, dt):
     return sliding_msds, steps, logDs
 
 def scale_data(window_size, tracks, dt):
+  
 
     preprocessed_tracks = []
     lengths = []
 
     ids = tracks["tid"].unique()
-    if len(ids) == 1:
-         ids = [ids]
 
     for i in ids:
-
         sliding_msds, steps, logD = preprocess_track(tracks,i, window_size, dt)
 
         track_features = [sliding_msds, steps, logD]
         preprocessed_tracks.append(track_features)
         lengths.append(len(sliding_msds) + (window_size-1))
 
-    preprocessed_tracks = np.array(preprocessed_tracks)
+ 
 
     # Step 1: Separate the feature vectors
     msd = [row[0] for row in preprocessed_tracks]
@@ -129,22 +127,22 @@ def scale_data(window_size, tracks, dt):
         ]
 
         #pad values at the end due to steplength to make feature vectors as long as original tracks
-        for list in scaled_list_of_lists:
-            list.append([0] * (window_size - 1))
+        for i, lis in enumerate(scaled_list_of_lists):
+            scaled_list_of_lists[i] =  scaled_list_of_lists[i] + ([0] * (window_size - 1))
 
         scaled_lists.append(scaled_list_of_lists)
 
-        # Step 3: Combine the scaled features back
-        scaled_data = list(zip(scaled_lists[0], scaled_lists[1], scaled_lists[2]))
+    # Step 3: Combine the scaled features back
+    scaled_data = list(zip(scaled_lists[0], scaled_lists[1], scaled_lists[2]))
 
     return preprocessed_tracks, scaled_data, lengths
 
 def run_model(model, tracks, window_size, dt):
     preprocessed_tracks, scaled_data, lengths = scale_data(window_size, tracks, dt)
 
-    print("heere2",scaled_data.shape)
     concat_data = np.concatenate(scaled_data, axis = 1)
     concat_data = concat_data.T
+
     lengths = np.array(lengths)
 
     predicted_states = []
@@ -166,7 +164,9 @@ def run_model(model, tracks, window_size, dt):
         # Move to the start index of the next sequence
         start_idx += length
 
-    predicted_states = np.array(predicted_states)
+ 
+    
+    #predicted_states = np.array(predicted_states)
 
     return  predicted_states
 

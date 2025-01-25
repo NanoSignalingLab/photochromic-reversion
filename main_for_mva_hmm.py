@@ -176,7 +176,7 @@ if __name__ == '__main__':
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
                 mean_msd_df=msd_mean_track(msd_df, dt)
 
-                print("heere deep1",deep_df1)
+                #print("heere deep1",deep_df1)
 
 
 
@@ -194,16 +194,6 @@ if __name__ == '__main__':
                 #make_fingerprint_file(path, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
 
           
-
-
-
-
-
-
-
-       
-
-
 
 
 
@@ -422,17 +412,17 @@ if __name__ == '__main__':
         print("loading HMM model")
         window_size=10
 
-        predicted_states_for_df=run_model(model, window_size, deep_df, dt)
+        predicted_states_for_df=run_model(model, deep_df,window_size, dt)
         #print("this is predicted states output:" ,predicted_states_for_df)
 
         #predicted_states_for_df= run_model(model, deep_df,  window_size, dt)
 
-        predicted_states_flat= list(chain.from_iterable(predicted_states_for_df[2]))
+        predicted_states_flat= list(chain.from_iterable(predicted_states_for_df))
       
         deep_df["hmm_states"]=predicted_states_flat
         #print(deep_df)
         deep_df["hmm_states"]= deep_df["hmm_states"].replace(2,1)
-        deep_df["hmm_states"]= deep_df["hmm_states"].replace(2,0)
+        #deep_df["hmm_states"]= deep_df["hmm_states"].replace(2,0)
         deep_df["hmm_states"]= deep_df["hmm_states"].replace(3,1)
 
         print("heere234", deep_df)
