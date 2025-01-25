@@ -47,22 +47,7 @@ def logD_from_mean_MSD(MSDs, dt):
         return mean_msd, logD
 
 
-def load_all(folderpath1):
-    count=0
-    onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
-    for i in onlyfiles:
-        if i.endswith(".csv"):
-            path=os.path.join(folderpath1, i)
-            print(path)
-            df=pd.read_csv(path)
-            if count==0:
-                tracks=df
-            else:
-                df["tid"] = df["tid"] + len(tracks["tid"].unique())
-            
-                tracks = pd.concat([tracks, df], ignore_index=True, axis=0)
-            count+=1
-    return tracks
+
 
 
 def preprocess_track(tracks, track_id, window_size, dt):
