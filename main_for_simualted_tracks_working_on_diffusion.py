@@ -1543,7 +1543,7 @@ if __name__ == '__main__':
     plotting_flag=0
     min_track_length=25
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
-    folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\pub10_BAK1_BL\cleaned"
+    folderpath1=r"C:\Users\miche\Desktop\Test_deepSPT\t"
 
     wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
 
