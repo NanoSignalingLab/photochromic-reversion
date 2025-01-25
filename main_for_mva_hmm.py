@@ -256,9 +256,9 @@ if __name__ == '__main__':
     #############################################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=5
-        T=50
-        D=0.01
+        N=500
+        T=200
+        D=0.001
         DS2=1
         L = 1.5*128 # enalrge field of fiew to avoid boundy effects
         compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
@@ -425,7 +425,7 @@ if __name__ == '__main__':
         #deep_df["hmm_states"]= deep_df["hmm_states"].replace(2,0)
         deep_df["hmm_states"]= deep_df["hmm_states"].replace(3,1)
 
-        print("heere234", deep_df)
+        #print("heere234", deep_df)
 
 
         return deep_df
@@ -1631,22 +1631,22 @@ if __name__ == '__main__':
 
 
 #### for our own hmm to evaulate while simualting tracks:
-    #f1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test\D0.001_N500_T200_for_philip_train.csv"
-    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
+    f1=r"C:\Users\miche\Desktop\simualted tracks\test_HMM\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
+    calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 
 ### fpr files oin a folder with real tracak for our own hmm:
-    plotting_flag=1
-    dt=0.05
-    min_track_length=25
-    plotting_saving_nice_image_flag=1
-    tracks_saving_flag=0
+    #plotting_flag=1
+    #dt=0.05
+    #min_track_length=25
+    #plotting_saving_nice_image_flag=1
+    #tracks_saving_flag=0
     
 
-    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
+    #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
 
-    calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+    #calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
 
 
 
