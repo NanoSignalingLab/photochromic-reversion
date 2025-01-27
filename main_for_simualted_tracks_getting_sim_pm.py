@@ -48,6 +48,10 @@ import andi_datasets
 from andi_datasets.models_phenom import models_phenom
 from sklearn import metrics
 from math import nan
+import statistics
+from scipy.stats import norm
+from scipy import stats
+
 
 
 warnings.filterwarnings('ignore')
@@ -178,11 +182,30 @@ if __name__ == '__main__':
             #print("here sim_tracks_2",sim_tracks_2)
             #sim_tracks_3=computing_distance_for_sim(sim_tracks_2)
             #print("here sim_tracks_3",sim_tracks_3)
-            #plot_distances(sim_tracks_3)
-            #sim_tracks_4=calculate_angels_for_sim(sim_tracks_3)
-            #plot_angles(sim_tracks_4)
+            #sim_tracks_4, lys_distance, lys_GT_0, lys_GT_1 =plot_distances(sim_tracks_3)
+            #print(sim_tracks_4) # hase distance in it maybe jsut save this one
+           
+            sim_tracks_4=calculate_angels_for_sim(sim_tracks_2)
+            print(sim_tracks_4)
+            plot_angles(sim_tracks_4)
             #sim_tracsk_5=make_KDE_for_sim(lys_x, lys_y, sim_tracks_4)
-            sim_tracks_6=calcualte_intersections_for_sim(lys_x, lys_y, sim_tracks_2)
+            #sim_tracks_6=calcualte_intersections_for_sim(lys_x, lys_y, sim_tracks_2)
+            if index==0:
+                #list_final_distances=[lys_distance]
+                print(lys_distance)
+                distance_df=pd.DataFrame([lys_distance])
+                distance_df.columns=["max_GT0", "max_GT1", "mean_GT0", "mean_GT1", "lower_GT0", "higher_GT0", "lower_GT1", "higher_GT1"]
+                distance_final=distance_df
+
+            else:
+                #list_final_distances=pd.concat([list_final_distances,lys_distance],axis=1)
+                distance_df=pd.DataFrame([lys_distance])
+                distance_df.columns=["max_GT0", "max_GT1", "mean_GT0", "mean_GT1", "lower_GT0", "higher_GT0", "lower_GT1", "higher_GT1"]
+                #distance_df=pd.concat([distance_df,lys_distance],axis=1)
+                distance_final=pd.concat([distance_final,distance_df],axis=1)
+
+        #df_final_parameters=pd.DataFrame(list_final_distances, columns=["max_GT0", "max_GT1", "mean_GT0", "mean_GT1", "lower_GT0", "higher_GT0", "lower_GT1", "higher_GT1"])
+        print(distance_final)
 
 
 
@@ -191,9 +214,9 @@ if __name__ == '__main__':
     #############################################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=500
+        N=50
         T=200
-        D=0.01
+        D=0.001
         DS2=1
         L = 1.5*128 #enalrge field ov fiew to avoid boundy effects
         compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
@@ -562,15 +585,13 @@ if __name__ == '__main__':
             if sim_tracks["GT"][i]==0:
                 if sim_tracks["distance"][i]!=0:
                     lys_GT_0.append(sim_tracks["distance"][i])
+
             else:
                 if sim_tracks["distance"][i]!=0:
                     lys_GT_1.append(sim_tracks["distance"][i])
 
         #print(lys_GT_0)
-        import statistics
-        from scipy.stats import norm
-        from scipy import stats
-
+        
 
        
  
@@ -582,12 +603,18 @@ if __name__ == '__main__':
         #print(tick_values)
         plt.xticks(tick_values)
         plt.show()
+        lys_distances_summmary=[]
         max_GT0=max(lys_GT_0)
         max_GT1=max(lys_GT_1)
         mean_GT0=mean(lys_GT_0)
         var_GT0=statistics.stdev(lys_GT_0)
         mean_GT1=mean(lys_GT_1)
         var_GT1=statistics.stdev(lys_GT_1)
+        lys_distances_summmary=[max_GT0,max_GT1, mean_GT0, mean_GT1, mean_GT0-var_GT0, mean_GT0+var_GT0, mean_GT1-var_GT1,mean_GT1+var_GT1 ]
+        print(lys_distances_summmary)
+
+
+
         #mu_Gt0, std_GT0 = norm.fit(lys_GT_0)
         #mu_Gt1, std_GT1 = norm.fit(lys_GT_1)
         #ae_GT1, loce_GT1, scalee_GT1 = stats.skewnorm.fit(lys_GT_1)
@@ -625,7 +652,7 @@ if __name__ == '__main__':
         plt.show()
 
 
-        return sim_tracks       
+        return sim_tracks, lys_distances_summmary, lys_GT_0, lys_GT_1       
     ################## End distance calculation
    
 
@@ -2080,12 +2107,12 @@ if __name__ == '__main__':
     dt=0.1
     min_track_length=25
     plotting_saving_nice_image_flag=0
-    tracks_saving_flag=1
+    tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\Sven_values\for_sven2\Sven_values2_D0.001_N500_T200.csv"
-    f1=r"C:\Users\miche\Desktop\test\tracks for philip\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip.csv"
-    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
+    #f1=r"C:\Users\miche\Desktop\test\tracks for philip\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip.csv"
+    #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
     ####################################################
     #### to get paramters from simualtion directly and plot them
@@ -2094,9 +2121,9 @@ if __name__ == '__main__':
     #min_track_length=25
     #plotting_saving_nice_image_flag=0
     #tracks_saving_flag=0
-    #f1=r"C:\Users\miche\Desktop\test\test_values1.csv"
+    f1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test\D0.001_N500_T200_for_philip_train.csv"
 
-    #calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag)
+    calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag)
 
    
     

@@ -247,6 +247,55 @@ if __name__ == '__main__':
 
 
     #############################################
+    ### mmmkae function that takes in previosuly generated tracks (with GT)and calculates accuracy:
+
+    def calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag):
+        onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
+        index=0
+        names_list=[]
+        for i in onlyfiles:
+            
+            if i.endswith(".csv"):
+                path=os.path.join(folderpath1, i)
+                print(path)
+                names_path_lys=path.split("\\")
+                names=names_path_lys[-1]
+                #print(names)
+                names_list.append(names)
+
+
+                #image_path=image_path_lys[0] +"svg"
+                tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
+                #print(tracks_input)
+                mean_msd_df=msd_mean_track(msd_df, dt)
+
+                deep_df2= run_traces_wrapper(deep_df1, dt)
+                deep_df3=computing_distance_wrapper(deep_df2)
+                deep_df4=calculate_angles_wrapper(deep_df3)
+                deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
+                deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
+
+                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
+                list_accuracy=calculate_accuracy(tracks_input, deep_df_short2, mean_msd_df)
+
+                if index==0:
+                    list_final_accuracy=[list_accuracy]
+                    index=1
+                else:
+                    list_final_accuracy.append(list_accuracy)
+                
+            
+        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" ])
+        df_final_accuracy["track_name"]=names_list
+        print(df_final_accuracy)
+        path_out_accuracy=folderpath1+"\\tracks_accuracy_results.xlsx"
+        #path_out_accuracy=path_out_accuracy_lys[0] +"_sim_accuracy_results.xlsx"
+        writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
+        df_final_accuracy.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+        writer.close()
+
+
 
     #############################################
 
@@ -1299,7 +1348,9 @@ if __name__ == '__main__':
     # function to calculate accuracy:
 
     def calculate_accuracy(sim_tracks2, finger_tracks, mean_msd_df):
-        print("calculate accuracy",sim_tracks2["pm2"])
+        print(sim_tracks2)
+        print(finger_tracks)
+        #print("calculate accuracy",sim_tracks2["pm2"])
         #print("arry_predict", arry_predict)
       
         arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
@@ -1719,11 +1770,18 @@ if __name__ == '__main__':
     tracks_saving_flag=0
     
 
-    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test_real_tracks"
+    #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
+    #folderpath1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test_real_tracks"
 
 
-    calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+    #calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+
+
+    ### for accuracy based on previosuly generated tracks in a folder:
+
+    folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\DC_MSS_1\DC_MSS_sim2_D0.015_N500_T200"
+    calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag)
+
 
 
 
