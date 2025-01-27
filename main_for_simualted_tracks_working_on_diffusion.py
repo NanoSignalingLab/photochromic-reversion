@@ -1539,13 +1539,13 @@ if __name__ == '__main__':
     # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
     
     # example:
-    dt=0.05
-    plotting_flag=0
-    min_track_length=25
+    #dt=0.05
+    #plotting_flag=0
+    #min_track_length=25
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
-    folderpath1=r"C:\Users\miche\Desktop\Test_deepSPT\t"
+    #folderpath1=r"C:\Users\miche\Desktop\Test_deepSPT\t"
 
-    wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+    #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
 
     ############################################
     ## for simulating tracks based on parameters stored in a file:
@@ -1561,15 +1561,18 @@ if __name__ == '__main__':
     
     # example:
 
-   # plotting_flag=0
-    #dt=0.1
-    #min_track_length=25
-    #plotting_saving_nice_image_flag=0
-    #tracks_saving_flag=1
+    plotting_flag=0
+    dt=0.1
+    min_track_length=25
+    plotting_saving_nice_image_flag=0
+    tracks_saving_flag=1
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\Sven_values\for_sven2\Sven_values2_D0.001_N500_T200.csv"
-    #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
+
+
+    f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_25.1.25_train_D0.01\D0.01_N500_T200_for_philip_train.csv"
+    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
    
     

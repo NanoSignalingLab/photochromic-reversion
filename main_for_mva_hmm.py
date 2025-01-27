@@ -176,11 +176,6 @@ if __name__ == '__main__':
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
                 mean_msd_df=msd_mean_track(msd_df, dt)
 
-                #print("heere deep1",deep_df1)
-
-
-
-
                 deep_df2= run_traces_wrapper(deep_df1, dt)
                 deep_df3=computing_distance_wrapper(deep_df2)
                 deep_df4=calculate_angles_wrapper(deep_df3)
@@ -191,7 +186,7 @@ if __name__ == '__main__':
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
 
                 plotting_final_image(deep_df_short2,lys_points2, image_path)
-                #make_fingerprint_file(path, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
+                make_results_file(path, deep_df_short2, dt,mean_msd_df ) # run function to make excel with all parameters
 
           
 
@@ -407,7 +402,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open("model_3.pkl", "rb") as file: 
+        with open("model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -1170,6 +1165,86 @@ if __name__ == '__main__':
         return fingerprints_df_out
     
     ############################### end function 
+    ###### mkae fingerprint for new HMM:
+    def make_results_file(f2, deep_df_short, dt, mean_msd_df):
+        print("this is deepdfshort",deep_df_short)
+
+        lys_string=f2.split("\\")
+        outpath1=lys_string[:-1]
+        outpath2='\\'.join(outpath1)
+        name=lys_string[-1].split(".csv")[0]
+        outpath3=outpath2+"\\"+name
+        print("saving results file in:", outpath3 )
+
+        # adding hull area and number of points in clusters
+        lys_nr_of_clusters=[]
+        lys_time_in_clusters=[]
+        lys_nr_of_unclustered=[]
+        lys_mean_area=[]
+        lys_sum_clusters=[]
+        lys_time_per_cluster=[]
+        grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
+        for i in grouped_plot["tid"].unique():
+
+            s= grouped_plot.get_group(i[0])
+            clusters=s['in_hull'].value_counts()
+            areas=s["area"].value_counts()
+            lys_interm_area=[]
+
+            for i in areas.keys():
+                lys_interm_area.append(i)
+            lys_interm_area.sort()
+
+            if len(clusters)>1:
+                # if track contains points both in clusters and not in clusters, assign each type
+                lys_nr_of_clusters.append(clusters[0])
+                lys_nr_of_unclustered.append(clusters[1])
+                lys_time_in_clusters.append(dt*clusters[0])
+                lys_mean_area.append(mean(lys_interm_area[1:]))
+                lys_sum_clusters.append(len(lys_interm_area[1:]))
+                lys_time_per_cluster.append(dt*clusters[0]/len(lys_interm_area[1:]))
+
+            else:
+                # if track only has one type of point, the "clusters[i]" object has only one entry, either 0 (points in clusters) or 1 (points not in clusters)
+                ind=clusters.index[0]
+                arry=clusters.array
+                lys_mean_area.append(0)
+
+                if ind==1:
+                    # no cluster 
+                    lys_nr_of_clusters.append(0)
+                    lys_nr_of_unclustered.append(arry[0])
+                    lys_time_in_clusters.append(dt*0)
+                    lys_time_per_cluster.append(0)
+                    lys_sum_clusters.append(0)
+                else:
+                    # all points of track are cluster points
+                    lys_nr_of_clusters.append(arry[0])
+                    lys_nr_of_unclustered.append(0)
+                    lys_time_in_clusters.append(dt*arry[0])
+                    lys_time_per_cluster.append(dt*arry[0])
+                    lys_sum_clusters.append(1)
+        
+        fingerprints_df_out=pd.DataFrame(lys_nr_of_clusters, columns=["nr_of_spatially_arrested_points_per_track"])
+        fingerprints_df_out["nr_of_non-arrested_points_per_track"]=lys_nr_of_unclustered
+        fingerprints_df_out["tot_time_of_spatial_arrest_per_track"]=lys_time_in_clusters
+        fingerprints_df_out["mean_area_spatial_arrest_events"]=lys_mean_area
+        fingerprints_df_out["nr_of_spatial_arrest_events_per_track"]=lys_sum_clusters
+        fingerprints_df_out["average_duration_of_spatial_arrest_events_per_track"]=lys_time_per_cluster
+        fingerprints_df_out["logD_whole_track"]=mean_msd_df["logD"]
+        fingerprints_df_out["MSD_cluster"]=mean_msd_df["cluster_msd"]
+        fingerprints_df_out["logD_cluster"]=mean_msd_df["cluster_logD"]
+
+        outpath4=outpath3+"_fingerprint_results"+".xlsx"
+        writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
+        fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+        writer.close()
+
+        return fingerprints_df_out
+        
+
+
+
         
     ############################### Function for consecutive GT:
     ##  curate sim da: all the things where pm is confined but for less than5 points -> make unconfiend!
@@ -1631,22 +1706,24 @@ if __name__ == '__main__':
 
 
 #### for our own hmm to evaulate while simualting tracks:
-    f1=r"C:\Users\miche\Desktop\simualted tracks\test_HMM\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
-    calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
+    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
+    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 
 ### fpr files oin a folder with real tracak for our own hmm:
-    #plotting_flag=1
-    #dt=0.05
-    #min_track_length=25
-    #plotting_saving_nice_image_flag=1
-    #tracks_saving_flag=0
+    plotting_flag=0
+    dt=0.1
+    min_track_length=25
+    plotting_saving_nice_image_flag=0
+    tracks_saving_flag=0
     
 
-    #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
+    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
+    folderpath1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test_real_tracks"
 
-    #calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+
+    calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
 
 
 
