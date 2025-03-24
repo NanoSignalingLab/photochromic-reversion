@@ -91,7 +91,10 @@ if __name__ == '__main__':
                 path=os.path.join(folderpath1, i)
                 print(path)
                 image_path_lys=path.split("csv")
-                image_path=image_path_lys[0] +"svg"
+                image_path_svg=image_path_lys[0] +"svg"
+                image_path_tiff=image_path_lys[0] +"tiff"
+
+
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
                 mean_msd_df=msd_mean_track(msd_df, dt)
                 train_result, states, lys_states = run_traces_wrapper(traces, dt)
@@ -102,7 +105,7 @@ if __name__ == '__main__':
                 deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
                 grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
-                plotting_final_image(deep_df_short2,lys_points2, image_path)
+                plotting_final_image(deep_df_short2,lys_points2, image_path_svg, image_path_tiff)
                 make_fingerprint_file(path, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
 
 
@@ -968,7 +971,7 @@ if __name__ == '__main__':
 
     ################################################
     ### plotting hull and tracks togehter: as arrested vs not spatially arrested
-    def plotting_final_image(deep_df_short,lys_points2, image_path):
+    def plotting_final_image(deep_df_short,lys_points2, image_path1, image_path2):
         final_pal=dict(zero= "#06fcde" , one= "#808080")
         linecollection = []
         colors = []
@@ -994,10 +997,10 @@ if __name__ == '__main__':
                 c2+=1
             c2+=1
 
-        lc = LineCollection(linecollection, color=colors, lw=1)
+        lc = LineCollection(linecollection, color=colors, lw=0.1) #was 1
 
         
-        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
+        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.000001,  alpha=0) # was0.001
         plt.gca().add_collection(lc)
 
         for j in range (len(lys_points2)):
@@ -1011,18 +1014,18 @@ if __name__ == '__main__':
                     if ratio<105:
                     
                         for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
+                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.01) # lw was 1
 
-                        plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
+                        plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=0.01, color="#008080") # lw was 1
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
                         
         
         plt.axis('equal') 
-        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
+        plt.savefig(str(image_path1), format="svg") # uncomment this to save nice svg
         plt.show()
 
         #plt.axis('equal') 
-        #plt.savefig(str(image_path), dpi=3500,format="tiff") # uncomment this to save nice svg
+        #plt.savefig(str(image_path2), dpi=3500,format="tiff") # uncomment this to save nice svg
         #plt.show()
 
 
@@ -1539,13 +1542,13 @@ if __name__ == '__main__':
     # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
     
     # example:
-    #dt=0.05
-    #plotting_flag=0
-    #min_track_length=25
+    dt=0.05
+    plotting_flag=0
+    min_track_length=20
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
-    #folderpath1=r"C:\Users\miche\Desktop\Test_deepSPT\t"
+    folderpath1=r"X:\labs\Lab_Gronnier\KALTRA\PALM\102025\spot data\AHA FC\cleaned"
 
-    #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+    wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
 
     ############################################
     ## for simulating tracks based on parameters stored in a file:
@@ -1561,18 +1564,18 @@ if __name__ == '__main__':
     
     # example:
 
-    plotting_flag=0
-    dt=0.1
-    min_track_length=25
-    plotting_saving_nice_image_flag=0
-    tracks_saving_flag=1
+   # plotting_flag=0
+    #dt=0.1
+    #min_track_length=25
+    #plotting_saving_nice_image_flag=0
+    #tracks_saving_flag=1
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\Sven_values\for_sven2\Sven_values2_D0.001_N500_T200.csv"
 
 
-    f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_25.1.25_train_D0.01\D0.01_N500_T200_for_philip_train.csv"
-    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
+    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_25.1.25_train_D0.01\D0.01_N500_T200_for_philip_train.csv"
+    #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
    
     
