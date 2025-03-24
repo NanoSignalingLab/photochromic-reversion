@@ -164,7 +164,7 @@ if __name__ == '__main__':
     #############################################
     # for our own HMM for reading inmultiple csv files with real tracks, make one result excel per file
 
-    def calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag):
+    def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag):
         onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
         for i in onlyfiles:
             
@@ -185,8 +185,8 @@ if __name__ == '__main__':
                 grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
-                plotting_final_image(deep_df_short2,lys_points2, image_path)
-                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2)
+                #plotting_final_image(deep_df_short2,lys_points2, image_path)
+                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path)
                 make_results_file(path, deep_df_short2, dt,mean_msd_df ) # run function to make excel with all parameters
 
           
@@ -975,7 +975,7 @@ if __name__ == '__main__':
         #print(lys_points2[2], len(lys_points2[2]))
 
         
-        ######################### plot points togehter with above lines
+        ######################### plot points together with above lines
         lys_area2=[]
         lys_perimeter2=[]
         lys_hull2 = []
@@ -1107,8 +1107,8 @@ if __name__ == '__main__':
         lys_the_last_middle=[]
         lys_area_last_middle=[]
 
-        print(len(lys_points_big2))
-        print(len(lys_points_big_only_middle2))
+        #print(len(lys_points_big2))
+        #print(len(lys_points_big_only_middle2))
         
         c2=0
         
@@ -1238,7 +1238,7 @@ if __name__ == '__main__':
 
         ###insert new plotting function: 
 
-    def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2):
+    def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path):
         final_pal=dict(zero= "#06fcde" , one= "#808080")
         linecollection = []
         colors = []
@@ -1294,9 +1294,10 @@ if __name__ == '__main__':
                                 
 
 
-       
         plt.axis('equal') 
+        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
         plt.show()
+      
 
 
      
@@ -1322,9 +1323,7 @@ if __name__ == '__main__':
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
 
-            ###
-            print(s)
-            ###
+        
 
             clusters=s['in_hull'].value_counts()
             areas=s["area"].value_counts()
@@ -1444,17 +1443,7 @@ if __name__ == '__main__':
                 lys_interm_area.append(i)
             lys_interm_area.sort()
 
-            # ####  
-            # clusters_middle=s['in_hull_middle'].value_counts()
-            # areas_middle=s["area_middle"].value_counts()
-            # lys_interm_area_middle=[]
-
-            # for i in areas_middle.keys():
-            #     lys_interm_area_middle.append(i)
-            # lys_interm_area_middle.sort()
-
-            ###
-
+       
             if len(clusters)>1:
                 # if track contains points both in clusters and not in clusters, assign each type
                 lys_nr_of_clusters.append(clusters[0])
@@ -1464,15 +1453,7 @@ if __name__ == '__main__':
                 lys_sum_clusters.append(len(lys_interm_area[1:]))
                 lys_time_per_cluster.append(dt*clusters[0]/len(lys_interm_area[1:]))
 
-            # if len(clusters_middle)>1:
-            #     lys_nr_of_clusters_middle.append(clusters_middle[0])
-            #     lys_nr_of_unclustered_middle.append(clusters_middle[1])
-            #     lys_time_in_clusters_middle.append(dt*clusters_middle[0])
-            #     lys_mean_area_middle.append(mean(lys_interm_area_middle[1:]))
-            #     lys_sum_clusters_middle.append(len(lys_interm_area_middle[1:]))
-            #     lys_time_per_cluster_middle.append(dt*clusters_middle[0]/len(lys_interm_area_middle[1:]))
-
-            
+     
 
             else:
                 # if track only has one type of point, the "clusters[i]" object has only one entry, either 0 (points in clusters) or 1 (points not in clusters)
@@ -1539,38 +1520,31 @@ if __name__ == '__main__':
 
 
 
-
-
-
-
                 
-        print(lys_nr_of_clusters)
-        print(lys_nr_of_clusters_middle)
+       # print(lys_nr_of_clusters)
+        #print(lys_nr_of_clusters_middle)
 
-
-
-        
-        fingerprints_df_out=pd.DataFrame(lys_nr_of_clusters, columns=["nr_of_spatially_arrested_points_per_track"])
-        fingerprints_df_out["nr_of_non-arrested_points_per_track"]=lys_nr_of_unclustered
-        fingerprints_df_out["tot_time_of_spatial_arrest_per_track"]=lys_time_in_clusters
-        fingerprints_df_out["mean_area_spatial_arrest_events"]=lys_mean_area
-        fingerprints_df_out["nr_of_spatial_arrest_events_per_track"]=lys_sum_clusters
-        fingerprints_df_out["average_duration_of_spatial_arrest_events_per_track"]=lys_time_per_cluster
+        ## below all the fully resolved ones: (only if cluster was in teh middle)
+        fingerprints_df_out=pd.DataFrame(lys_nr_of_clusters_middle, columns=["nr_of_STA_points_per_track"])
+        fingerprints_df_out["nr_of_non-STA_points_per_trck"]=lys_nr_of_unclustered_middle
+        fingerprints_df_out["tot_time_of_STA_per_track"]=lys_time_in_clusters_middle
+        fingerprints_df_out["mean_area_of_STA"]=lys_mean_area_middle
+        fingerprints_df_out["nr_of_STA_events_per_track"]=lys_sum_clusters_middle
+        fingerprints_df_out["average_duration_of_STA_events_per_track"]=lys_time_per_cluster_middle
+        fingerprints_df_out["MSD_STA"]=mean_msd_df["cluster_msd_middle"]
+        fingerprints_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
         fingerprints_df_out["logD_whole_track"]=mean_msd_df["logD"]
-        fingerprints_df_out["MSD_cluster"]=mean_msd_df["cluster_msd"]
-        fingerprints_df_out["logD_cluster"]=mean_msd_df["cluster_logD"]
 
 
-        fingerprints_df_out["nr_of_spatially_arrested_points_per_track_middle"]=lys_nr_of_clusters_middle
-        fingerprints_df_out["nr_of_non-arrested_points_per_track_middle"]=lys_nr_of_unclustered_middle
-        fingerprints_df_out["tot_time_of_spatial_arrest_per_track_middle"]=lys_time_in_clusters_middle
-        fingerprints_df_out["mean_area_spatial_arrest_events_middle"]=lys_mean_area_middle
-        fingerprints_df_out["nr_of_spatial_arrest_events_per_track_middle"]=lys_sum_clusters_middle
-        fingerprints_df_out["average_duration_of_spatial_arrest_events_per_track_middle"]=lys_time_per_cluster_middle
-        fingerprints_df_out["MSD_cluster_middle"]=mean_msd_df["cluster_msd_middle"]
-        fingerprints_df_out["logD_cluster_middle"]=mean_msd_df["cluster_logD_middle"]
-
-
+        # below including everything: also clusters in beginning and end
+        fingerprints_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
+        fingerprints_df_out["nr_of_non-SA_points_per_track"]=lys_nr_of_unclustered
+        fingerprints_df_out["tot_time_of_SA_per_track"]=lys_time_in_clusters
+        fingerprints_df_out["mean_area_of_SA"]=lys_mean_area
+        fingerprints_df_out["nr_of_SA_events_per_track"]=lys_sum_clusters
+        fingerprints_df_out["average_duration_of_SA_events_per_track"]=lys_time_per_cluster
+        fingerprints_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
+        fingerprints_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
 
 
 
@@ -2056,17 +2030,17 @@ if __name__ == '__main__':
 ### for files oin a folder with real tracak for our own hmm:
 ### working on implementaiton of julines STAs only in the middle
     plotting_flag=0
-    dt=0.2
+    dt=0.05
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
     
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"Z:\labs\Lab_Gronnier\Julien\ZMBP\Microscopy\TIRFM\spt-PALM\240507\Analysis\200ms\cleaned"
+    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\real_tracks"
 
 
-    calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+    calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
 
 
     ### for accuracy based on previosuly generated tracks in a folder:
