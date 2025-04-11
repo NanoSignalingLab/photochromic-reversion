@@ -67,7 +67,7 @@ if __name__ == '__main__':
     #############################################
     # for our own HMM for reading inmultiple csv files with real tracks, make one result excel per file
 
-    def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag):
+    def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag,image_saving_flag ):
         onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
         for i in onlyfiles:
             
@@ -75,7 +75,11 @@ if __name__ == '__main__':
                 path=os.path.join(folderpath1, i)
                 print(path)
                 image_path_lys=path.split("csv")
-                image_path=image_path_lys[0] +"svg"
+                if image_saving_flag=="svg":
+                    image_path=image_path_lys[0] +"svg"
+                else:
+                    image_path=image_path_lys[0] +"tiff"
+
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
                 mean_msd_df=msd_mean_track(msd_df, dt)
 
@@ -90,7 +94,7 @@ if __name__ == '__main__':
 
                 mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
 
-                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path)
+                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_saving_flag)
                 make_results_file(path, deep_df_short2, dt,mean_msd_df2 ) # run function to make excel with all parameters
 
 
@@ -907,13 +911,21 @@ if __name__ == '__main__':
     ################################################
     ###insert new plotting function: 
 
-    def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path):
+    def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_saving_flag):
         final_pal=dict(zero= "#06fcde" , one= "#808080")
         linecollection = []
         colors = []
+        if image_saving_flag=="tiff":
+            lw1=0.1
+            s1=0.001
+        else:
+            lw1=1
+            s1=0.1
+        
 
-        fig = plt.figure()
-        ax = fig.add_subplot()
+        #fig = plt.figure() # was this before
+        fig, ax = plt.subplots(1)
+        #ax = fig.add_subplot()
 
         sns.set(style="ticks", context="talk")
 
@@ -933,10 +945,10 @@ if __name__ == '__main__':
                 c2+=1
             c2+=1
 
-        lc = LineCollection(linecollection, color=colors, lw=1)
+        lc = LineCollection(linecollection, color=colors, lw=lw1)
 
         
-        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
+        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=s1, alpha=0)
         plt.gca().add_collection(lc)
 
 
@@ -945,7 +957,7 @@ if __name__ == '__main__':
                 points=lys_points_big2[j][i] 
                 hull = ConvexHull(points)
                 for simplex in hull.simplices:
-                    plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
+                    plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=lw1, color="green") # all SA
 
                     #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
@@ -956,16 +968,32 @@ if __name__ == '__main__':
                         points=lys_points_big_only_middle2[j][i] 
                         hull = ConvexHull(points)
                         for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1, color="red") 
+                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=lw1, color="red") # only middle STA
 
                             #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="red")
                                 #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
                                 
 
 
-        plt.axis('equal') 
-        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
-        plt.show()
+        if image_saving_flag=="svg":
+            plt.axis('equal') 
+            plt.savefig(str(image_path), format="svg") # 
+            plt.show()
+        else:
+            #plt.axis('equal') # was this before
+            ax.axis("equal")
+            #axes = plt.gca()
+            xmin, xmax=ax.get_xlim()
+            ymin, ymax=ax.get_ylim()
+            print(xmin, xmax)
+            print(ymin, ymax)
+
+
+                      # draw vertical line from (70,100) to (70, 250)$
+            plt.plot([xmax-2, xmax-1], [ymin+1, ymin+1], 'k-', lw=1)
+
+            plt.savefig(str(image_path), dpi=1500,format="tiff") # was 3500
+            plt.show()
       
   
     ###### make reuslts file for CASTA new HMM:
@@ -1136,14 +1164,18 @@ if __name__ == '__main__':
     dt=0.05
     min_track_length=25
     plotting_saving_nice_image_flag=0
-    tracks_saving_flag=0
+    image_saving_flag="svg"
+    image_saving_flag="tiff"
+
+
+
     
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
     folderpath1=r"C:\Users\miche\Desktop\simualted tracks\real_tracks"
 
 
-    calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+    calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
 
 
 
