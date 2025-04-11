@@ -1450,7 +1450,7 @@ if __name__ == '__main__':
     ############################### end function 
     ###### mkae fingerprint for new HMM:
     def make_results_file(f2, deep_df_short, dt, mean_msd_df):
-        print("this is deepdfshort",deep_df_short)
+        #print("this is deepdfshort",deep_df_short)
 
         lys_string=f2.split("\\")
         outpath1=lys_string[:-1]
@@ -1569,39 +1569,39 @@ if __name__ == '__main__':
         #print(lys_nr_of_clusters_middle)
 
         ## below all the fully resolved ones: (only if cluster was in teh middle)
-        fingerprints_df_out=pd.DataFrame(lys_nr_of_clusters_middle, columns=["nr_of_STA_points_per_track"])
-        fingerprints_df_out["nr_of_non-STA_points_per_trck"]=lys_nr_of_unclustered_middle
-        fingerprints_df_out["tot_time_of_STA_per_track"]=lys_time_in_clusters_middle
-        fingerprints_df_out["mean_area_of_STA"]=lys_mean_area_middle
-        fingerprints_df_out["nr_of_STA_events_per_track"]=lys_sum_clusters_middle
-        fingerprints_df_out["average_duration_of_STA_events_per_track"]=lys_time_per_cluster_middle
-        fingerprints_df_out["MSD_STA"]=mean_msd_df["cluster_msd_middle"]
-        fingerprints_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
-        fingerprints_df_out["logD_whole_track"]=mean_msd_df["logD"]
+        casta_df_out=pd.DataFrame(lys_nr_of_clusters_middle, columns=["nr_of_STA_points_per_track"])
+        casta_df_out["nr_of_non-STA_points_per_trck"]=lys_nr_of_unclustered_middle
+        casta_df_out["tot_time_of_STA_per_track"]=lys_time_in_clusters_middle
+        casta_df_out["mean_area_of_STA"]=lys_mean_area_middle
+        casta_df_out["nr_of_STA_events_per_track"]=lys_sum_clusters_middle
+        casta_df_out["average_duration_of_STA_events_per_track"]=lys_time_per_cluster_middle
+        casta_df_out["MSD_STA"]=mean_msd_df["cluster_msd_middle"]
+        casta_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
+        casta_df_out["logD_whole_track"]=mean_msd_df["logD"]
 
-        fingerprints_df_out["logD_tracks_without_STA"]=mean_msd_df["mean_logD_without_STA"]
+        casta_df_out["logD_tracks_without_STA"]=mean_msd_df["mean_logD_without_STA"]
 
 
 
         # below including everything: also clusters in beginning and end
-        fingerprints_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
-        fingerprints_df_out["nr_of_non-SA_points_per_track"]=lys_nr_of_unclustered
-        fingerprints_df_out["tot_time_of_SA_per_track"]=lys_time_in_clusters
-        fingerprints_df_out["mean_area_of_SA"]=lys_mean_area
-        fingerprints_df_out["nr_of_SA_events_per_track"]=lys_sum_clusters
-        fingerprints_df_out["average_duration_of_SA_events_per_track"]=lys_time_per_cluster
-        fingerprints_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
-        fingerprints_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
+        casta_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
+        casta_df_out["nr_of_non-SA_points_per_track"]=lys_nr_of_unclustered
+        casta_df_out["tot_time_of_SA_per_track"]=lys_time_in_clusters
+        casta_df_out["mean_area_of_SA"]=lys_mean_area
+        casta_df_out["nr_of_SA_events_per_track"]=lys_sum_clusters
+        casta_df_out["average_duration_of_SA_events_per_track"]=lys_time_per_cluster
+        casta_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
+        casta_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
 
 
 
 
         outpath4=outpath3+"_CASTA_results"+".xlsx"
         writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
-        fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+        casta_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
         writer.close()
 
-        return fingerprints_df_out
+        return casta_df_out
         
 
 
