@@ -182,14 +182,12 @@ if __name__ == '__main__':
                 deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
                 deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
 
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
                 #plotting_final_image(deep_df_short2,lys_points2, image_path)
-                mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
-
                 plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path)
-                make_results_file(path, deep_df_short2, dt,mean_msd_df2 ) # run function to make excel with all parameters
+                make_results_file(path, deep_df_short2, dt,mean_msd_df ) # run function to make excel with all parameters
 
           
 
@@ -641,6 +639,68 @@ if __name__ == '__main__':
         return out, out2
         
     #################### end function
+    ## for nice KDE picture plot:
+
+
+    def plot_KDE(deep_df, out,lys_x, lys_y ):
+        print(out)
+        print(deep_df)
+       
+        final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
+
+        plt.style.use("dark_background")
+
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        sns.set(style="ticks", context="talk")
+
+        linecollection = []
+        colors = []
+        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
+        
+        c2=0
+      
+        for i in grouped_plot["tid"].unique():
+            s= grouped_plot.get_group(i[0])
+            sns.kdeplot(data=s, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="mako",alpha=0.6)
+
+            for i in range (len(s["pos_x"])-1):
+
+                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
+                color = final_pal[deep_df["KDE_level"][c2]]
+                linecollection.append(line)
+                colors.append(color)
+
+                c2+=1
+            c2+=1
+
+        lc = LineCollection(linecollection, color=colors, lw=2) # was 1
+        
+       
+    
+        plt.gca().add_collection(lc)
+        plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01) #was 0.00
+
+        #sns.kdeplot(data=deep_df, x="pos_x", y="pos_y",hue="tid",fill=True, thresh=0, levels=100, cmap="mako",)
+        plt.axis('equal') 
+
+
+        plt.show()
+
+
+
+        #fig, ax = plt.subplots()
+        #ax.imshow(np.rot90(out))
+        #ax.plot(lys_x, lys_y, 'k.', markersize=2)
+        #plt.show()
+     
+       
+
+
+
+
+
+        return deep_df
 
     #################### function for KDE:
 
@@ -668,9 +728,16 @@ if __name__ == '__main__':
         deep_df["KDE_cont"]=KDE_cont_lys
         deep_df["KDE_cont_level"] = pd.cut(deep_df["KDE_cont"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df["KDE_cont_level"] = deep_df["KDE_cont_level"].astype(str)
+
+        plot_KDE(deep_df,out, lys_x, lys_y)
+        
         return deep_df
 
+        
         ########################## KDE done
+
+
+
 
     ######################### function to calculate intersections:
     # check line intersection: for consistency: 0 = intersection, 1 = not
@@ -976,9 +1043,6 @@ if __name__ == '__main__':
         #print(lys_start_end_cluster2[2], len(lys_start_end_cluster2[2]))
         #print(lys_points2[2], len(lys_points2[2]))
 
-        ## insert logD calucaltion of non-clustered tracks someweherre here:
-
-
         
         ######################### plot points together with above lines
         lys_area2=[]
@@ -1178,49 +1242,8 @@ if __name__ == '__main__':
         deep_df_short['in_hull_level_middle'] = pd.cut(deep_df_short["in_hull_middle"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df_short['in_hull_level_middle'] = deep_df_short['in_hull_level_middle'].astype(str)
     
+        #print(deep_df_short)
         return deep_df_short
-    
-
-    ## here insert function for log D of only non-clsutered:
-
-    def caluclate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
-        print(mean_msd_df)
-
-
-        grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
-        lys_logD_no_STA=[]
-        for trackn in grouped_plot["tid"].unique():
-            s= grouped_plot.get_group(trackn[0])
-            pos_x=s["pos_x"]
-            pos_y=s["pos_y"]
-            if sum(s["in_hull"])==len(s["in_hull"]): # only get trackcs without any clsuter: all are 1=no clsuter
-                   
-                m= np.column_stack(( pos_x, pos_y))
-                msd, rmsd = compute_msd(m)
-                mean_msd, logD = logD_from_mean_MSD(msd)
-                #lys_logD_no_STA.append([logD]*len(pos_x))
-                lys_logD_no_STA.append(logD)
-
-
-            
-            else:
-                #lys_logD_no_STA.append([0]*len(pos_x))
-                lys_logD_no_STA.append(0)
-        
-        #lys_logD_no_STA_flat=list(chain.from_iterable(lys_logD_no_STA))
-        #deep_df_short["mean_logD_without_STA"]=lys_logD_no_STA_flat
-        mean_msd_df["mean_logD_without_STA"]=lys_logD_no_STA
-        #print(mean_msd_df)
-
-        return mean_msd_df
-
-
-
-
-    
-
-
-
 
     ################################################
     ### plotting hull and tracks togehter: as arrested vs not spatially arrested
@@ -1516,6 +1539,8 @@ if __name__ == '__main__':
                     lys_sum_clusters.append(0)
 
 
+                    
+
                 else:
                     # all points of track are cluster points
                     lys_nr_of_clusters.append(arry[0])
@@ -1579,9 +1604,6 @@ if __name__ == '__main__':
         fingerprints_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
         fingerprints_df_out["logD_whole_track"]=mean_msd_df["logD"]
 
-        fingerprints_df_out["logD_tracks_without_STA"]=mean_msd_df["mean_logD_without_STA"]
-
-
 
         # below including everything: also clusters in beginning and end
         fingerprints_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
@@ -1596,7 +1618,7 @@ if __name__ == '__main__':
 
 
 
-        outpath4=outpath3+"_CASTA_results"+".xlsx"
+        outpath4=outpath3+"_fingerprint_results"+".xlsx"
         writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
         fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
         writer.close()
