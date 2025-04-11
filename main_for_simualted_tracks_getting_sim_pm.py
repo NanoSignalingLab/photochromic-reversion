@@ -200,14 +200,14 @@ if __name__ == '__main__':
             sim_tracks_6=calcualte_intersections_for_sim(lys_x, lys_y, sim_tracks_5)
             #print(sim_tracks_6.columns)
             sim_tracks_7=sim_tracks_6[["POSITION_X", "POSITION_Y", "TRACK_ID", "POSITION_T", "GT", "distance", "angles", "cont_angles_values","KDE_invert", "cont_KDE_values" , "all_intersect_count", "cont_intersect_values"]]
-            print(sim_tracks_7)
+            #print(sim_tracks_7)
 
-            sim_tracks_7.pivot(columns="GT", values="cont_angles_values").plot.hist(bins=100, alpha=0.5)
-            plt.show()
-            sim_tracks_7.pivot(columns="GT", values="cont_KDE_values").plot.hist(bins=20, alpha=0.5)
-            plt.show()
-            sim_tracks_7.pivot(columns="GT", values="cont_intersect_values").plot.hist(bins=10, alpha=0.5)
-            plt.show()
+            #sim_tracks_7.pivot(columns="GT", values="cont_angles_values").plot.hist(bins=100, alpha=0.5)
+           # plt.show()
+            #sim_tracks_7.pivot(columns="GT", values="cont_KDE_values").plot.hist(bins=100, alpha=0.5) # th is 13
+            #plt.show()
+            #sim_tracks_7.pivot(columns="GT", values="cont_intersect_values").plot.hist(bins=100, alpha=0.5) # th is 6
+            #plt.show()
 
 
             
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
         N=500
         T=200
-        D=0.001
+        D=0.01
         DS2=1
         L = 1.5*128 #enalrge field ov fiew to avoid boundy effects
         compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
@@ -2172,15 +2172,15 @@ if __name__ == '__main__':
 
     ####################################################
     #### to get paramters from simualtion directly and plot them
-    plotting_flag=0
-    dt=0.1
-    min_track_length=25
-    plotting_saving_nice_image_flag=0
-    tracks_saving_flag=0
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values1.csv"
-    #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\for_sim_paramters_distributionplots\Sven_sim_values1_D0.001_N500_T200_6.12.24.csv"
-    #f1=r"C:\Users\miche\Desktop\simualted tracks\test_values_1.csv"
-    #calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag)
+    #plotting_flag=0
+    #dt=0.1
+    #min_track_length=25
+    #plotting_saving_nice_image_flag=0
+    #tracks_saving_flag=0
+    f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values1.csv"
+    f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep3\values_pm_sweep_D0.01_N500_T200.csv"
+
+    calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag)
 
    
     
