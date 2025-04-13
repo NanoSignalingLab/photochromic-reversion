@@ -16,7 +16,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn import datasets, svm, metrics
 
-from pomegranate import *
+#from pomegranate import *
 import pandas as pd
 
 
