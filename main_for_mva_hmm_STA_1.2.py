@@ -14,7 +14,7 @@ from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWra
 from MLGeneral import ML, histogram
 import pickle
 import os
-from pomegranate import *
+#from pomegranate import *
 from functools import partial
 import numpy as np
 # import multiprocess as mp
@@ -612,8 +612,6 @@ if __name__ == '__main__':
                     pos_x=s["pos_x"][c2]
                     pos_y=s["pos_y"][c2]
                     m= np.column_stack(( pos_x, pos_y))
-                   
-                                
                     if flag==0:
                         pos_all=m
 
@@ -627,9 +625,7 @@ if __name__ == '__main__':
                             lys_test1=[]
                             lys_test1.append("BC") # just begginning of clsuter
 
-
                     else:
-                        
                         if i == len(s["pos_x"])-2:
                             pos_all = np.vstack((pos_all,m))
                         
@@ -638,16 +634,13 @@ if __name__ == '__main__':
 
                             #lys_starting_end_points.append(["E"]) # clsuter in end of track
                             lys_test1.append("E")
+                            lys_start_end_cluster.append(lys_test1)
                           
-
                         else:
                             pos_all = np.vstack((pos_all,m))
                             #lys_starting_end_points.append(["M"]) # middle of clsuter and cluster in tehn  middle
                          
                             lys_test1.append("M")
-
-
-
 
                 else:
                     if flag!=0:
@@ -657,23 +650,15 @@ if __name__ == '__main__':
                         lys_start_end_cluster.append(lys_test1)
 
                         #lys_starting_end_points.append(["IDK"]) # end of clsuter 
-                   
-
-
-                    
                     flag=0
                 c2+=1
             
             lys_points2.append(lys_points)
          
             lys_start_end_cluster2.append(lys_start_end_cluster)
-            
-            
                 
             c2+=1
        
-
-        
         ######################### plot points together with above lines
         lys_area2=[]
         lys_perimeter2=[]
@@ -701,11 +686,11 @@ if __name__ == '__main__':
             #### add clsuter begin end points here as well:
             lys_begin_end_big=[]
             lys_points_big_only_middle=[]
-
             
             for i in range(len(lys_points2[j])):
                 
                 points=lys_points2[j][i] 
+                
                 if len(points)>5:
                     
                     hull = ConvexHull(points)
@@ -1172,7 +1157,11 @@ if __name__ == '__main__':
     
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
+<<<<<<< HEAD
     folderpath1=r"C:\Users\miche\Desktop\simualted tracks\tracks_problem"
+=======
+    folderpath1=r"C:\Users\Philip\Desktop\tracks"
+>>>>>>> f990cad14961a36ba8a72f2e1b8ac678df8cb3be
 
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
