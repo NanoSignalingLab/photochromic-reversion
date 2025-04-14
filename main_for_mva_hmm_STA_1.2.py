@@ -1172,7 +1172,7 @@ if __name__ == '__main__':
     
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\real_tracks"
+    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\tracks_problem"
 
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)

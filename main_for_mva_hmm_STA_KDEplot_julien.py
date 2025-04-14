@@ -683,6 +683,9 @@ if __name__ == '__main__':
 
         #sns.kdeplot(data=deep_df, x="pos_x", y="pos_y",hue="tid",fill=True, thresh=0, levels=100, cmap="mako",)
         plt.axis('equal') 
+        
+        plt.savefig(str(image_path), dpi=1500,format="tiff") # was 3500
+
 
 
         plt.show()
