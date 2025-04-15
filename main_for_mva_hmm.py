@@ -302,7 +302,7 @@ if __name__ == '__main__':
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
         N=500
         T=200
-        D=0.001
+        D=0.015
         DS2=1
         L = 1.5*128 # enalrge field of fiew to avoid boundy effects
         compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
@@ -1758,16 +1758,18 @@ if __name__ == '__main__':
 
 #### for our own hmm to evaulate while simualting tracks:
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
-    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
+    f1=r"Z:\Research\Members\Michelle\simulated_tracks\sim_values_for_accruracy_new_HMM\sim_values_25.3.25_D0.015_N500_T200\sim_values4.3_D0.015_N500_T200_25.3.25.csv"
+
+    calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 
 ### fpr files oin a folder with real tracak for our own hmm:
-    plotting_flag=0
-    dt=0.1
-    min_track_length=25
-    plotting_saving_nice_image_flag=0
-    tracks_saving_flag=0
+    #plotting_flag=0
+    #dt=0.1
+    #min_track_length=25
+    #plotting_saving_nice_image_flag=0
+    #tracks_saving_flag=0
     
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
@@ -1779,8 +1781,8 @@ if __name__ == '__main__':
 
     ### for accuracy based on previosuly generated tracks in a folder:
 
-    folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\DC_MSS_1\DC_MSS_sim2_D0.015_N500_T200"
-    calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag)
+    #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\DC_MSS_1\DC_MSS_sim2_D0.015_N500_T200"
+    #calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag)
 
 
 

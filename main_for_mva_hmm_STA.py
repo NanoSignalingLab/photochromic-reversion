@@ -173,6 +173,8 @@ if __name__ == '__main__':
                 print(path)
                 image_path_lys=path.split("csv")
                 image_path=image_path_lys[0] +"svg"
+                image_path_tiff=image_path_lys[0] +"tiff"
+
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
                 mean_msd_df=msd_mean_track(msd_df, dt)
 
@@ -186,7 +188,7 @@ if __name__ == '__main__':
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
                 #plotting_final_image(deep_df_short2,lys_points2, image_path)
-                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path)
+                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_path_tiff)
                 make_results_file(path, deep_df_short2, dt,mean_msd_df ) # run function to make excel with all parameters
 
           
@@ -1233,12 +1235,12 @@ if __name__ == '__main__':
         plt.show()
 
         #plt.axis('equal') 
-        #plt.savefig(str(image_path), dpi=3500,format="tiff") # uncomment this to save nice svg
+        #plt.savefig(str(image_path), dpi=3500,format="tiff") # uncomment this to save nice tiff
         #plt.show()
 
         ###insert new plotting function: 
 
-    def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path):
+    def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_path_tiff):
         final_pal=dict(zero= "#06fcde" , one= "#808080")
         linecollection = []
         colors = []
@@ -1264,10 +1266,10 @@ if __name__ == '__main__':
                 c2+=1
             c2+=1
 
-        lc = LineCollection(linecollection, color=colors, lw=1)
+        lc = LineCollection(linecollection, color=colors, lw=0.1) #was1
 
         
-        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
+        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001, alpha=0)
         plt.gca().add_collection(lc)
 
 
@@ -1276,7 +1278,7 @@ if __name__ == '__main__':
                 points=lys_points_big2[j][i] 
                 hull = ConvexHull(points)
                 for simplex in hull.simplices:
-                    plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
+                    plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.1 ) #was 1
 
                     #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
@@ -1287,7 +1289,7 @@ if __name__ == '__main__':
                         points=lys_points_big_only_middle2[j][i] 
                         hull = ConvexHull(points)
                         for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1, color="red") 
+                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.1, color="#008080") #was1
 
                             #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="red")
                                 #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
@@ -1297,6 +1299,10 @@ if __name__ == '__main__':
         plt.axis('equal') 
         plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
         plt.show()
+
+        #plt.axis('equal') 
+        #plt.savefig(str(image_path_tiff), dpi=3500,format="tiff") # uncomment this to save nice tiff
+        #plt.show()
       
 
 
@@ -1982,7 +1988,7 @@ if __name__ == '__main__':
     # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
     
     # example:
-    #dt=0.05
+    #dt=0.1
     #plotting_flag=0
     #min_track_length=25
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
@@ -2008,11 +2014,11 @@ if __name__ == '__main__':
     
     # example:
 
-    plotting_flag=0
-    dt=0.1
-    min_track_length=25
-    plotting_saving_nice_image_flag=0
-    tracks_saving_flag=0
+    #plotting_flag=0
+    #dt=0.1
+    #min_track_length=25
+   # plotting_saving_nice_image_flag=0
+    #tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\plots\plot_values_D0.001_for_mean_clusters_plot.csv"
@@ -2023,12 +2029,14 @@ if __name__ == '__main__':
 
 #### for our own hmm to evaulate while simualting tracks:
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
+    #f1=r"Z:\Research\Members\Michelle\simulated_tracks\sim_values_for_accruracy_new_HMM\sim_values_25.3.25_D0.001_N500_T200\sim_values1.1_D0.001_N500_T200_25.3.25.csv"
     #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 
 ### for files oin a folder with real tracak for our own hmm:
 ### working on implementaiton of julines STAs only in the middle
+
     plotting_flag=0
     dt=0.05
     min_track_length=25
@@ -2037,7 +2045,7 @@ if __name__ == '__main__':
     
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\real_tracks"
+    folderpath1=r"Z:\Research\Members\Michelle\TIRFM\24.09.10_At_FLS2_MADs\pub10_FLS2_3248-4\cleaned_casta\t"
 
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)

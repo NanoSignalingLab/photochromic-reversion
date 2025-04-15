@@ -258,7 +258,7 @@ if __name__ == '__main__':
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
         N=500
         T=200
-        D=0.01
+        D=0.015
         DS2=1
         L = 1.5*128 #enalrge field ov fiew to avoid boundy effects
         compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
@@ -2121,13 +2121,13 @@ if __name__ == '__main__':
     #f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\Long_tracks_cell6-3_1476.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\confinement_0_tracks.csv"
 
-    f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\cleaned_trackmate_1476-1_488.csv"
-    f2=f1
-    dt=0.05
-    plotting_flag=0
-    min_track_length=25
+    #f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\cleaned_trackmate_1476-1_488.csv"
+    #f2=f1
+    #dt=0.05
+    #plotting_flag=0
+    #min_track_length=25
 
-    wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
+    #wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
     ############################################
     ## for folder with multiple real tracks:
 
@@ -2172,13 +2172,13 @@ if __name__ == '__main__':
 
     ####################################################
     #### to get paramters from simualtion directly and plot them
-    #plotting_flag=0
-    #dt=0.1
-    #min_track_length=25
-    #plotting_saving_nice_image_flag=0
-    #tracks_saving_flag=0
-    f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values1.csv"
-    f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep3\values_pm_sweep_D0.01_N500_T200.csv"
+    plotting_flag=0
+    dt=0.1
+    min_track_length=25
+    plotting_saving_nice_image_flag=0
+    tracks_saving_flag=0
+    f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep1\values_pm_sweep_D0.005_N500_T200.csv"
+    f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep4\values_pm_sweep_D0.015_N500_T200.csv"
 
     calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag)
 
