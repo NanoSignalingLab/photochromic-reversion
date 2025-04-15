@@ -305,9 +305,9 @@ if __name__ == '__main__':
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
         N=500
         T=200
-        D=0.015
+        D=0.001
         DS2=1
-        L = 1.5*128 # enalrge field of fiew to avoid boundy effects
+        L = 1.5*128 # enalrge field of fiew to avoid boundy effects ³ was 1.5*128 
         compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
                                                                             r = radius_compartments,
                                                                             L = L)                                
@@ -1674,7 +1674,7 @@ if __name__ == '__main__':
         #ax = fig.add_subplot()
 
         for c in compartments_center:
-            circle = plt.Circle((c[0], c[1]), radius_compartments, facecolor = 'None', edgecolor = 'C1', zorder = 10)
+            circle = plt.Circle((c[0], c[1]), radius_compartments, facecolor = 'None', edgecolor = 'C1', zorder = 10, lw=1)
             ax.add_patch(circle)
 
 
@@ -1697,10 +1697,10 @@ if __name__ == '__main__':
         lc = LineCollection(linecollection, color=colors, lw=1)
 
         
-        plt.scatter(finger_tracks["pos_x"], finger_tracks["pos_y"], s=0.001)
+        plt.scatter(finger_tracks["pos_x"], finger_tracks["pos_y"], s=0.1, alpha=0)
         plt.gca().add_collection(lc)
         plt.axis('equal') 
-        plt.savefig(str(image_path1), format="tiff") # uncomment this to save nice svg
+        plt.savefig(str(image_path1), dpi=4500, format="tiff") # uncomment this to save nice svg
 
         plt.show()
 
@@ -1776,10 +1776,11 @@ if __name__ == '__main__':
 
 
 #### for our own hmm to evaulate while simualting tracks:
-    f1=r"C:\Users\miche\Desktop\simualted tracks\test_HMM\sim_test.csv"
+    f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_pictures_of_simulations\sim_picture_circles.csv"
 
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
-    f1=r"Z:\Research\Members\Michelle\simulated_tracks\sim_values_for_accruracy_new_HMM\sim_values_25.3.25_D0.015_N500_T200\sim_values4.3_D0.015_N500_T200_25.3.25.csv"
+    #f1=r"Z:\Research\Members\Michelle\simulated_tracks\sim_values_for_accruracy_new_HMM\sim_values_25.3.25_D0.015_N500_T200\sim_values4.3_D0.015_N500_T200_25.3.25.csv"
+
 
     calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
