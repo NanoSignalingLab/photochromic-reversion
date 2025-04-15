@@ -184,12 +184,14 @@ if __name__ == '__main__':
                 deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
                 deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
 
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
                 #plotting_final_image(deep_df_short2,lys_points2, image_path)
+                mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
+
                 plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_path_tiff)
-                make_results_file(path, deep_df_short2, dt,mean_msd_df ) # run function to make excel with all parameters
+                make_results_file(path, deep_df_short2, dt,mean_msd_df2 ) # run function to make excel with all parameters
 
           
 
@@ -976,6 +978,9 @@ if __name__ == '__main__':
         #print(lys_start_end_cluster2[2], len(lys_start_end_cluster2[2]))
         #print(lys_points2[2], len(lys_points2[2]))
 
+        ## insert logD calucaltion of non-clustered tracks someweherre here:
+
+
         
         ######################### plot points together with above lines
         lys_area2=[]
@@ -1175,8 +1180,49 @@ if __name__ == '__main__':
         deep_df_short['in_hull_level_middle'] = pd.cut(deep_df_short["in_hull_middle"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df_short['in_hull_level_middle'] = deep_df_short['in_hull_level_middle'].astype(str)
     
-        #print(deep_df_short)
         return deep_df_short
+    
+
+    ## here insert function for log D of only non-clsutered:
+
+    def caluclate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
+        print(mean_msd_df)
+
+
+        grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
+        lys_logD_no_STA=[]
+        for trackn in grouped_plot["tid"].unique():
+            s= grouped_plot.get_group(trackn[0])
+            pos_x=s["pos_x"]
+            pos_y=s["pos_y"]
+            if sum(s["in_hull"])==len(s["in_hull"]): # only get trackcs without any clsuter: all are 1=no clsuter
+                   
+                m= np.column_stack(( pos_x, pos_y))
+                msd, rmsd = compute_msd(m)
+                mean_msd, logD = logD_from_mean_MSD(msd)
+                #lys_logD_no_STA.append([logD]*len(pos_x))
+                lys_logD_no_STA.append(logD)
+
+
+            
+            else:
+                #lys_logD_no_STA.append([0]*len(pos_x))
+                lys_logD_no_STA.append(0)
+        
+        #lys_logD_no_STA_flat=list(chain.from_iterable(lys_logD_no_STA))
+        #deep_df_short["mean_logD_without_STA"]=lys_logD_no_STA_flat
+        mean_msd_df["mean_logD_without_STA"]=lys_logD_no_STA
+        #print(mean_msd_df)
+
+        return mean_msd_df
+
+
+
+
+    
+
+
+
 
     ################################################
     ### plotting hull and tracks togehter: as arrested vs not spatially arrested
@@ -1410,7 +1456,7 @@ if __name__ == '__main__':
     ############################### end function 
     ###### mkae fingerprint for new HMM:
     def make_results_file(f2, deep_df_short, dt, mean_msd_df):
-        print("this is deepdfshort",deep_df_short)
+        #print("this is deepdfshort",deep_df_short)
 
         lys_string=f2.split("\\")
         outpath1=lys_string[:-1]
@@ -1476,8 +1522,6 @@ if __name__ == '__main__':
                     lys_sum_clusters.append(0)
 
 
-                    
-
                 else:
                     # all points of track are cluster points
                     lys_nr_of_clusters.append(arry[0])
@@ -1531,36 +1575,39 @@ if __name__ == '__main__':
         #print(lys_nr_of_clusters_middle)
 
         ## below all the fully resolved ones: (only if cluster was in teh middle)
-        fingerprints_df_out=pd.DataFrame(lys_nr_of_clusters_middle, columns=["nr_of_STA_points_per_track"])
-        fingerprints_df_out["nr_of_non-STA_points_per_trck"]=lys_nr_of_unclustered_middle
-        fingerprints_df_out["tot_time_of_STA_per_track"]=lys_time_in_clusters_middle
-        fingerprints_df_out["mean_area_of_STA"]=lys_mean_area_middle
-        fingerprints_df_out["nr_of_STA_events_per_track"]=lys_sum_clusters_middle
-        fingerprints_df_out["average_duration_of_STA_events_per_track"]=lys_time_per_cluster_middle
-        fingerprints_df_out["MSD_STA"]=mean_msd_df["cluster_msd_middle"]
-        fingerprints_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
-        fingerprints_df_out["logD_whole_track"]=mean_msd_df["logD"]
+        casta_df_out=pd.DataFrame(lys_nr_of_clusters_middle, columns=["nr_of_STA_points_per_track"])
+        casta_df_out["nr_of_non-STA_points_per_trck"]=lys_nr_of_unclustered_middle
+        casta_df_out["tot_time_of_STA_per_track"]=lys_time_in_clusters_middle
+        casta_df_out["mean_area_of_STA"]=lys_mean_area_middle
+        casta_df_out["nr_of_STA_events_per_track"]=lys_sum_clusters_middle
+        casta_df_out["average_duration_of_STA_events_per_track"]=lys_time_per_cluster_middle
+        casta_df_out["MSD_STA"]=mean_msd_df["cluster_msd_middle"]
+        casta_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
+        casta_df_out["logD_whole_track"]=mean_msd_df["logD"]
+
+        casta_df_out["logD_tracks_without_STA"]=mean_msd_df["mean_logD_without_STA"]
+
 
 
         # below including everything: also clusters in beginning and end
-        fingerprints_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
-        fingerprints_df_out["nr_of_non-SA_points_per_track"]=lys_nr_of_unclustered
-        fingerprints_df_out["tot_time_of_SA_per_track"]=lys_time_in_clusters
-        fingerprints_df_out["mean_area_of_SA"]=lys_mean_area
-        fingerprints_df_out["nr_of_SA_events_per_track"]=lys_sum_clusters
-        fingerprints_df_out["average_duration_of_SA_events_per_track"]=lys_time_per_cluster
-        fingerprints_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
-        fingerprints_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
+        casta_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
+        casta_df_out["nr_of_non-SA_points_per_track"]=lys_nr_of_unclustered
+        casta_df_out["tot_time_of_SA_per_track"]=lys_time_in_clusters
+        casta_df_out["mean_area_of_SA"]=lys_mean_area
+        casta_df_out["nr_of_SA_events_per_track"]=lys_sum_clusters
+        casta_df_out["average_duration_of_SA_events_per_track"]=lys_time_per_cluster
+        casta_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
+        casta_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
 
 
 
 
-        outpath4=outpath3+"_fingerprint_results"+".xlsx"
+        outpath4=outpath3+"_CASTA_results"+".xlsx"
         writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
-        fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+        casta_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
         writer.close()
 
-        return fingerprints_df_out
+        return casta_df_out
         
 
 
