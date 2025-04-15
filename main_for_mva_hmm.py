@@ -120,7 +120,7 @@ if __name__ == '__main__':
         
         for index, row in df_values.iterrows():
             print("running simulation nr: ", index)
-            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
+            trajectories, labels, compartments_center =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
             sim_tracks=make_dataset_csv(trajectories, labels)
             deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks, min_track_length)
             mean_msd_df=msd_mean_track(msd_df, dt)
@@ -205,8 +205,10 @@ if __name__ == '__main__':
         
         for index, row in df_values.iterrows():
             print("running simulation nr: ", index)
-            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
+            trajectories, labels, compartments_center =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
             sim_tracks=make_dataset_csv(trajectories, labels)
+
+            
             deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks, min_track_length)
             mean_msd_df=msd_mean_track(msd_df, dt)
             deep_df2= run_traces_wrapper(deep_df1, dt)
@@ -224,7 +226,8 @@ if __name__ == '__main__':
         
             if plotting_saving_nice_image_flag==1:
                 image_path1=image_path+str(index)+".tiff"
-                plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
+                plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1, compartments_center,sim_tracks, row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
+                #plot_simulation(compartments_center,sim_tracks, row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
             if tracks_saving_flag==1:
                 path_out_simulated_tracks_lys=f1.split(".csv")
                 path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
@@ -317,7 +320,14 @@ if __name__ == '__main__':
                                                             trans = trans_value, # Boundary transmittance
                                                             T=T,
                                                             alphas=[1, alphas_value])
-        return trajs_model5, labels_model5
+        
+        
+        return trajs_model5, labels_model5, compartments_center
+    
+
+
+
+
     ################################################
     def make_dataset_csv(traj, labels):
         for i in range (0, traj.shape[1]):
@@ -347,8 +357,6 @@ if __name__ == '__main__':
         return tracks_df
 
 
-    ############################################
-  
     ############################################
     # function to directly load the cleaned trackmate files:
 
@@ -1611,7 +1619,7 @@ if __name__ == '__main__':
 
     #####################################################
     ## function for plotting for GT and finger here:
-    def plot_GT_and_finger(sim_tracks2, finger_tracks, image_path1):
+    def plot_GT_and_finger(sim_tracks2, finger_tracks, image_path1, compartments_center,sim_tracks, number_compartments, radius_compartments, DS1, alphas_value, trans_value):
        
         arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
         arry_finger=finger_tracks["in_hull"] #
@@ -1660,6 +1668,15 @@ if __name__ == '__main__':
         ax = fig.add_subplot()
 
         sns.set(style="ticks", context="talk")
+
+        ## add plotting of circles here:
+        #fig = plt.figure()
+        #ax = fig.add_subplot()
+
+        for c in compartments_center:
+            circle = plt.Circle((c[0], c[1]), radius_compartments, facecolor = 'None', edgecolor = 'C1', zorder = 10)
+            ax.add_patch(circle)
+
 
         grouped_plot= finger_tracks.sort_values(["pos_t"]).groupby("tid")
         c2=0
@@ -1743,31 +1760,38 @@ if __name__ == '__main__':
     
     # example:
 
-    plotting_flag=0
+    plotting_flag=1
     dt=0.1
     min_track_length=25
-    plotting_saving_nice_image_flag=0
+    plotting_saving_nice_image_flag=1
     tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\plots\plot_values_D0.001_for_mean_clusters_plot.csv"
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\simulation_parameters_for_Sven\Sven_values_D0.001_N500_T200_test.csv"
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip_test.csv"
+    
+    #f1=r"C:\Users\miche\Desktop\simualted tracks\test_HMM\sim_test.csv"
     #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
 
 
 #### for our own hmm to evaulate while simualting tracks:
+    f1=r"C:\Users\miche\Desktop\simualted tracks\test_HMM\sim_test.csv"
+
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
-    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
+
+
+
+    calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 
 ### fpr files oin a folder with real tracak for our own hmm:
-    plotting_flag=0
-    dt=0.1
-    min_track_length=25
-    plotting_saving_nice_image_flag=0
-    tracks_saving_flag=0
+    #plotting_flag=0
+    #dt=0.1
+    #min_track_length=25
+    #plotting_saving_nice_image_flag=0
+    #tracks_saving_flag=0
     
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
@@ -1779,8 +1803,8 @@ if __name__ == '__main__':
 
     ### for accuracy based on previosuly generated tracks in a folder:
 
-    folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\DC_MSS_1\DC_MSS_sim2_D0.015_N500_T200"
-    calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag)
+    #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\DC_MSS_1\DC_MSS_sim2_D0.015_N500_T200"
+    #calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag)
 
 
 
