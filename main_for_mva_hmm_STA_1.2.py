@@ -1152,17 +1152,8 @@ if __name__ == '__main__':
     image_saving_flag="svg"
     image_saving_flag="tiff"
 
-
-
-    
-
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-<<<<<<< HEAD
-    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\tracks_problem"
-=======
     folderpath1=r"C:\Users\Philip\Desktop\tracks"
->>>>>>> f990cad14961a36ba8a72f2e1b8ac678df8cb3be
-
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
 

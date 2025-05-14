@@ -14,7 +14,6 @@ from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWra
 from MLGeneral import ML, histogram
 import pickle
 import os
-from pomegranate import *
 from functools import partial
 import numpy as np
 # import multiprocess as mp
@@ -29,6 +28,8 @@ from functools import reduce
 import operator 
 from matplotlib import rcParams
 from matplotlib.collections import LineCollection
+from matplotlib import cm
+from matplotlib.colors import Normalize
 from itertools import chain
 import math
 from scipy.stats import gaussian_kde
@@ -176,7 +177,7 @@ if __name__ == '__main__':
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
                 mean_msd_df=msd_mean_track(msd_df, dt)
 
-                deep_df2= run_traces_wrapper(deep_df1, dt)
+                deep_df2=run_traces_wrapper(deep_df1, dt)
                 deep_df3=computing_distance_wrapper(deep_df2)
                 deep_df4=calculate_angles_wrapper(deep_df3)
                 deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
@@ -509,6 +510,92 @@ if __name__ == '__main__':
         return lys_final_flat
     
     ################# end function for consecutive features
+
+    ################## plot feature values onto line segments ##############
+    def plot_values_on_track(deep_df, value):
+
+        if value == "KDE_invert":
+            plt.style.use("dark_background")
+        else:
+            plt.style.use("default")
+
+        fig, ax = plt.subplots(figsize=(6, 6))
+        sns.set(style="ticks", context="talk")
+
+        linecollection = []
+        colors = []
+        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
+
+        custom_colors = ['#380282', '#440053', '#404388', '#2a788e', '#21a784', '#78d151', '#fde624', '#ff9933', '#ff3300']
+        custom_colors_short = ['#404688', '#c7e020']
+
+        custom_cmap = LinearSegmentedColormap.from_list("custom_continuous", custom_colors, N=256)
+        custom_cmap_r = custom_cmap.reversed()
+
+        custom_short = LinearSegmentedColormap.from_list("custom_short", custom_colors_short, N=256)
+        custom_short_r = custom_short.reversed()
+
+        norm = Normalize(vmin=deep_df[value].min(), vmax=deep_df[value].max())
+        cmap = plt.get_cmap("viridis_r")
+
+        h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.15
+        h2 = (deep_df["pos_y"].max() - deep_df["pos_y"].min())*0.15
+        xlim = (deep_df["pos_x"].min()-h1, deep_df["pos_x"].max()+h1)
+        ylim = (deep_df["pos_y"].min()-h2, deep_df["pos_y"].max()+h2)
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_aspect('equal', adjustable='box')
+        
+        c2=0
+      
+        for i in grouped_plot["tid"].unique():
+            s= grouped_plot.get_group(i[0])
+            
+            for i in range (len(s["pos_x"])-1):
+                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
+                dist_val = deep_df[value].iloc[c2]
+
+                if value == "angles":
+                    color = "#D3D3D3"
+                elif value == "pos_x": #just used as a placeholder column name to get empty track picture
+                    color = "#000000" 
+                elif value == "all_intersect":
+                    color = custom_short_r(norm(dist_val))
+                else:
+                    color = cmap(norm(dist_val))
+
+                linecollection.append(line)
+                colors.append(color)
+                c2+=1
+            c2+=1
+
+        lc = LineCollection(linecollection, color=colors, lw=1) # was 1
+    
+        plt.gca().add_collection(lc)
+
+        if value == "KDE_invert":
+                sns.kdeplot(data=s, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="mako",alpha=1, ax=ax)
+
+        if value == "angles":
+            deep_df["shifted_val"] = deep_df[value].shift(1)
+            df_sorted = deep_df.sort_values(by="shifted_val", ascending = False)
+            plt.scatter(
+                df_sorted["pos_x"],
+                df_sorted["pos_y"],
+                c=df_sorted["shifted_val"],
+                cmap=cmap,
+                norm=norm,
+                s=2,
+                zorder=10
+            )
+        else:
+            plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01, alpha=0) #was 0.00
+
+        img_path = str(folderpath1) + "\\" + value + ".tiff"
+        plt.savefig(img_path, dpi=500,format="tiff") # was 3500
+
+        plt.show()
+    ########################################################################
     
     ################# Calculate distance and add to dataframe
     def computing_distance_wrapper(deep_df):
@@ -536,7 +623,10 @@ if __name__ == '__main__':
         distance_flag.append(0)
         deep_df["distance"] = distance
         deep_df["distance_flag"] = distance_flag
-        
+
+        plot_values_on_track(deep_df, "pos_x")
+        plot_values_on_track(deep_df, "distance")
+
 
     ################## End distance calculation
 
@@ -615,6 +705,8 @@ if __name__ == '__main__':
         deep_df['angles_cont_level'] = deep_df['angles_cont_level'].astype(str)
         #final_pal_only_0=dict(zero='#fde624' ,  one= '#380282') # zero=yellow=high angles
 
+        plot_values_on_track(deep_df, "angles")
+
         return deep_df
 
     ###################### end anlges calc
@@ -642,68 +734,58 @@ if __name__ == '__main__':
     ## for nice KDE picture plot:
 
 
-    def plot_KDE(deep_df, out,lys_x, lys_y ):
-        print(out)
-        print(deep_df)
-       
-        final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
+    # def plot_KDE(deep_df, out,lys_x, lys_y ):
+    #     #final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
 
-        plt.style.use("dark_background")
+    #     plt.style.use("dark_background")
 
-        fig = plt.figure()
-        ax = fig.add_subplot()
-        sns.set(style="ticks", context="talk")
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot()
+    #     sns.set(style="ticks", context="talk")
 
-        linecollection = []
-        colors = []
-        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
+    #     linecollection = []
+    #     colors = []
+    #     grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
         
-        c2=0
+    #     c2=0
       
-        for i in grouped_plot["tid"].unique():
-            s= grouped_plot.get_group(i[0])
-            sns.kdeplot(data=s, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="mako",alpha=0.6)
+    #     for i in grouped_plot["tid"].unique():
+    #         s= grouped_plot.get_group(i[0])
+    #         sns.kdeplot(data=s, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="mako",alpha=0.6)
 
-            for i in range (len(s["pos_x"])-1):
+    #         for i in range (len(s["pos_x"])-1):
 
-                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
-                color = final_pal[deep_df["KDE_level"][c2]]
-                linecollection.append(line)
-                colors.append(color)
+    #             line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
+    #             #color = final_pal[deep_df["KDE_level"][c2]]
+    #             color = "#D3D3D3"
+    #             linecollection.append(line)
+    #             colors.append(color)
 
-                c2+=1
-            c2+=1
+    #             c2+=1
+    #         c2+=1
 
-        lc = LineCollection(linecollection, color=colors, lw=2) # was 1
-        
-       
+    #     lc = LineCollection(linecollection, color=colors, lw=1) # was 1
     
-        plt.gca().add_collection(lc)
-        plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01) #was 0.00
+    #     plt.gca().add_collection(lc)
+    #     plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01) #was 0.00
 
-        #sns.kdeplot(data=deep_df, x="pos_x", y="pos_y",hue="tid",fill=True, thresh=0, levels=100, cmap="mako",)
-        plt.axis('equal') 
+    #     #sns.kdeplot(data=deep_df, x="pos_x", y="pos_y",hue="tid",fill=True, thresh=0, levels=100, cmap="mako",)
+    #     plt.axis('equal') 
         
-        plt.savefig(str(image_path), dpi=1500,format="tiff") # was 3500
+        
+    #     #plt.savefig(str(image_path1), dpi=1500,format="tiff") # was 3500
 
 
 
-        plt.show()
+    #     plt.show()
 
 
 
-        #fig, ax = plt.subplots()
-        #ax.imshow(np.rot90(out))
-        #ax.plot(lys_x, lys_y, 'k.', markersize=2)
-        #plt.show()
-     
-       
-
-
-
-
-
-        return deep_df
+    #     #fig, ax = plt.subplots()
+    #     #ax.imshow(np.rot90(out))
+    #     #ax.plot(lys_x, lys_y, 'k.', markersize=2)
+    #     #plt.show()
+    #     return deep_df
 
     #################### function for KDE:
 
@@ -732,7 +814,8 @@ if __name__ == '__main__':
         deep_df["KDE_cont_level"] = pd.cut(deep_df["KDE_cont"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df["KDE_cont_level"] = deep_df["KDE_cont_level"].astype(str)
 
-        plot_KDE(deep_df,out, lys_x, lys_y)
+        #plot_KDE(deep_df,out, lys_x, lys_y)
+        plot_values_on_track(deep_df, "KDE_invert")
         
         return deep_df
 
@@ -850,6 +933,8 @@ if __name__ == '__main__':
 
         intersect_cont=consecutive("all_intersect", 10, 6, deep_df)
         deep_df["intersect_cont"]=intersect_cont
+
+        plot_values_on_track(deep_df, "all_intersect")
         return deep_df
 
         ########################### end intersections
@@ -1476,7 +1561,7 @@ if __name__ == '__main__':
     ############################### end function 
     ###### mkae fingerprint for new HMM:
     def make_results_file(f2, deep_df_short, dt, mean_msd_df):
-        print("this is deepdfshort",deep_df_short)
+        #print("this is deepdfshort",deep_df_short)
 
         lys_string=f2.split("\\")
         outpath1=lys_string[:-1]
@@ -2002,7 +2087,6 @@ if __name__ == '__main__':
         c2=0
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
-
         
             for i in range (len(s["pos_x"])-1):
 
@@ -2020,6 +2104,7 @@ if __name__ == '__main__':
         plt.scatter(finger_tracks["pos_x"], finger_tracks["pos_y"], s=0.001)
         plt.gca().add_collection(lc)
         plt.axis('equal') 
+        print(image_path1)
         plt.savefig(str(image_path1), format="tiff") # uncomment this to save nice svg
 
         plt.show()
@@ -2106,95 +2191,13 @@ if __name__ == '__main__':
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
-    
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"C:\Users\miche\Desktop\simualted tracks\real_tracks"
-
+    folderpath1=r"C:\Users\Philip\Desktop\tracks"
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
-
 
     ### for accuracy based on previosuly generated tracks in a folder:
 
     #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\DC_MSS_1\DC_MSS_sim2_D0.015_N500_T200"
     #calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-            
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              
-        
-
-
-
-
-
-
-
-
-
-
-
-      
-        
-
-
-                
-
-
-
-
-        
-
-
-       
-
-
-
-
-
-
-
-
-
-
-    
