@@ -1656,10 +1656,12 @@ if __name__ == '__main__':
                         #sim_total_unconfined+=1
 
         final_pal=dict(zero= "#78d151",one= '#2a788e',two= '#ff3300', three= "#fde624") #all colors 
-        # zero= both confined = green= #78d151
-        # one= both unconfined= blue= #2a788e
-        # two= sim_only_confined= red= 
-        # three= finger_onyl_confiend= #fde624
+        final_pal=dict(zero= "#bddf26",one= '#482173',two= '#2e6fbe', three= "#29af7f") #all colors 
+
+        # zero= both confined = green= #78d151 - green
+        # one= both unconfined= blue= #2a788e -violet
+        # two= sim_only_confined= red= -blue
+        # three= finger_onyl_confiend= #fde624 -mint
 
         linecollection = []
         colors = []
@@ -1673,10 +1675,10 @@ if __name__ == '__main__':
         #fig = plt.figure()
         #ax = fig.add_subplot()
 
-        for c in compartments_center:
-            circle = plt.Circle((c[0], c[1]), radius_compartments, facecolor = 'None', edgecolor = 'C1', zorder = 10, lw=1)
-            ax.add_patch(circle)
 
+        for c in compartments_center:
+            circle = plt.Circle((c[0], c[1]), radius_compartments, facecolor = 'None', edgecolor = 'black', zorder = 10, lw=1) #edgecolor = 'C1'
+            ax.add_patch(circle)
 
         grouped_plot= finger_tracks.sort_values(["pos_t"]).groupby("tid")
         c2=0
@@ -1700,7 +1702,7 @@ if __name__ == '__main__':
         plt.scatter(finger_tracks["pos_x"], finger_tracks["pos_y"], s=0.1, alpha=0)
         plt.gca().add_collection(lc)
         plt.axis('equal') 
-        plt.savefig(str(image_path1), dpi=4500, format="tiff") # uncomment this to save nice svg
+        #plt.savefig(str(image_path1), dpi=4500, format="tiff") # uncomment this to save nice svg
 
         plt.show()
 
