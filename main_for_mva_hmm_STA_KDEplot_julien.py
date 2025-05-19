@@ -188,7 +188,9 @@ if __name__ == '__main__':
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
                 #plotting_final_image(deep_df_short2,lys_points2, image_path)
-                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path)
+                #plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path)
+                plot_values_on_track(deep_df_short, "in_hull_level")
+                plot_values_on_track_hull(deep_df_short, "in_hull_level", lys_points_big_only_middle2)
                 make_results_file(path, deep_df_short2, dt,mean_msd_df ) # run function to make excel with all parameters
 
           
@@ -515,6 +517,7 @@ if __name__ == '__main__':
     ################## plot feature values onto line segments ##############
     def plot_values_on_track(deep_df, value):
 
+
         if value == "KDE_invert":
             plt.style.use("dark_background")
         else:
@@ -536,7 +539,8 @@ if __name__ == '__main__':
         custom_short = LinearSegmentedColormap.from_list("custom_short", custom_colors_short, N=256)
         custom_short_r = custom_short.reversed()
 
-        norm = Normalize(vmin=deep_df[value].min(), vmax=deep_df[value].max())
+        if value != "in_hull_level":
+            norm = Normalize(vmin=deep_df[value].min(), vmax=deep_df[value].max())
         cmap = plt.get_cmap("viridis_r")
 
         h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.15
@@ -548,6 +552,7 @@ if __name__ == '__main__':
         ax.set_aspect('equal', adjustable='box')
         
         c2=0
+        final_pal=dict(zero="#c7e020", one="#404688")
       
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
@@ -562,6 +567,8 @@ if __name__ == '__main__':
                     color = "#000000" 
                 elif value == "all_intersect":
                     color = custom_short_r(norm(dist_val))
+                elif value == "in_hull_level":
+                    color = final_pal[deep_df["in_hull_level"][c2]]
                 else:
                     color = cmap(norm(dist_val))
 
@@ -591,6 +598,103 @@ if __name__ == '__main__':
             )
         else:
             plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01, alpha=0) #was 0.00
+
+        img_path = str(folderpath1) + "\\" + value + ".tiff"
+        plt.savefig(img_path, dpi=500,format="tiff") # was 3500
+
+        plt.show()
+    
+    
+    def plot_values_on_track_hull(deep_df, value, lys_points_middle):
+
+        if value == "KDE_invert":
+            plt.style.use("dark_background")
+        else:
+            plt.style.use("default")
+
+        fig, ax = plt.subplots(figsize=(6, 6))
+        sns.set(style="ticks", context="talk")
+
+        linecollection = []
+        colors = []
+        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
+
+        custom_colors = ['#380282', '#440053', '#404388', '#2a788e', '#21a784', '#78d151', '#fde624', '#ff9933', '#ff3300']
+        custom_colors_short = ['#404688', '#c7e020']
+
+        custom_cmap = LinearSegmentedColormap.from_list("custom_continuous", custom_colors, N=256)
+        custom_cmap_r = custom_cmap.reversed()
+
+        custom_short = LinearSegmentedColormap.from_list("custom_short", custom_colors_short, N=256)
+        custom_short_r = custom_short.reversed()
+
+        if value != "in_hull_level":
+            norm = Normalize(vmin=deep_df[value].min(), vmax=deep_df[value].max())
+        cmap = plt.get_cmap("viridis_r")
+
+        h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.15
+        h2 = (deep_df["pos_y"].max() - deep_df["pos_y"].min())*0.15
+        xlim = (deep_df["pos_x"].min()-h1, deep_df["pos_x"].max()+h1)
+        ylim = (deep_df["pos_y"].min()-h2, deep_df["pos_y"].max()+h2)
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_aspect('equal', adjustable='box')
+        
+        c2=0
+        final_pal=dict(zero="#c7e020", one="#404688")
+      
+        for i in grouped_plot["tid"].unique():
+            s= grouped_plot.get_group(i[0])
+            
+            for i in range (len(s["pos_x"])-1):
+                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
+                dist_val = deep_df[value].iloc[c2]
+
+                if value == "angles":
+                    color = "#D3D3D3"
+                elif value == "pos_x": #just used as a placeholder column name to get empty track picture
+                    color = "#000000" 
+                elif value == "all_intersect":
+                    color = custom_short_r(norm(dist_val))
+                elif value == "in_hull_level":
+                    color = final_pal[deep_df["in_hull_level"][c2]]
+                else:
+                    color = cmap(norm(dist_val))
+
+                linecollection.append(line)
+                colors.append(color)
+                c2+=1
+            c2+=1
+
+        lc = LineCollection(linecollection, color=colors, lw=1) # was 1
+    
+        plt.gca().add_collection(lc)
+
+        if value == "KDE_invert":
+                sns.kdeplot(data=s, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="mako",alpha=1, ax=ax)
+
+        if value == "angles":
+            deep_df["shifted_val"] = deep_df[value].shift(1)
+            df_sorted = deep_df.sort_values(by="shifted_val", ascending = False)
+            plt.scatter(
+                df_sorted["pos_x"],
+                df_sorted["pos_y"],
+                c=df_sorted["shifted_val"],
+                cmap=cmap,
+                norm=norm,
+                s=2,
+                zorder=10
+            )
+        else:
+            plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01, alpha=0) #was 0.00
+
+        for j in range (len(lys_points_middle)):
+                     for i in range(len(lys_points_middle[j])):
+                         points=lys_points_middle[j][i] 
+                         hull = ConvexHull(points)
+                         for simplex in hull.simplices:
+                             plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1, color="red") #,color="#c7e020") 
+                             #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
 
         img_path = str(folderpath1) + "\\" + value + ".tiff"
         plt.savefig(img_path, dpi=500,format="tiff") # was 3500
@@ -769,62 +873,7 @@ if __name__ == '__main__':
         return out, out2
         
     #################### end function
-    ## for nice KDE picture plot:
-
-
-    # def plot_KDE(deep_df, out,lys_x, lys_y ):
-    #     #final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
-
-    #     plt.style.use("dark_background")
-
-    #     fig = plt.figure()
-    #     ax = fig.add_subplot()
-    #     sns.set(style="ticks", context="talk")
-
-    #     linecollection = []
-    #     colors = []
-    #     grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-        
-    #     c2=0
-      
-    #     for i in grouped_plot["tid"].unique():
-    #         s= grouped_plot.get_group(i[0])
-    #         sns.kdeplot(data=s, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="mako",alpha=0.6)
-
-    #         for i in range (len(s["pos_x"])-1):
-
-    #             line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
-    #             #color = final_pal[deep_df["KDE_level"][c2]]
-    #             color = "#D3D3D3"
-    #             linecollection.append(line)
-    #             colors.append(color)
-
-    #             c2+=1
-    #         c2+=1
-
-    #     lc = LineCollection(linecollection, color=colors, lw=1) # was 1
     
-    #     plt.gca().add_collection(lc)
-    #     plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01) #was 0.00
-
-    #     #sns.kdeplot(data=deep_df, x="pos_x", y="pos_y",hue="tid",fill=True, thresh=0, levels=100, cmap="mako",)
-    #     plt.axis('equal') 
-        
-        
-    #     #plt.savefig(str(image_path1), dpi=1500,format="tiff") # was 3500
-
-
-
-    #     plt.show()
-
-
-
-    #     #fig, ax = plt.subplots()
-    #     #ax.imshow(np.rot90(out))
-    #     #ax.plot(lys_x, lys_y, 'k.', markersize=2)
-    #     #plt.show()
-    #     return deep_df
-
     #################### function for KDE:
 
     def calculate_KDE_wrapper(lys_x, lys_y, deep_df):
@@ -1434,16 +1483,25 @@ if __name__ == '__main__':
         ###insert new plotting function: 
 
     def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path):
-        final_pal=dict(zero= "#06fcde" , one= "#808080")
-        linecollection = []
-        colors = []
 
-        fig = plt.figure()
-        ax = fig.add_subplot()
-
+        fig, ax = plt.subplots(figsize=(6, 6))
         sns.set(style="ticks", context="talk")
 
+        linecollection = []
+        colors = []
         grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
+
+
+        h1 = (deep_df_short["pos_x"].max() - deep_df_short["pos_x"].min())*0.15
+        h2 = (deep_df_short["pos_y"].max() - deep_df_short["pos_y"].min())*0.15
+        xlim = (deep_df_short["pos_x"].min()-h1, deep_df_short["pos_x"].max()+h1)
+        ylim = (deep_df_short["pos_y"].min()-h2, deep_df_short["pos_y"].max()+h2)
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_aspect('equal', adjustable='box')
+
+        final_pal=dict(zero="#c7e020", one="#404688")
+
         c2=0
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
@@ -1460,42 +1518,36 @@ if __name__ == '__main__':
             c2+=1
 
         lc = LineCollection(linecollection, color=colors, lw=1)
-
         
         plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
         plt.gca().add_collection(lc)
 
 
-        for j in range (len(lys_points_big2)):
-            for i in range(len(lys_points_big2[j])):
-                points=lys_points_big2[j][i] 
-                hull = ConvexHull(points)
-                for simplex in hull.simplices:
-                    plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
+        # for j in range (len(lys_points_big2)):
+        #     for i in range(len(lys_points_big2[j])):
+        #         points=lys_points_big2[j][i] 
+        #         hull = ConvexHull(points)
+        #         for simplex in hull.simplices:
+        #             plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
 
                     #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
                         
        
-        for j in range (len(lys_points_big_only_middle2)):
-                    for i in range(len(lys_points_big_only_middle2[j])):
-                        points=lys_points_big_only_middle2[j][i] 
-                        hull = ConvexHull(points)
-                        for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1, color="red") 
-
-                            #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="red")
-                                #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
-                                
-
+        # for j in range (len(lys_points_big_only_middle2)):
+        #             for i in range(len(lys_points_big_only_middle2[j])):
+        #                 points=lys_points_big_only_middle2[j][i] 
+        #                 hull = ConvexHull(points)
+        #                 for simplex in hull.simplices:
+        #                     plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1, color="red") #,color="#c7e020") 
+        #                     #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
 
         plt.axis('equal') 
-        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
+        img_path = str(folderpath1) + "\\" + "clusters" + ".tiff"
+        plt.savefig(img_path, dpi=500,format="tiff")
+        #plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
         plt.show()
-      
 
-
-     
     ########################### function to make a nice excel fiel with all the parameters per track:
 
     def make_fingerprint_file(f2, train_result, deep_df_short, dt, mean_msd_df): 
