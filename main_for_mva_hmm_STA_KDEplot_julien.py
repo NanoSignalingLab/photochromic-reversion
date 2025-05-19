@@ -176,6 +176,7 @@ if __name__ == '__main__':
                 image_path=image_path_lys[0] +"svg"
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
                 mean_msd_df=msd_mean_track(msd_df, dt)
+                plot_original_tracks(deep_df1)
 
                 deep_df2=run_traces_wrapper(deep_df1, dt)
                 deep_df3=computing_distance_wrapper(deep_df2)
@@ -596,6 +597,43 @@ if __name__ == '__main__':
 
         plt.show()
     ########################################################################
+
+    def plot_original_tracks(deep_df):
+        cmap = plt.get_cmap("viridis_r")
+
+
+        linecollection = []
+        #colors = []
+        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
+        c2=0
+        
+        for i in grouped_plot["tid"].unique():
+            s= grouped_plot.get_group(i[0])
+            for i in range (len(s["pos_x"])-1):
+
+                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
+                #color = final_pal[deep_df_short["row_sums_level"][c2]]
+                linecollection.append(line)
+                #colors.append(color)
+
+                c2+=1
+            c2+=1
+
+        lc = LineCollection(linecollection, color=tid, cmap=cmap, lw=2) # was 1
+        
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        sns.set(style="ticks", context="talk")
+    
+        plt.gca().add_collection(lc)
+        plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01) #was 0.001
+        print("here")
+        plt.show()
+        plt.close()
+
+
+
+
     
     ################# Calculate distance and add to dataframe
     def computing_distance_wrapper(deep_df):
@@ -2194,6 +2232,8 @@ if __name__ == '__main__':
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
     folderpath1=r"C:\Users\Philip\Desktop\tracks"
+    folderpath1=r"Z:\Research\Members\Michelle\TIRFM\25.02.25\longterm\2610-1_600_150ms\cleaned"
+
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
 

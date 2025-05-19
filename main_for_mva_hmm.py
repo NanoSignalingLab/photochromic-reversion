@@ -1778,28 +1778,30 @@ if __name__ == '__main__':
 
 
 #### for our own hmm to evaulate while simualting tracks:
-    f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_pictures_of_simulations\sim_picture_circles.csv"
+    #f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_pictures_of_simulations\sim_picture_circles.csv"
+    #f1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test.csv"
 
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
     #f1=r"Z:\Research\Members\Michelle\simulated_tracks\sim_values_for_accruracy_new_HMM\sim_values_25.3.25_D0.015_N500_T200\sim_values4.3_D0.015_N500_T200_25.3.25.csv"
 
 
-    calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
+    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 ### fpr files oin a folder with real tracak for our own hmm:
-    #plotting_flag=0
-    #dt=0.1
-    #min_track_length=25
-    #plotting_saving_nice_image_flag=0
-    #tracks_saving_flag=0
+    plotting_flag=0
+    dt=0.15
+    min_track_length=25
+    plotting_saving_nice_image_flag=0
+    tracks_saving_flag=0
     
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
     #folderpath1=r"C:\Users\bcgvm01\Desktop\simulated_tracks\test_real_tracks"
 
+    folderpath1=r"Z:\Research\Members\Michelle\TIRFM\25.02.25\longterm\2610-1_600_150ms\cleaned"
 
-    #calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+    calculate_spatial_tranient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
 
 
     ### for accuracy based on previosuly generated tracks in a folder:
