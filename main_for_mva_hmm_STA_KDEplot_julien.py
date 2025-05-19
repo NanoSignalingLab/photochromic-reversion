@@ -703,35 +703,37 @@ if __name__ == '__main__':
     ########################################################################
 
     def plot_original_tracks(deep_df):
-        cmap = plt.get_cmap("viridis_r")
-
-
-        linecollection = []
-        #colors = []
-        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-        c2=0
         
-        for i in grouped_plot["tid"].unique():
-            s= grouped_plot.get_group(i[0])
-            for i in range (len(s["pos_x"])-1):
-
-                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
-                #color = final_pal[deep_df_short["row_sums_level"][c2]]
-                linecollection.append(line)
-                #colors.append(color)
-
-                c2+=1
-            c2+=1
-
-        lc = LineCollection(linecollection, color=tid, cmap=cmap, lw=2) # was 1
-        
-        fig = plt.figure()
-        ax = fig.add_subplot()
+        cmap = plt.get_cmap("viridis")  # Or "viridis_r" for reversed
         sns.set(style="ticks", context="talk")
-    
-        plt.gca().add_collection(lc)
-        plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01) #was 0.001
-        print("here")
+
+        # Get unique track IDs and normalize to colormap range
+        unique_ids = deep_df["tid"].unique()
+        norm = plt.Normalize(vmin=min(unique_ids), vmax=max(unique_ids))
+
+        line_segments = []
+        colors = []
+
+        for tid in unique_ids:
+            track = deep_df[deep_df["tid"] == tid].sort_values("pos_t")
+            points = track[["pos_x", "pos_y"]].values
+
+            # Make segments from consecutive points
+            for i in range(len(points) - 1):
+                segment = [points[i], points[i + 1]]
+                line_segments.append(segment)
+                colors.append(cmap(norm(tid)))  # Assign color based on tid
+
+        lc = LineCollection(line_segments, colors=colors, linewidths=1.5)
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+        ax.add_collection(lc)
+        ax.autoscale()
+        ax.set_aspect("equal")
+        plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.1, alpha=0.3, color="black")  # Optional: background points
+        plt.xlabel("X Position")
+        plt.ylabel("Y Position")
+        plt.title("Single Particle Tracks")
         plt.show()
         plt.close()
 
