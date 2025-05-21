@@ -908,9 +908,9 @@ if __name__ == '__main__':
             s1=0.1
         
 
-        #fig = plt.figure() # was this before
-        fig, ax = plt.subplots(1)
-        #ax = fig.add_subplot()
+        fig = plt.figure() # was this before
+        #fig, ax = plt.subplots(1) #for tif?
+        ax = fig.add_subplot()
 
         sns.set(style="ticks", context="talk")
 
@@ -961,7 +961,10 @@ if __name__ == '__main__':
 
 
         if image_saving_flag=="svg":
-            plt.axis('equal') 
+            plt.axis('equal') #before
+            #square_inches = 5  # You can choose another value
+            #fig.set_size_inches(square_inches, square_inches)
+            #ax.set_aspect('equal', adjustable='box')
             plt.savefig(str(image_path), format="svg") # 
             plt.show()
         else:
@@ -1149,11 +1152,12 @@ if __name__ == '__main__':
     dt=0.05
     min_track_length=25
     plotting_saving_nice_image_flag=0
+   
     image_saving_flag="svg"
     image_saving_flag="tiff"
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"C:\Users\Philip\Desktop\tracks"
+    folderpath1=r"D:\photochromic_reversion_data\tst"
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
 
