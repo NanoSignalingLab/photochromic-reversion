@@ -543,13 +543,15 @@ if __name__ == '__main__':
             norm = Normalize(vmin=deep_df[value].min(), vmax=deep_df[value].max())
         cmap = plt.get_cmap("viridis_r")
 
-        h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.15
-        h2 = (deep_df["pos_y"].max() - deep_df["pos_y"].min())*0.15
+        h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.05
+        h2 = (deep_df["pos_y"].max() - deep_df["pos_y"].min())*0.05
         xlim = (deep_df["pos_x"].min()-h1, deep_df["pos_x"].max()+h1)
         ylim = (deep_df["pos_y"].min()-h2, deep_df["pos_y"].max()+h2)
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
-        ax.set_aspect('equal', adjustable='box')
+        #ax.set_aspect('equal', adjustable='box')
+        ax.set_aspect('equal')
+        ax.set_box_aspect(1)
         
         c2=0
         final_pal=dict(zero="#c7e020", one="#404688")
@@ -632,16 +634,18 @@ if __name__ == '__main__':
             norm = Normalize(vmin=deep_df[value].min(), vmax=deep_df[value].max())
         cmap = plt.get_cmap("viridis_r")
 
-        h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.15
-        h2 = (deep_df["pos_y"].max() - deep_df["pos_y"].min())*0.15
+        h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.05
+        h2 = (deep_df["pos_y"].max() - deep_df["pos_y"].min())*0.05
         xlim = (deep_df["pos_x"].min()-h1, deep_df["pos_x"].max()+h1)
         ylim = (deep_df["pos_y"].min()-h2, deep_df["pos_y"].max()+h2)
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
         ax.set_aspect('equal', adjustable='box')
+        ax.set_box_aspect(1)
+
         
         c2=0
-        final_pal=dict(zero="#c7e020", one="#404688")
+        final_pal=dict(zero="#06fcde", one="#808080")
       
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
@@ -2286,7 +2290,6 @@ if __name__ == '__main__':
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
     folderpath1=r"C:\Users\Philip\Desktop\tracks"
-    folderpath1=r"Z:\Research\Members\Michelle\TIRFM\25.02.25\longterm\2610-1_600_150ms\cleaned"
 
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
