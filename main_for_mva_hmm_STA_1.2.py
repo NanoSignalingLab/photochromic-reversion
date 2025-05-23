@@ -911,6 +911,8 @@ if __name__ == '__main__':
         fig = plt.figure() # was this before
         #fig, ax = plt.subplots(1) #for tif?
         ax = fig.add_subplot()
+        ax.set_aspect('equal', adjustable='box')
+        ax.set_box_aspect(1)
 
         sns.set(style="ticks", context="talk")
 
@@ -1157,86 +1159,7 @@ if __name__ == '__main__':
     image_saving_flag="tiff"
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"D:\photochromic_reversion_data\tst"
+    #folderpath1=r"D:\photochromic_reversion_data\tst"
+    folderpath1=r"C:\Users\Philip\Desktop\tracks"
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-            
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              
-        
-
-
-
-
-
-
-
-
-
-
-
-      
-        
-
-
-                
-
-
-
-
-        
-
-
-       
-
-
-
-
-
-
-
-
-
-
-    
