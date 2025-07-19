@@ -1,6 +1,6 @@
 # %%
 
-from RandomWalkSims import (
+from src.RandomWalkSims import (
     Gen_normal_diff,
     Gen_directed_diff,
     Get_params,
@@ -48,7 +48,7 @@ import andi_datasets
 from andi_datasets.models_phenom import models_phenom
 from sklearn import metrics
 from math import nan
-from hmm_functions import run_model
+from src.hmm_functions import run_model
 
 
 warnings.filterwarnings('ignore')
