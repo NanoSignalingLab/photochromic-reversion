@@ -90,7 +90,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 If you use CASTA in your research, please cite:
 
 ```
-[citation]
+Photochromic reversion enables long-term tracking of single molecules in living plants
+Michelle von Arx, Kaltra Xhelilaj, Philip Schulz, Sven zur Oven-Krockhaus, Julien Gronnier
+bioRxiv 2024.04.10.585335; doi: https://doi.org/10.1101/2024.04.10.585335
 ```
 
 ## Support
