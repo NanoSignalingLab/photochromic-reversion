@@ -1,4 +1,4 @@
-# CASTA - Computational Analysis of Apatial Transient Arrests
+# CASTA - Computational Analysis of Spatial Transient Arrests
 
 CASTA is a Python package for analyzing spatial transient patterns in tracking data using Hidden Markov Models (HMM). It provides tools for processing and plotting trajectory data.
 
