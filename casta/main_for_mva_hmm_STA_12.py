@@ -1,71 +1,28 @@
-# %%
-
-#from RandomWalkSims import (
-#    Gen_normal_diff,
-#    Gen_directed_diff,
-#    Get_params,
-#    Gen_confined_diff,
-#    Gen_anomalous_diff,
-#)
-
 import matplotlib.pyplot as plt
-#import matplotlib
-#from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
-#from MLGeneral import ML, histogram
 import pickle
-import os
-#from pomegranate import *
-from functools import partial
 import numpy as np
-# import multiprocess as mp
-#from sklearn.metrics import confusion_matrix
-#from mpl_toolkits.mplot3d import Axes3D
-#from sklearn.model_selection import train_test_split
-#from matplotlib.colors import LinearSegmentedColormap
-from tqdm import tqdm
 import pandas as pd
 import seaborn as sns
-from functools import reduce
-#import operator 
-#from matplotlib import rcParams
+import math
+
 from matplotlib.collections import LineCollection
 from itertools import chain
-import math
 from scipy.stats import gaussian_kde
-from sklearn.preprocessing import normalize
-#import shapely
-from shapely.geometry import LineString, Point
-from shapely import intersection
-#import itertools
-from statistics import mean 
 from scipy.spatial import ConvexHull
-from matplotlib.path import Path
+from sklearn.preprocessing import normalize
+from shapely.geometry import LineString
+from shapely import intersection
+from statistics import mean 
+from pathlib import Path
+
 import os
 from os import listdir
 from os.path import isfile, join
-import warnings
-#import andi_datasets
-#from andi_datasets.models_phenom import models_phenom
-#from sklearn import metrics
-#from math import nan
+
 from casta.hmm_functions import run_model
 
-
+import warnings
 warnings.filterwarnings('ignore')
-
-#if __name__ == '__main__':
-    
-    #################################
-   
-    #import stochastic
-    #stochastic.random.seed(3)
-    #np.random.seed(7)
-
-    ##########################################
-   
-
-    #############################################
-    # for our own HMM for reading inmultiple csv files with real tracks, make one result excel per file
 
 def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag,image_saving_flag ):
     onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
@@ -990,12 +947,10 @@ def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_mi
 def make_results_file(f2, deep_df_short, dt, mean_msd_df):
     #print("this is deepdfshort",deep_df_short)
 
-    lys_string=f2.split("\\")
-    outpath1=lys_string[:-1]
-    outpath2='\\'.join(outpath1)
-    name=lys_string[-1].split(".csv")[0]
-    outpath3=outpath2+"\\"+name
-    print("saving results file in:", outpath3 )
+    f2_path = Path(f2)
+    name = f2_path.stem  # Gets filename without extension
+    outpath3 = f2_path.parent / name
+    print("saving results file in:", outpath3)
 
     # adding hull area and number of points in clusters
     lys_nr_of_clusters=[]
@@ -1131,35 +1086,9 @@ def make_results_file(f2, deep_df_short, dt, mean_msd_df):
     casta_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
     casta_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
 
-
-
-
-    outpath4=outpath3+"_CASTA_results"+".xlsx"
-    writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
+    outpath4 = f2_path.parent / f"{name}_CASTA_results.xlsx"
+    writer = pd.ExcelWriter(outpath4, engine='xlsxwriter')
     casta_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
     writer.close()
 
     return casta_df_out
-        
-
-
-
-
-##################################################
-
-### for files in a folder with real tracak for our own hmm:
-### working on implementaiton of julines STAs only in the middle
-
-    #plotting_flag=0
-    #dt=0.05
-    #min_track_length=25
-    #plotting_saving_nice_image_flag=0
-    
-    #image_saving_flag="svg"
-    #image_saving_flag="tiff"
-
-    #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    #folderpath1=r"D:\photochromic_reversion_data\tst"
-    #folderpath1=r"/Users/schulzp9/Documents/casta"
-
-    #calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)

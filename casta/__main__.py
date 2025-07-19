@@ -1,16 +1,31 @@
+import argparse
 from casta.main_for_mva_hmm_STA_12 import calculate_spatial_transient_wrapper
 
-if __name__ == "__main__":
-    plotting_flag=0
-    dt=0.05
-    min_track_length=25
-    plotting_saving_nice_image_flag=0
+def main():
+    parser = argparse.ArgumentParser(
+        description='Calculate spatial transient analysis',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     
-    image_saving_flag="svg"
-    image_saving_flag="tiff"
+    # Required
+    parser.add_argument('dir', help='Path to the folder containing track data')
+    
+    # Optional
+    parser.add_argument('--dt', type=float, default=0.05, help='Time step for analysis')
+    parser.add_argument('--min-track-length', type=int, default=25, help='Minimum track length for analysis')
+    parser.add_argument('--plot', type=int, default=0, help='Enable plotting (0=off, 1=on)')
+    parser.add_argument('--save_plot', type=int, default=0, help='Enable plot image saving (0=off, 1=on)')
+    parser.add_argument('--image-format', choices=['svg', 'tiff'], default='svg', help='Image saving format')
+    
+    args = parser.parse_args()
+    
+    calculate_spatial_transient_wrapper(
+        args.dir,
+        args.min_track_length,
+        args.dt,
+        args.save_plot,
+        args.image_format
+    )
 
-    #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    #folderpath1=r"D:\photochromic_reversion_data\tst"
-    folderpath1=r"/Users/schulzp9/Documents/casta"
-
-    calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
+if __name__ == "__main__":
+    main()

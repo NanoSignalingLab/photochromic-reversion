@@ -9,7 +9,8 @@ name = "casta"
 version = "0.0.1"
 description = "Calculate spatial transient arrests"
 readme = "README.md"
-authors = [{ name = "Michelle von Arx", email = "michelle.vonarx@tum.de" }]
+authors = [{ name = "Michelle von Arx", email = "michelle.vonarx@tum.de" },
+            { name = "Philip Schulz", email = "philip.schulz@outlook.com" }]
 license = { file = "LICENSE" }
 classifiers = [
     "License :: :: MIT License",
