@@ -1,42 +1,42 @@
 # %%
 
-from RandomWalkSims import (
-    Gen_normal_diff,
-    Gen_directed_diff,
-    Get_params,
-    Gen_confined_diff,
-    Gen_anomalous_diff,
-)
+#from RandomWalkSims import (
+#    Gen_normal_diff,
+#    Gen_directed_diff,
+#    Get_params,
+#    Gen_confined_diff,
+#    Gen_anomalous_diff,
+#)
 
 import matplotlib.pyplot as plt
-import matplotlib
-from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
-from MLGeneral import ML, histogram
+#import matplotlib
+#from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
+#from MLGeneral import ML, histogram
 import pickle
 import os
 #from pomegranate import *
 from functools import partial
 import numpy as np
 # import multiprocess as mp
-from sklearn.metrics import confusion_matrix
-from mpl_toolkits.mplot3d import Axes3D
-from sklearn.model_selection import train_test_split
-from matplotlib.colors import LinearSegmentedColormap
+#from sklearn.metrics import confusion_matrix
+#from mpl_toolkits.mplot3d import Axes3D
+#from sklearn.model_selection import train_test_split
+#from matplotlib.colors import LinearSegmentedColormap
 from tqdm import tqdm
 import pandas as pd
 import seaborn as sns
 from functools import reduce
-import operator 
-from matplotlib import rcParams
+#import operator 
+#from matplotlib import rcParams
 from matplotlib.collections import LineCollection
 from itertools import chain
 import math
 from scipy.stats import gaussian_kde
 from sklearn.preprocessing import normalize
-import shapely
+#import shapely
 from shapely.geometry import LineString, Point
 from shapely import intersection
-import itertools
+#import itertools
 from statistics import mean 
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
@@ -44,10 +44,10 @@ import os
 from os import listdir
 from os.path import isfile, join
 import warnings
-import andi_datasets
-from andi_datasets.models_phenom import models_phenom
-from sklearn import metrics
-from math import nan
+#import andi_datasets
+#from andi_datasets.models_phenom import models_phenom
+#from sklearn import metrics
+#from math import nan
 from hmm_functions import run_model
 
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     
     #################################
    
-    import stochastic
+    #import stochastic
     #stochastic.random.seed(3)
     #np.random.seed(7)
 
@@ -1160,6 +1160,6 @@ if __name__ == '__main__':
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
     #folderpath1=r"D:\photochromic_reversion_data\tst"
-    folderpath1=r"C:\Users\Philip\Desktop\tracks"
+    folderpath1=r"/Users/schulzp9/Documents/casta"
 
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
