@@ -24,7 +24,7 @@ from casta.hmm_functions import run_model
 import warnings
 warnings.filterwarnings('ignore')
 
-def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag,image_saving_flag ):
+def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag,image_saving_flag):
     onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
     for i in onlyfiles:
         

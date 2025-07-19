@@ -6,14 +6,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "casta"
-version = "0.0.1"
+version = "0.0.2"
 description = "Calculate spatial transient arrests"
 readme = "README.md"
 authors = [{ name = "Michelle von Arx", email = "michelle.vonarx@tum.de" },
             { name = "Philip Schulz", email = "philip.schulz@outlook.com" }]
 license = { file = "LICENSE" }
 classifiers = [
-    "License :: :: MIT License",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
