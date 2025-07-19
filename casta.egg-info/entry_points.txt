@@ -1,0 +1,2 @@
+[console_scripts]
+casta = casta.main:main

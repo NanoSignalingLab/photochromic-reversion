@@ -1,6 +1,6 @@
 # %%
 
-from src.RandomWalkSims import (
+from casta.RandomWalkSims import (
     Gen_normal_diff,
     Gen_directed_diff,
     Get_params,
@@ -48,6 +48,10 @@ import andi_datasets
 from andi_datasets.models_phenom import models_phenom
 from sklearn import metrics
 from math import nan
+import statistics
+from scipy.stats import norm
+from scipy import stats
+
 
 
 warnings.filterwarnings('ignore')
@@ -57,8 +61,8 @@ if __name__ == '__main__':
     #################################
    
     import stochastic
-    #stochastic.random.seed(3)
-    #np.random.seed(7)
+    stochastic.random.seed(3)
+    np.random.seed(7)
 
     
     ##################################
@@ -91,10 +95,7 @@ if __name__ == '__main__':
                 path=os.path.join(folderpath1, i)
                 print(path)
                 image_path_lys=path.split("csv")
-                image_path_svg=image_path_lys[0] +"svg"
-                image_path_tiff=image_path_lys[0] +"tiff"
-
-
+                image_path=image_path_lys[0] +"svg"
                 tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
                 mean_msd_df=msd_mean_track(msd_df, dt)
                 train_result, states, lys_states = run_traces_wrapper(traces, dt)
@@ -105,7 +106,7 @@ if __name__ == '__main__':
                 deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
                 grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
-                plotting_final_image(deep_df_short2,lys_points2, image_path_svg, image_path_tiff)
+                plotting_final_image(deep_df_short2,lys_points2, image_path)
                 make_fingerprint_file(path, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
 
 
@@ -162,12 +163,102 @@ if __name__ == '__main__':
 
 
         return df_final_parameters_out
+    
+######################## to get parameters from sim to plot them nicely: under progress:
+
+    def calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag):
+        df_values=pd.read_csv(f1)
+        print(f1)
+        image_path_lys=f1.split("csv")
+        image_path=image_path_lys[0]
+    
+        df_values= df_values.iloc[: , 1:]
+        
+        for index, row in df_values.iterrows():
+            print("running simulation nr: ", index)
+            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
+            sim_tracks=make_dataset_csv(trajectories, labels)
+            deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks, min_track_length)
+            sim_tracks_2=make_GT_consecutive(sim_tracks)
+            print("HEERE",sim_tracks_2)
+            sim_tracks_2=sim_tracks_2[["POSITION_X", "POSITION_Y", "TRACK_ID", "POSITION_T", "GT"]]
+            print(sim_tracks_2)
+
+            #print("here sim_tracks_2",sim_tracks_2)
+            sim_tracks_3=computing_distance_for_sim(sim_tracks_2)
+            #print("here sim_tracks_3",sim_tracks_3)
+            #sim_tracks_4, lys_distance, lys_GT_0, lys_GT_1 =plot_distances(sim_tracks_3)
+            #print(sim_tracks_4) # hase distance in it maybe jsut save this one
+           
+            sim_tracks_4=calculate_angels_for_sim(sim_tracks_3)
+            #print(sim_tracks_4)
+            #plot_angles(sim_tracks_4)
+
+            sim_tracks_5=make_KDE_for_sim(lys_x, lys_y, sim_tracks_4)
+            #print(sim_tracks_5)
+
+            sim_tracks_6=calcualte_intersections_for_sim(lys_x, lys_y, sim_tracks_5)
+            #print(sim_tracks_6.columns)
+            sim_tracks_7=sim_tracks_6[["POSITION_X", "POSITION_Y", "TRACK_ID", "POSITION_T", "GT", "distance", "angles", "cont_angles_values","KDE_invert", "cont_KDE_values" , "all_intersect_count", "cont_intersect_values"]]
+            #print(sim_tracks_7)
+
+            #sim_tracks_7.pivot(columns="GT", values="cont_angles_values").plot.hist(bins=100, alpha=0.5)
+           # plt.show()
+            #sim_tracks_7.pivot(columns="GT", values="cont_KDE_values").plot.hist(bins=100, alpha=0.5) # th is 13
+            #plt.show()
+            #sim_tracks_7.pivot(columns="GT", values="cont_intersect_values").plot.hist(bins=100, alpha=0.5) # th is 6
+            #plt.show()
+
+
+            
+
+
+
+
+
+            path_out3=f1.split(".csv")
+            path_out4=path_out3[0]
+
+            outpath4=path_out4+"sim_"+str(index)+"_parameter_values"+".xlsx"
+            writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
+            sim_tracks_7.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+            writer.close()
+
+            ## plot all teh  stuff:
+
+
+
+
+
+
+            
+        #     if index==0:
+        #         #list_final_distances=[lys_distance]
+        #         print(lys_distance)
+        #         distance_df=pd.DataFrame([lys_distance])
+        #         distance_df.columns=["max_GT0", "max_GT1", "mean_GT0", "mean_GT1", "lower_GT0", "higher_GT0", "lower_GT1", "higher_GT1"]
+        #         distance_final=distance_df
+
+        #     else:
+        #         #list_final_distances=pd.concat([list_final_distances,lys_distance],axis=1)
+        #         distance_df=pd.DataFrame([lys_distance])
+        #         distance_df.columns=["max_GT0", "max_GT1", "mean_GT0", "mean_GT1", "lower_GT0", "higher_GT0", "lower_GT1", "higher_GT1"]
+        #         #distance_df=pd.concat([distance_df,lys_distance],axis=1)
+        #         distance_final=pd.concat([distance_final,distance_df],axis=1)
+
+        # #df_final_parameters=pd.DataFrame(list_final_distances, columns=["max_GT0", "max_GT1", "mean_GT0", "mean_GT1", "lower_GT0", "higher_GT0", "lower_GT1", "higher_GT1"])
+        # print(distance_final)
+
+
+
+
+
     #############################################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
         N=500
         T=200
-        D=0.01
+        D=0.015
         DS2=1
         L = 1.5*128 #enalrge field ov fiew to avoid boundy effects
         compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
@@ -321,34 +412,7 @@ if __name__ == '__main__':
 
         ############################ run the model:
 
-        # if not os.path.isfile("HMMjson"):
-        #     steplength = []
-        #     for t in traces:
-               
-        #         x, y = t[:, 0], t[:, 1]
-        #         steplength.append(np.sqrt((x[1:] - x[:-1]) ** 2 + (y[1:] - y[:-1]) ** 2))
-        #     print("fitting HMM")
-        #     model = HiddenMarkovModel.from_samples(
-        #         NormalDistribution, n_components=4, X=steplength, n_jobs=3, verbose=True
-        #     )
-            
-        #     print(model)
-        #     model.bake()
-        #     print("Saving HMM model")
-
-        #     s = model.to_json()
-        #     f = open("HMMjson", "w")
-        #     f.write(s)
-        #     f.close()
-        # else:
-        #     print("loading HMM model")
-        #     s = "HMMjson"
-        #     file = open(s, "r")
-        #     json_s = ""
-        #     for line in file:
-        #         json_s += line
-        #     model = HiddenMarkovModel.from_json(json_s)
-        #     print(model)
+        
 
     ################################################
     # function loading HMM model:
@@ -416,7 +480,8 @@ if __name__ == '__main__':
         return lys_final_flat
     
     ################# end function for consecutive features
-    
+
+
     ################# Calculate distance and add to dataframe
     def computing_distance_wrapper(deep_df):
     
@@ -443,10 +508,6 @@ if __name__ == '__main__':
         distance_flag.append(0)
         deep_df["distance"] = distance
         deep_df["distance_flag"] = distance_flag
-        
-
-    ################## End distance calculation
-
     ################## Find consecutive short distances (4 in this case)
     
         tresh_l = 9
@@ -484,6 +545,138 @@ if __name__ == '__main__':
         return deep_df
 
     ################### end distance
+
+    ################ 
+    def computing_distance_for_sim(sim_tracks):
+        grouped_plot= sim_tracks.sort_values(["POSITION_T"]).groupby("TRACK_ID")
+        lys_distance=[]
+        c3=0
+        for i in grouped_plot["TRACK_ID"].unique():
+            distance = []
+            #c3=0
+            s= grouped_plot.get_group(i[0])
+            #print("heere",s)
+            #print(s["POSITION_X"][1])
+           
+            #distance_flag = []
+            #threshold_dist = 0.09
+            for l in range(len(s["POSITION_X"])-1):
+                #print("heere is l", l)
+                x1, y1 = s["POSITION_X"][c3], s["POSITION_Y"][c3]
+                x2, y2 = s["POSITION_X"][c3+1], s["POSITION_Y"][c3+1]
+
+                p1 = [x1, y1]
+                p2 = [x2, y2]
+
+                dis = math.dist(p1, p2)
+                distance.append(dis)
+                #print(distance, c3)
+                c3+=1
+                #if dis < threshold_dist:
+                    #distance_flag.append(0)
+                #else:
+                    #distance_flag.append(1)
+            c3+=1
+            #print(c3)
+            distance.append(0)
+            lys_distance.append(distance)
+
+            #distance_flag.append(0)
+        dist_flat=list(chain.from_iterable(lys_distance))
+        sim_tracks["distance"] = dist_flat
+            #sim_tracks["distance_flag"] = distance_flag
+
+        return sim_tracks
+    
+    def plot_distances(sim_tracks):
+        lys_GT_0=[]
+        lys_GT_1=[]
+        maximum=max(sim_tracks["distance"])
+        print(maximum)
+
+       
+        #print(sim_tracks["distance"])
+        for i in range (len(sim_tracks)):
+            if sim_tracks["GT"][i]==0:
+                if sim_tracks["distance"][i]!=0:
+                    lys_GT_0.append(sim_tracks["distance"][i])
+
+            else:
+                if sim_tracks["distance"][i]!=0:
+                    lys_GT_1.append(sim_tracks["distance"][i])
+
+        #print(lys_GT_0)
+        
+
+       
+ 
+        plt.hist([lys_GT_0, lys_GT_1], color=[ 'Black', 'Red'], label=['zero', 'one'], range=[0.0, maximum], bins=20)
+
+        tick_values=[]
+        for i in np.arange(0.0,maximum,0.001 ):
+             tick_values.append(i)
+        #print(tick_values)
+        plt.xticks(tick_values)
+        plt.show()
+        lys_distances_summmary=[]
+        max_GT0=max(lys_GT_0)
+        max_GT1=max(lys_GT_1)
+        mean_GT0=mean(lys_GT_0)
+        var_GT0=statistics.stdev(lys_GT_0)
+        mean_GT1=mean(lys_GT_1)
+        var_GT1=statistics.stdev(lys_GT_1)
+        lys_distances_summmary=[max_GT0,max_GT1, mean_GT0, mean_GT1, mean_GT0-var_GT0, mean_GT0+var_GT0, mean_GT1-var_GT1,mean_GT1+var_GT1 ]
+        print(lys_distances_summmary)
+
+
+
+        #mu_Gt0, std_GT0 = norm.fit(lys_GT_0)
+        #mu_Gt1, std_GT1 = norm.fit(lys_GT_1)
+        #ae_GT1, loce_GT1, scalee_GT1 = stats.skewnorm.fit(lys_GT_1)
+        #ae_GT0, loce_GT0, scalee_GT0 = stats.skewnorm.fit(lys_GT_0)
+
+
+
+
+        
+        plt.hist(lys_GT_0,  range=[0.0, maximum], alpha=0.5, bins=200)
+        plt.axvline(mean_GT0, color='blue', linestyle='dashed', linewidth=1)
+        plt.axvline(mean_GT0-var_GT0, color='green', linestyle='dashed', linewidth=1)
+        plt.axvline(mean_GT0+var_GT0, color='green', linestyle='dashed', linewidth=1)
+        #plt.axvline(mu_Gt0, color='k', linestyle='dashed', linewidth=1)
+        #plt.axvline(mu_Gt0-std_GT0, color='k', linestyle='dashed', linewidth=1)
+        #plt.axvline(mu_Gt0+std_GT0, color='k', linestyle='dashed', linewidth=1)
+        #plt.axvline(ae_GT0, color='purple', linestyle='dashed', linewidth=1)
+        #plt.axvline(loce_GT0, color='yellow', linestyle='dashed', linewidth=1)
+        #plt.axvline(scalee_GT0, color='brown', linestyle='dashed', linewidth=1)
+
+        plt.hist(lys_GT_1,  range=[0.0, maximum], alpha=0.5, bins=200)
+        plt.axvline(mean_GT1, color='red', linestyle='dashed', linewidth=1)
+        plt.axvline(mean_GT1-var_GT1, color='yellow', linestyle='dashed', linewidth=1)
+        plt.axvline(mean_GT1+ var_GT1, color='yellow', linestyle='dashed', linewidth=1)
+        #plt.axvline(mu_Gt1-std_GT1, color='k', linestyle='dashed', linewidth=1)
+        #plt.axvline(mu_Gt1+std_GT1, color='k', linestyle='dashed', linewidth=1)
+
+        #plt.axvline(ae_GT1, color='pink', linestyle='dashed', linewidth=1)
+        #plt.axvline(loce_GT1, color='orange', linestyle='dashed', linewidth=1)
+        #plt.axvline(scalee_GT1, color='green', linestyle='dashed', linewidth=1)
+
+
+        plt.xticks(tick_values)
+
+        plt.show()
+
+
+        return sim_tracks, lys_distances_summmary, lys_GT_0, lys_GT_1      
+
+
+    ###########
+    # make consecutive distance for sim:
+    
+
+    
+    ################## End distance calculation
+   
 
     ################### calulcate angles:
 
@@ -526,6 +719,157 @@ if __name__ == '__main__':
 
     ###################### end anlges calc
 
+
+     # works
+    def consecutive_for_sim(col, seg_len,  deep_df): # col= string of cl indf, seg_len=segment length of consecutive, threshold number
+        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
+      
+        lys_values_final=[]
+        for i in grouped_plot["tid"].unique():
+            
+            lys_values=[]
+            s= grouped_plot.get_group(i[0])
+            c3=0
+            seg1=seg_len-1
+            seg2=seg_len+1
+            
+            while c3<len(s["pos_x"]): 
+
+                if c3>=len(s["pos_x"])-seg_len: 
+                        lys_values.append([0]*1)
+                else:
+
+                        
+                    lys_values.append([sum(s[col][c3:c3+seg_len])]*1)
+                   
+                c3+=1
+           
+            lys_values_flat=list(chain.from_iterable(lys_values))
+            lys_values_final.append(lys_values_flat)
+            c3=0
+
+        lys_values_flat_final=list(chain.from_iterable(lys_values_final))
+        return lys_values_flat_final
+
+    ############################################
+
+    def calculate_angels_for_sim(sim_tracks):
+        grouped_plot= sim_tracks.sort_values(["POSITION_T"]).groupby("TRACK_ID")
+        lys_angles=[]
+        c3=0
+        for i in grouped_plot["TRACK_ID"].unique():
+            angles = []
+            #c3=0
+            s= grouped_plot.get_group(i[0])
+
+            #threshold_dist = 0.09
+            for l in range(len(s["POSITION_X"])-2):
+                #print("heere is l", l)
+                x1, y1 = s["POSITION_X"][c3], s["POSITION_Y"][c3]
+                x2, y2 = s["POSITION_X"][c3+1], s["POSITION_Y"][c3+1]
+                x3, y3 = s["POSITION_X"][c3+2], s["POSITION_Y"][c3+2]
+
+                a = [x1, y1]
+                b = [x2, y2]
+                c = [x3, y3]
+
+                angle1 = 180 - angle3pt(a, b, c)
+                angle=180-abs(angle1)
+
+                angles.append(angle)
+                c3+=1
+
+            angles.append(0)
+            angles.append(0)
+            c3+=2
+            lys_angles.append(angles)
+            #print(lys_angles, c3)
+
+        angles_flat=list(chain.from_iterable(lys_angles))
+        sim_tracks["angles"] = angles_flat
+
+        sim_tracks["pos_t"]=sim_tracks["POSITION_T"]
+        sim_tracks["tid"]=sim_tracks["TRACK_ID"]
+        sim_tracks["pos_x"]=sim_tracks["POSITION_X"]
+        #print(sim_tracks["angles"])
+
+
+        angle_value_list= consecutive_for_sim("angles", 10, sim_tracks)
+        sim_tracks["cont_angles_values"]=angle_value_list
+
+
+
+        #print("lys_amgles",sim_tracks["angles"])
+            
+        return sim_tracks
+    
+    ################################# calculate consecutive angles for sim with values!!
+   
+    
+
+    ################################################ plot angels:
+    def plot_angles(sim_tracks):
+        lys_GT_0=[]
+        lys_GT_1=[]
+        
+        maximum=max(sim_tracks["cont_angles_values"])
+
+        for i in range (len(sim_tracks)):
+            if sim_tracks["GT"][i]==0:
+                lys_GT_0.append(sim_tracks["cont_angles_values"][i])
+            else:
+                lys_GT_1.append(sim_tracks["cont_angles_values"][i])
+
+        import statistics
+        lys_GT_0_nozero=[]
+        lys_GT_1_nozero=[]
+        for i in range (len(lys_GT_0)):
+            if lys_GT_0[i]!=0:
+                lys_GT_0_nozero.append(lys_GT_0[i])
+            if lys_GT_1[i]!=0:
+                lys_GT_1_nozero.append(lys_GT_1[i])
+
+
+        plt.hist([lys_GT_0_nozero, lys_GT_1_nozero], color=[ 'Black', 'Red'], label=['zero', 'one'], range=[0, maximum], bins=20)
+
+        tick_values=[]
+        #for i in np.arange(0.0,maximum,0.001 ):
+            #tick_values.append(i)
+        #print(tick_values)
+        #plt.xticks(tick_values)
+        plt.show()
+        max_GT0=max(lys_GT_0_nozero)
+        print(min(lys_GT_1_nozero))
+        max_GT1=max(lys_GT_1_nozero)
+        mean_GT0=mean(lys_GT_0_nozero)
+        print(mean_GT0)
+        print(lys_GT_0_nozero)
+        var_GT0=statistics.stdev(lys_GT_0_nozero)
+        mean_GT1=mean(lys_GT_1_nozero)
+        print(mean_GT1)
+        var_GT1=statistics.stdev(lys_GT_1_nozero)
+        
+        plt.hist(lys_GT_0_nozero,  range=[0, maximum], alpha=0.5, bins=200)
+        plt.axvline(mean_GT0, color='blue', linestyle='dashed', linewidth=1)
+        plt.axvline(mean_GT0-var_GT0, color='k', linestyle='dashed', linewidth=1)
+        plt.axvline(var_GT0+mean_GT0, color='k', linestyle='dashed', linewidth=1)
+
+
+        plt.hist(lys_GT_1_nozero,  range=[0, maximum], alpha=0.5, bins=200)
+        plt.axvline(mean_GT1, color='red', linestyle='dashed', linewidth=1)
+        plt.axvline(mean_GT1-var_GT1, color='k', linestyle='dashed', linewidth=1)
+        plt.axvline(var_GT1+mean_GT1, color='k', linestyle='dashed', linewidth=1)
+
+        #plt.xticks(tick_values)
+
+        plt.show()
+        #print(sim_tracks)
+        return sim_tracks   
+
+    ###############################################
+
+
+
     ###################### function to calculate KDE:
     def make_KDE_per_track(lys_x, lys_y):
         lys_z=[]
@@ -547,6 +891,111 @@ if __name__ == '__main__':
         
     #################### end function
 
+    ###### function to calulate KDE fpr sim tracsk: under progress.....
+
+    def make_KDE_for_sim(lys_x, lys_y, sim_tracks):
+
+        out, out2 =make_KDE_per_track(lys_x, lys_y)
+        sim_tracks["KDE_values"]=out
+        print("CALCULATING KDE FOR SIM")
+
+        sim_tracks['KDE_level']=pd.qcut(sim_tracks["KDE_values"], 9,labels=["zero" , "one", "two", "three", "four", "five", "six", "seven", "eight"])
+        sim_tracks['KDE_values_bin']=pd.qcut(sim_tracks["KDE_values"], 9,labels=False)
+        sim_tracks['KDE_level'] = sim_tracks['KDE_level'].astype(str)
+        #final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
+
+        # invert KDE values: for consistency, low values = good
+        lys_invert=[]
+        for i in sim_tracks["KDE_values_bin"]:
+            KDE_invert=8-i
+            lys_invert.append(KDE_invert)
+        sim_tracks["KDE_invert"]=lys_invert
+
+        ## add consecutives:
+        #KDE_cont_lys=consecutive("KDE_invert", 10, 13, deep_df)
+        KDE_cont_lys=consecutive_for_sim("KDE_invert", 10,sim_tracks )
+        sim_tracks["cont_KDE_values"]=KDE_cont_lys
+
+
+
+
+
+
+        return sim_tracks
+
+
+    def plot_KDE_for_sim(sim_tracks):
+        ##### plot it 
+
+        lys_GT_0=[]
+        lys_GT_1=[]
+        maximum=max(sim_tracks["KDE_values"])
+        print(maximum)
+        #print(sim_tracks["distance"])
+        for i in range (len(sim_tracks)):
+            if sim_tracks["GT"][i]==0:
+                lys_GT_0.append(sim_tracks["KDE_values"][i])
+            else:
+                lys_GT_1.append(sim_tracks["KDE_values"][i])
+
+        #print(lys_GT_0)
+        import statistics
+       
+ 
+        plt.hist([lys_GT_0, lys_GT_1], color=[ 'Black', 'Red'], label=['zero', 'one'], range=[0.0, maximum], bins=20)
+
+        tick_values=[]
+        #for i in np.arange(0.0,maximum,0.001 ):
+             #tick_values.append(i)
+        #print(tick_values)
+       # plt.xticks(tick_values)
+        plt.show()
+        max_GT0=max(lys_GT_0)
+        max_GT1=max(lys_GT_1)
+        mean_GT0=mean(lys_GT_0)
+        var_GT0=statistics.stdev(lys_GT_0)
+        mean_GT1=mean(lys_GT_1)
+        var_GT1=statistics.stdev(lys_GT_1)
+        
+        plt.hist(lys_GT_0,  range=[0.0, maximum], alpha=0.5, bins=200)
+        plt.axvline(mean_GT0, color='k', linestyle='dashed', linewidth=1)
+        plt.axvline(var_GT0, color='k', linestyle='dashed', linewidth=1)
+        plt.axvline(var_GT0+mean_GT0, color='k', linestyle='dashed', linewidth=1)
+
+
+        plt.hist(lys_GT_1,  range=[0.0, maximum], alpha=0.5, bins=200)
+        plt.axvline(mean_GT1, color='k', linestyle='dashed', linewidth=1)
+        plt.axvline(var_GT1, color='k', linestyle='dashed', linewidth=1)
+        plt.axvline(var_GT1+mean_GT1, color='k', linestyle='dashed', linewidth=1)
+
+        plt.xticks(tick_values)
+
+        plt.show()
+
+
+        ## try more:
+        
+    
+
+        lys_GT_0=[]
+        lys_GT_1=[]
+        maximum=max(sim_tracks["KDE_invert"])
+        print(maximum)
+        #print(sim_tracks["distance"])
+        for i in range (len(sim_tracks)):
+            if sim_tracks["GT"][i]==0:
+                lys_GT_0.append(sim_tracks["KDE_invert"][i])
+            else:
+                lys_GT_1.append(sim_tracks["KDE_invert"][i])
+
+        plt.hist([lys_GT_0, lys_GT_1], color=[ 'Black', 'Red'], label=['zero', 'one'], range=[0.0, maximum], bins=10)
+        plt.show()
+
+
+
+        return sim_tracks
+
+    #################################
     #################### function for KDE:
 
     def calculate_KDE_wrapper(lys_x, lys_y, deep_df):
@@ -688,6 +1137,154 @@ if __name__ == '__main__':
         return deep_df
 
         ########################### end intersections
+
+
+        # calcualete intersitions for simualtion:
+    def calcualte_intersections_for_sim(lys_x, lys_y, sim_tracks):
+
+        inter_flat1, inter_flat2, inter_flat3, inter_flat4=calc_intersections(lys_x, lys_y)
+        sim_tracks["intersect1"]=inter_flat1
+        sim_tracks["intersect2"]=inter_flat2
+        sim_tracks["intersect3"]=inter_flat3
+        sim_tracks["intersect4"]=inter_flat4
+        ## intersect 1= no intersection
+
+        ## put all intersections together:
+        lys_all=[]
+        lys_all_count=[]
+        inter_count=0
+
+
+
+        for i in range(len(sim_tracks["POSITION_X"])):
+            inter_count=0
+           
+            if sim_tracks["intersect1"][i]==0:
+                inter_count+=1
+            if sim_tracks["intersect2"][i]==0:
+                inter_count+=1
+            if sim_tracks["intersect3"][i]==0:
+                inter_count+=1
+            if sim_tracks["intersect4"][i]==0:
+                inter_count+=1
+            if sim_tracks["intersect1"][i]==0 or sim_tracks["intersect2"][i]==0 or sim_tracks["intersect3"][i]==0 or sim_tracks["intersect4"][i]==0:
+                lys_all.append(0)
+            else:
+                lys_all.append(1)
+
+            lys_all_count.append(inter_count)
+
+        sim_tracks["all_intersect_count"]=lys_all_count
+        sim_tracks["all_intersect"]=lys_all
+
+        ## ad consectuive somehow?
+        #in 10 min 6 intersections?
+        intersection_cont_lys=consecutive_for_sim("all_intersect", 10,sim_tracks )
+
+        sim_tracks["cont_intersect_values"]=intersection_cont_lys
+
+
+
+        return sim_tracks
+    
+
+    def plot_intersections(sim_tracks):
+
+        ### plot it:
+        lys_GT_0=[]
+        lys_GT_1=[]
+        maximum=max(sim_tracks["all_intersect_count"])
+        print(maximum)
+        #print(sim_tracks["distance"])
+        for i in range (len(sim_tracks)):
+            if sim_tracks["GT"][i]==0:
+                lys_GT_0.append(sim_tracks["all_intersect_count"][i])
+            else:
+                lys_GT_1.append(sim_tracks["all_intersect_count"][i])
+
+        plt.hist([lys_GT_0, lys_GT_1], color=[ 'Black', 'Red'], label=['zero', 'one'], range=[0.0, maximum], bins=10)
+
+        plt.show()
+        plt.hist(lys_GT_0,  range=[0.0, maximum], alpha=0.5, bins=20)
+        plt.hist(lys_GT_1,  range=[0.0, maximum], alpha=0.5, bins=20)
+        plt.show()
+
+        
+        sim_tracks["pos_t"]= sim_tracks["POSITION_T"]
+        sim_tracks["tid"]= sim_tracks["TRACK_ID"]
+        sim_tracks["pos_x"]= sim_tracks["POSITION_X"]
+
+
+
+        intersect_cont=consecutive("all_intersect", 10, 6, sim_tracks)
+        sim_tracks["intersect_cont"]=intersect_cont
+        print("max_cont", max(sim_tracks["intersect_cont"]))
+        print("min_cont", min(sim_tracks["intersect_cont"]))
+        lys_GT_0=[]
+        lys_GT_1=[] 
+        for i in range (len(sim_tracks)):
+            if sim_tracks["GT"][i]==0:
+                lys_GT_0.append(sim_tracks["intersect_cont"][i])
+            else:
+                lys_GT_1.append(sim_tracks["intersect_cont"][i])
+        
+
+        values0, counts0 = np.unique(lys_GT_0, return_counts=True)
+     
+        print(counts0[0],len(lys_GT_0) , (counts0[0]/len(lys_GT_0 )),(counts0[1]/len(lys_GT_0 )) )
+        print("zero", values0, counts0, )
+        values1, counts1 = np.unique(lys_GT_1, return_counts=True)
+        print(counts1[0],len(lys_GT_1) , (counts1[0]/len(lys_GT_1 )),(counts1[1]/len(lys_GT_1 )) )
+
+        print("one", values1, counts1)
+
+        plt.hist([lys_GT_0, lys_GT_1], color=[ 'Black', 'Red'], label=['zero', 'one'])
+        plt.show()
+        #values for 5,6, 7
+
+        lys_all0_0=[0.4179431072210066, 0.6091903719912473]
+        lys_all0_1=[0.5820568927789934, 0.39080962800875274]
+        lys_all1_0=[0.013869086195722618, 0.04121840570317563]
+        lys_all1_1=[0.986130913804277, 0.9587815942968244] 
+      
+        #plt.hist
+        precision_0=counts0[0]/(counts0[0]+counts1[0])
+        precision_1=counts1[1]/(counts1[1]+counts0[1])
+        print(precision_0, precision_1)
+        # precision0=0.89924670433145, 
+        #precision1=0.8511971358245692
+
+
+
+
+
+
+
+        #import statistics
+
+    #     max_GT0=max(lys_GT_0)
+    #     max_GT1=max(lys_GT_1)
+    #     mean_GT0=mean(lys_GT_0)
+    #     var_GT0=statistics.stdev(lys_GT_0)
+    #     mean_GT1=mean(lys_GT_1)
+    #     var_GT1=statistics.stdev(lys_GT_1)
+      
+    #     plt.hist(lys_GT_0,  range=[0.0, maximum], alpha=0.5, bins=200)
+    #     plt.axvline(mean_GT0, color='blue', linestyle='dashed', linewidth=1)
+    #     plt.axvline(mean_GT0-var_GT0, color='green', linestyle='dashed', linewidth=1)
+    #     plt.axvline(mean_GT0+var_GT0, color='green', linestyle='dashed', linewidth=1)
+   
+    #     plt.hist(lys_GT_1,  range=[0.0, maximum], alpha=0.5, bins=200)
+    #     plt.axvline(mean_GT1, color='red', linestyle='dashed', linewidth=1)
+    #     plt.axvline(mean_GT1-var_GT1, color='yellow', linestyle='dashed', linewidth=1)
+    #     plt.axvline(mean_GT1+ var_GT1, color='yellow', linestyle='dashed', linewidth=1)
+     
+    #    # plt.xticks(tick_values)
+
+    #     plt.show()
+
+
+        return sim_tracks
     
 
     ########################## get fingertprint states:
@@ -971,7 +1568,7 @@ if __name__ == '__main__':
 
     ################################################
     ### plotting hull and tracks togehter: as arrested vs not spatially arrested
-    def plotting_final_image(deep_df_short,lys_points2, image_path1, image_path2):
+    def plotting_final_image(deep_df_short,lys_points2, image_path):
         final_pal=dict(zero= "#06fcde" , one= "#808080")
         linecollection = []
         colors = []
@@ -997,10 +1594,10 @@ if __name__ == '__main__':
                 c2+=1
             c2+=1
 
-        lc = LineCollection(linecollection, color=colors, lw=0.1) #was 1
+        lc = LineCollection(linecollection, color=colors, lw=1)
 
         
-        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.000001,  alpha=0) # was0.001
+        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
         plt.gca().add_collection(lc)
 
         for j in range (len(lys_points2)):
@@ -1014,20 +1611,15 @@ if __name__ == '__main__':
                     if ratio<105:
                     
                         for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.01) # lw was 1
+                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
 
-                        plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=0.01, color="#008080") # lw was 1
+                        plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
                         
         
         plt.axis('equal') 
-        plt.savefig(str(image_path1), format="svg") # uncomment this to save nice svg
+        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
         plt.show()
-
-        #plt.axis('equal') 
-        #plt.savefig(str(image_path2), dpi=3500,format="tiff") # uncomment this to save nice svg
-        #plt.show()
-
 
      
     ########################### function to make a nice excel fiel with all the parameters per track:
@@ -1508,7 +2100,7 @@ if __name__ == '__main__':
         plt.scatter(finger_tracks["pos_x"], finger_tracks["pos_y"], s=0.001)
         plt.gca().add_collection(lc)
         plt.axis('equal') 
-        plt.savefig(str(image_path1), format="tiff") # uncomment this to save nice svg
+        #plt.savefig(str(image_path1), format="tiff") # uncomment this to save nice svg
 
         plt.show()
 
@@ -1528,6 +2120,8 @@ if __name__ == '__main__':
     # example:
     #f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\Long_tracks_cell6-3_1476.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\confinement_0_tracks.csv"
+
+    #f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\cleaned_trackmate_1476-1_488.csv"
     #f2=f1
     #dt=0.05
     #plotting_flag=0
@@ -1542,13 +2136,13 @@ if __name__ == '__main__':
     # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
     
     # example:
-    dt=0.05
-    plotting_flag=0
-    min_track_length=20
+    #dt=0.05
+    #plotting_flag=0
+    #min_track_length=25
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
-    folderpath1=r"X:\labs\Lab_Gronnier\KALTRA\PALM\102025\spot data\AHA FC\cleaned"
+    #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\pub10_BAK1_BL\cleaned"
 
-    wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
+    #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
 
     ############################################
     ## for simulating tracks based on parameters stored in a file:
@@ -1564,21 +2158,36 @@ if __name__ == '__main__':
     
     # example:
 
-   # plotting_flag=0
+    #plotting_flag=0
     #dt=0.1
     #min_track_length=25
     #plotting_saving_nice_image_flag=0
-    #tracks_saving_flag=1
+    #tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\test_saving_tracks\Sven_values\for_sven2\Sven_values2_D0.001_N500_T200.csv"
-
-
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_25.1.25_train_D0.01\D0.01_N500_T200_for_philip_train.csv"
+    #f1=r"C:\Users\miche\Desktop\test\tracks for philip\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip.csv"
+    #f1=r"C:\Users\miche\Desktop\simualted tracks\test_values_1.csv"
     #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
+
+    ####################################################
+    #### to get paramters from simualtion directly and plot them
+    plotting_flag=0
+    dt=0.1
+    min_track_length=25
+    plotting_saving_nice_image_flag=0
+    tracks_saving_flag=0
+    f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep1\values_pm_sweep_D0.005_N500_T200.csv"
+    f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep4\values_pm_sweep_D0.015_N500_T200.csv"
+
+    calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag)
 
    
     
+
+
+
+
 
 
 

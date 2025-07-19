@@ -1,6 +1,6 @@
 # %%
 
-from src.RandomWalkSims import (
+from casta.RandomWalkSims import (
     Gen_normal_diff,
     Gen_directed_diff,
     Get_params,

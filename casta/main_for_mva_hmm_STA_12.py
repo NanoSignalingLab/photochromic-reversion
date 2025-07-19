@@ -48,7 +48,7 @@ import warnings
 #from andi_datasets.models_phenom import models_phenom
 #from sklearn import metrics
 #from math import nan
-from hmm_functions import run_model
+from casta.hmm_functions import run_model
 
 
 warnings.filterwarnings('ignore')
@@ -204,7 +204,7 @@ def msd_mean_track(msd_df, dt):
 
 def run_traces_wrapper(deep_df, dt): 
 
-    with open("src/model_4.pkl", "rb") as file: 
+    with open("casta/model_4.pkl", "rb") as file: 
         model = pickle.load(file)
     print("loading HMM model")
     window_size=10
