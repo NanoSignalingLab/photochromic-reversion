@@ -24,12 +24,16 @@ from casta.hmm_functions import run_model
 import warnings
 warnings.filterwarnings('ignore')
 
-def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag,image_saving_flag):
-    onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
+def calculate_spatial_transient_wrapper(dir: str, 
+                                        min_track_length: int = 25, 
+                                        dt: float = 0.05, 
+                                        plotting_flag: bool = False,
+                                        image_saving_flag: str = "svg"):
+    onlyfiles = [f for f in listdir(dir) if isfile(join(dir, f))]
     for i in onlyfiles:
         
         if i.endswith(".csv"):
-            path=os.path.join(folderpath1, i)
+            path=os.path.join(dir, i)
             print(path)
             image_path_lys=path.split("csv")
             if image_saving_flag=="svg":
@@ -161,7 +165,7 @@ def msd_mean_track(msd_df, dt):
 
 def run_traces_wrapper(deep_df, dt): 
 
-    with open("casta/model_4.pkl", "rb") as file: 
+    with open("casta/data/model_4.pkl", "rb") as file: 
         model = pickle.load(file)
     print("loading HMM model")
     window_size=10
@@ -519,7 +523,7 @@ def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag,
     c2=0
     
     c2=0
-    if plotting_flag==1:
+    if plotting_flag:
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
             for i in range (len(s["pos_x"])-1):
@@ -684,7 +688,7 @@ def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag,
                     lys_hull.append(hull)
                     lys_area.append(hull.volume) 
                     lys_perimeter.append(hull.area) 
-                    if plotting_flag==1:
+                    if plotting_flag:
                         for simplex in hull.simplices:
                             plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.5, color="red")
 
@@ -729,7 +733,7 @@ def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag,
     
     
 
-    if plotting_flag==1:
+    if plotting_flag:
         plt.axis('equal') 
         plt.show()
     #print(mean_msd_df)

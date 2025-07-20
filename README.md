@@ -69,12 +69,15 @@ The analysis generates:
 ## Requirements
 
 - Python 3.10.18
-- NumPy
-- Pandas
-- Matplotlib
-- SciPy
-- Scikit-learn
-- hmm-learn
+- NumPy 2.0.1
+- Pandas 2.2.3
+- Matplotlib 3.10.0
+- SciPy 1.15.0
+- Scikit-learn 1.6.1
+- Seaborn 0.13.2
+- hmm-learn 0.3.3
+- Shapely 2.0.6
+- xlsxwriter 3.2.3
 
 ## Contributing
 
