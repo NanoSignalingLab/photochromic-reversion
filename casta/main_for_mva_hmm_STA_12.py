@@ -24,14 +24,15 @@ from casta.hmm_functions import run_model
 import warnings
 warnings.filterwarnings('ignore')
 
-def calculate_spatial_transient_wrapper(dir: str, 
+def calculate_spatial_transient_wrapper(dir: str,
+                                        out_dir: str = None, 
                                         min_track_length: int = 25, 
                                         dt: float = 0.05, 
                                         plotting_flag: bool = False,
                                         image_saving_flag: str = "svg"):
     onlyfiles = [f for f in listdir(dir) if isfile(join(dir, f))]
+
     for i in onlyfiles:
-        
         if i.endswith(".csv"):
             path=os.path.join(dir, i)
             print(path)
@@ -44,7 +45,7 @@ def calculate_spatial_transient_wrapper(dir: str,
             tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
             mean_msd_df=msd_mean_track(msd_df, dt)
 
-            deep_df2= run_traces_wrapper(deep_df1, dt)
+            deep_df2=run_traces_wrapper(deep_df1, dt)
             deep_df3=computing_distance_wrapper(deep_df2)
             deep_df4=calculate_angles_wrapper(deep_df3)
             deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
@@ -56,7 +57,7 @@ def calculate_spatial_transient_wrapper(dir: str,
             mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
 
             plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_saving_flag)
-            make_results_file(path, deep_df_short2, dt,mean_msd_df2 ) # run function to make excel with all parameters
+            make_results_file(path, out_dir, deep_df_short2, dt,mean_msd_df2) # run function to make excel with all parameters
 
 
 
@@ -948,13 +949,11 @@ def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_mi
     
 
 ###### make reuslts file for CASTA new HMM:
-def make_results_file(f2, deep_df_short, dt, mean_msd_df):
+def make_results_file(f2, out_dir, deep_df_short, dt, mean_msd_df):
     #print("this is deepdfshort",deep_df_short)
 
     f2_path = Path(f2)
     name = f2_path.stem  # Gets filename without extension
-    outpath3 = f2_path.parent / name
-    print("saving results file in:", outpath3)
 
     # adding hull area and number of points in clusters
     lys_nr_of_clusters=[]
@@ -1090,8 +1089,12 @@ def make_results_file(f2, deep_df_short, dt, mean_msd_df):
     casta_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
     casta_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
 
-    outpath4 = f2_path.parent / f"{name}_CASTA_results.xlsx"
-    writer = pd.ExcelWriter(outpath4, engine='xlsxwriter')
+    if out_dir is not None:
+        outpath = Path(out_dir) / f"{name}_CASTA_results.xlsx"
+    else:
+        outpath = f2_path.parent / f"{name}_CASTA_results.xlsx"
+    print("Saving results to: ", outpath)
+    writer = pd.ExcelWriter(outpath, engine='xlsxwriter')
     casta_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
     writer.close()
 

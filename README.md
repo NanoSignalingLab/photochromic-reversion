@@ -37,10 +37,11 @@ import casta
 
 # Run analysis in notebook
 casta.calculate_spatial_transient_wrapper(
-    "/path/to/data",
+    dir="/path/to/data/directory",
+    out_dir="/path/to/output/directory",
     min_track_length=25,
     dt=0.05,
-    plotting_flag=1,
+    plotting_flag=True,
     image_saving_flag="svg"
 )
 ```
@@ -49,22 +50,33 @@ casta.calculate_spatial_transient_wrapper(
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `dir` | str | *required* | Path to folder containing track data |
+| `dir` | str | *required* | Path to directory input containing track data |
+| `--out_dir` | str | None | Path to output directory to save results, defaults to input directory |
 | `--dt` | float | 0.05 | Time step for analysis |
 | `--min-track-length` | int | 25 | Minimum track length for analysis |
-| `--plot` | int | 0 | Enable plotting (0=off, 1=on) |
+| `--plot` | bool | False | Enable additional plotting |
 | `--image-format` | str | svg | Image format (svg, tiff) |
 
 ## Input Data Format
 
-CASTA expects track data in CSV format with appropriate trajectory information. The package will process all compatible files in the specified directory.
+CASTA includes an example file.
+
+```python
+import os
+import casta
+
+example_df, path = casta.utils.load_example_data()
+
+current_dir = os.getcwd()
+
+casta.calculate_spatial_transient_wrapper(path, out_dir=current_dir)
+```
 
 ## Output
 
 The analysis generates:
 - **Excel files** with detailed results (`*_CASTA_results.xlsx`)
 - **Visualization plots** (optional, in specified format)
-- **Console output** with analysis progress and summary
 
 ## Requirements
 
