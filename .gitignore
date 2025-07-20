@@ -1,4 +1,6 @@
 .DS_Store
 /casta.egg-info
-*.pyc
 dist/
+
+*.pyc
+*.xlsx

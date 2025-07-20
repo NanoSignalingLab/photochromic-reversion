@@ -1,6 +1,4 @@
 import pandas as pd
-#import polars as ps
-
 import numpy as np
 
 from hmmlearn import hmm

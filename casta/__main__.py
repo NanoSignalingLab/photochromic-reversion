@@ -1,5 +1,5 @@
 import argparse
-from casta.main_for_mva_hmm_STA_12 import calculate_sta
+from casta.main import calculate_sta
 
 def main():
     parser = argparse.ArgumentParser(
