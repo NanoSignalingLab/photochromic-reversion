@@ -1,17 +1,6 @@
-# %%
-
-from casta.RandomWalkSims import (
-    Gen_normal_diff,
-    Gen_directed_diff,
-    Get_params,
-    Gen_confined_diff,
-    Gen_anomalous_diff,
-)
-
 import matplotlib.pyplot as plt
 import matplotlib
-from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
-from MLGeneral import ML, histogram
+from casta.ml.my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
 import pickle
 import os
 from pomegranate import *
@@ -2181,87 +2170,3 @@ if __name__ == '__main__':
     f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep4\values_pm_sweep_D0.015_N500_T200.csv"
 
     calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag)
-
-   
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-            
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              
-        
-
-
-
-
-
-
-
-
-
-
-
-      
-        
-
-
-                
-
-
-
-
-        
-
-
-       
-
-
-
-
-
-
-
-
-
-
-    

@@ -1,17 +1,6 @@
-# %%
-
-from casta.RandomWalkSims import (
-    Gen_normal_diff,
-    Gen_directed_diff,
-    Get_params,
-    Gen_confined_diff,
-    Gen_anomalous_diff,
-)
-
 import matplotlib.pyplot as plt
 import matplotlib
-from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
-from MLGeneral import ML, histogram
+from casta.ml.my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
 import pickle
 import os
 from pomegranate import *
@@ -1047,83 +1036,4 @@ if __name__ == '__main__':
     plotting_flag=1
     #wrapper_one_file(f1, f2, min_track_length, dt,plotting_flag ) 
     f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\test_values.csv"
-    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-            
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              
-        
-
-
-
-
-
-
-
-
-
-
-
-      
-        
-
-
-                
-
-
-
-
-        
-
-
-       
-
-
-
-
-
-
-
-
-
-
-    
+    read_in_values_and_execute(f1,min_track_length, dt, plotting_flag )   

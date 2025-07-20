@@ -24,6 +24,7 @@ def calculate_sta(dir: str,
                   dt: float = 0.05, 
                   plot: bool = False,
                   image_format: str = "svg"):
+    
     onlyfiles = [f for f in listdir(dir) if isfile(join(dir, f))]
 
     for i in onlyfiles:
@@ -44,12 +45,12 @@ def calculate_sta(dir: str,
             df=calc_KDE(lys_x, lys_y, df)
             df=calc_intersections(lys_x, lys_y, df)
 
-            grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(df, mean_msd_df, plot, dt)
+            grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_calculate_hull(df, mean_msd_df, plot, dt)
             deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
-            mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
+            mean_msd_df2=calculate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
 
-            plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_format)
+            plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_format)
             make_results_file(path, out_dir, deep_df_short2, dt,mean_msd_df2) # run function to make excel with all parameters
 
 ############################################
@@ -153,7 +154,7 @@ def msd_mean_track(msd_df, dt):
 
 
 ############## plot all features togheter (plus convex hull):
-def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag, dt): # add ture =1or false =0 for plotting yes or no
+def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag, dt): # add ture =1or false =0 for plotting yes or no
     print("plotting all features")
     #print("heere is deepdf",deep_df)
 
@@ -475,7 +476,7 @@ def convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_p
 
 ## here insert function for log D of only non-clsutered:
 
-def caluclate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
+def calculate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
     #print(mean_msd_df)
 
 
@@ -509,7 +510,7 @@ def caluclate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
 ################################################
 ###insert new plotting function: 
 
-def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_saving_flag):
+def plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_saving_flag):
     final_pal=dict(zero= "#06fcde" , one= "#808080")
     linecollection = []
     colors = []
@@ -597,7 +598,6 @@ def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_mi
 
         plt.savefig(str(image_path), dpi=1500,format="tiff") # was 3500
         plt.show()
-    
 
 ###### make reuslts file for CASTA new HMM:
 def make_results_file(f2, out_dir, deep_df_short, dt, mean_msd_df):
