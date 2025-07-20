@@ -1,5 +1,5 @@
 import argparse
-from casta.main_for_mva_hmm_STA_12 import calculate_spatial_transient_wrapper
+from casta.main_for_mva_hmm_STA_12 import calculate_sta
 
 def main():
     parser = argparse.ArgumentParser(
@@ -19,7 +19,7 @@ def main():
     
     args = parser.parse_args()
     
-    calculate_spatial_transient_wrapper(
+    calculate_sta(
         args.dir,
         args.min_track_length,
         args.dt,

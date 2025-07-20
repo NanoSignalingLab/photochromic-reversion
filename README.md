@@ -36,13 +36,13 @@ python -m casta /path/to/data --dt 0.05 --min-track-length 25
 import casta
 
 # Run analysis in notebook
-casta.calculate_spatial_transient_wrapper(
+casta.calculate_sta(
     dir="/path/to/data/directory",
     out_dir="/path/to/output/directory",
     min_track_length=25,
     dt=0.05,
-    plotting_flag=True,
-    image_saving_flag="svg"
+    plot=True,
+    image_format="svg"
 )
 ```
 
@@ -69,7 +69,7 @@ example_df, path = casta.utils.load_example_data()
 
 current_dir = os.getcwd()
 
-casta.calculate_spatial_transient_wrapper(path, out_dir=current_dir)
+casta.calculate_sta(path, out_dir=current_dir)
 ```
 
 ## Output

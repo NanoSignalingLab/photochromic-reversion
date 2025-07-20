@@ -24,12 +24,12 @@ from casta.hmm_functions import run_model
 import warnings
 warnings.filterwarnings('ignore')
 
-def calculate_spatial_transient_wrapper(dir: str,
-                                        out_dir: str = None, 
-                                        min_track_length: int = 25, 
-                                        dt: float = 0.05, 
-                                        plotting_flag: bool = False,
-                                        image_saving_flag: str = "svg"):
+def calculate_sta(dir: str,
+                  out_dir: str = None, 
+                  min_track_length: int = 25, 
+                  dt: float = 0.05, 
+                  plot: bool = False,
+                  image_format: str = "svg"):
     onlyfiles = [f for f in listdir(dir) if isfile(join(dir, f))]
 
     for i in onlyfiles:
@@ -37,7 +37,7 @@ def calculate_spatial_transient_wrapper(dir: str,
             path=os.path.join(dir, i)
             print(path)
             image_path_lys=path.split("csv")
-            if image_saving_flag=="svg":
+            if image_format=="svg":
                 image_path=image_path_lys[0] +"svg"
             else:
                 image_path=image_path_lys[0] +"tiff"
@@ -51,12 +51,12 @@ def calculate_spatial_transient_wrapper(dir: str,
             deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
             deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
 
-            grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag, dt)
+            grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plot, dt)
             deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
             mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
 
-            plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_saving_flag)
+            plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_format)
             make_results_file(path, out_dir, deep_df_short2, dt,mean_msd_df2) # run function to make excel with all parameters
 
 
