@@ -81,7 +81,7 @@ The analysis generates:
 ## Requirements
 
 - Python 3.10.18
-- NumPy 2.0.1
+- NumPy 1.26.4
 - Pandas 2.2.3
 - Matplotlib 3.10.0
 - SciPy 1.15.0

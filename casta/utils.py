@@ -1,25 +1,103 @@
 import math
 import pandas as pd
 import numpy as np
-from importlib import resources
 from itertools import chain
 from scipy.stats import gaussian_kde
+from statistics import mean 
 
 from sklearn.preprocessing import normalize
 
-def load_example_data():
-    with resources.files('casta.data').joinpath('example_track.csv').open('r') as f:
-            df = pd.read_csv(f)
+def load_file(path, min_track_length):
+    df=pd.read_csv(path)
+    deep_df, list_traces, lys_x, lys_y, msd_df= make_deep_df(df, min_track_length)
+    return df, deep_df, list_traces, lys_x, lys_y, msd_df
 
-    with resources.path('casta.data', '') as path:
-            path = str(path)
+def make_deep_df(df, min_track_length):
+    grouped= df.sort_values(["FRAME"]).groupby("TRACK_ID")
+    count2=0
+    deep_all=[]
+    list_traces=[]
+    lys_x=[]
+    lys_y=[]
 
-    return df, path
+    for i in grouped["TRACK_ID"].unique():
+        s= grouped.get_group(i[0])
+        
+        if s.shape[0]>min_track_length: # parameter to set threshold of minimun length of track duration (eg. 25 time points)
+            count2+=1
+            pos_x=list(s["POSITION_X"])
+            pos_y= list(s["POSITION_Y"])
+            pos_t=list(s["POSITION_T"])
+            tid=list(s["TRACK_ID"])
+            lys_x.append(pos_x)
+            lys_y.append(pos_y)
+            m= np.column_stack(( pos_x, pos_y ))
+            msd, rmsd = compute_msd(m)
+            frames= list(s["FRAME"])
+            n= np.column_stack((msd,(frames[1:]),tid[1:]))
+
+            if(count2== 1):
+                msd_all = n
+            else:
+                msd_all = np.vstack((msd_all, n))
+
+            msd_df=pd.DataFrame(msd_all, columns=["msd", "frame", "track_id"])
+
+            list_traces.append(m)
+            m2=np.column_stack(( tid, pos_x, pos_y, pos_t)) 
+
+            if(count2== 1):
+                deep_all = m2
+            else:
+                deep_all = np.vstack((deep_all, m2))
+    deep_all_df=pd.DataFrame(deep_all, columns=["tid", "pos_x", "pos_y", "pos_t"])
+
+    return deep_all_df, list_traces, lys_x, lys_y, msd_df
 
 def angle3pt(a, b, c):
     ang = math.degrees(
     math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(a[1] - b[1], a[0] - b[0]))
     return ang + 360 if ang < 0 else ang
+
+def compute_msd(trajectory):
+    totalsize=len(trajectory)
+    msd=[]
+    for i in range(totalsize-1):
+        j=i+1
+        msd.append(np.sum((trajectory[0:-j]-trajectory[j::])**2)/float(totalsize-j)) # Distance that a particle moves for each time point divided by time
+    msd=np.array(msd)
+    rmsd = np.sqrt(msd)
+    return msd, rmsd 
+
+def logD_from_mean_MSD(MSDs, dt):
+
+    mean_msd = 0
+    logD = 0
+
+    mean_track=mean(MSDs[0:3])
+    if mean_track!=0:
+        mean_msd = mean_track
+    else:
+        mean_msd = 0.000000001
+
+    logD = math.log10(mean_track/(dt*4)) # 2*2dimnesions* time
+    return mean_msd, logD
+
+def msd_mean_track(msd_df, dt):
+    group2= msd_df.groupby("track_id")
+    lys=[]
+    lys2=[]
+    for i in group2["track_id"].unique():
+        s= group2.get_group(i[0])
+        
+        full_track=list(s["msd"])
+        mean_msd, logD = logD_from_mean_MSD(full_track, dt)
+        lys.append(mean_msd)
+        lys2.append(logD)
+
+    track_means_df = pd.DataFrame(np.column_stack([lys, lys2]), columns=["msd", "logD"])
+    
+    return track_means_df
 
 def consecutive(col, seg_len, threshold, deep_df): # col= string of cl indf, seg_len=segment length of consecutive, threshold number
     grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")

@@ -1,6 +1,6 @@
 __version__ = "0.0.4"
 
 from .main import calculate_sta
-from . import utils
+from . import example
 
-__all__ = ['calculate_sta', 'utils', '__version__']
+__all__ = ['calculate_sta', 'example', '__version__']

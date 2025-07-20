@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import math
 
 from matplotlib.collections import LineCollection
 from scipy.spatial import ConvexHull
@@ -14,6 +13,9 @@ from os import listdir
 from os.path import isfile, join
 
 from casta.features import run_hmm, calc_distance, calc_angles, calc_KDE, calc_intersections
+from casta.plot import plotting_final_image
+from casta.results import make_results_file
+from casta.utils import *
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -52,106 +54,6 @@ def calculate_sta(dir: str,
 
             plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_format)
             make_results_file(path, out_dir, deep_df_short2, dt,mean_msd_df2) # run function to make excel with all parameters
-
-############################################
-# function to directly load the cleaned trackmate files:
-
-def load_file(path2, min_track_length):
-    df=pd.read_csv(path2)
-    deep_df, list_traces, lys_x, lys_y, msd_df= make_deep_df(df, min_track_length)
-    return df, deep_df, list_traces, lys_x, lys_y, msd_df
-
-def make_deep_df(df, min_track_length):
-    grouped= df.sort_values(["FRAME"]).groupby("TRACK_ID")
-    count2=0
-    deep_all=[]
-    list_traces=[]
-    lys_x=[]
-    lys_y=[]
-
-    for i in grouped["TRACK_ID"].unique():
-        s= grouped.get_group(i[0])
-        
-        if s.shape[0]>min_track_length: # parameter to set threshold of minimun length of track duration (eg. 25 time points)
-            count2+=1
-            pos_x=list(s["POSITION_X"])
-            pos_y= list(s["POSITION_Y"])
-            pos_t=list(s["POSITION_T"])
-            tid=list(s["TRACK_ID"])
-            lys_x.append(pos_x)
-            lys_y.append(pos_y)
-            m= np.column_stack(( pos_x, pos_y ))
-            msd, rmsd = compute_msd(m)
-            frames= list(s["FRAME"])
-            n= np.column_stack((msd,(frames[1:]),tid[1:]))
-
-            if(count2== 1):
-                msd_all = n
-            else:
-                msd_all = np.vstack((msd_all, n))
-
-            msd_df=pd.DataFrame(msd_all, columns=["msd", "frame", "track_id"])
-
-            list_traces.append(m)
-            m2=np.column_stack(( tid, pos_x, pos_y, pos_t)) 
-
-            if(count2== 1):
-                deep_all = m2
-            else:
-            
-                deep_all = np.vstack((deep_all, m2))
-    deep_all_df=pd.DataFrame(deep_all, columns=["tid", "pos_x", "pos_y", "pos_t"])
-
-    return deep_all_df, list_traces, lys_x, lys_y, msd_df
-#############################################
-# function for MSD and diffusion:
-
-def compute_msd(trajectory):
-    totalsize=len(trajectory)
-    msd=[]
-    for i in range(totalsize-1):
-        j=i+1
-        msd.append(np.sum((trajectory[0:-j]-trajectory[j::])**2)/float(totalsize-j)) # Distance that a particle moves for each time point divided by time
-    msd=np.array(msd)
-    rmsd = np.sqrt(msd)
-    return msd, rmsd 
-
-##############################################
-# function for logDs:
-
-def logD_from_mean_MSD(MSDs, dt):
-
-    mean_msd = 0
-    logD = 0
-
-    mean_track=mean(MSDs[0:3])
-    if mean_track!=0:
-        mean_msd = mean_track
-    else:
-        mean_msd = 0.000000001
-
-    logD = math.log10(mean_track/(dt*4)) # 2*2dimnesions* time
-    return mean_msd, logD
-
-def msd_mean_track(msd_df, dt):
-    group2= msd_df.groupby("track_id")
-    lys=[]
-    lys2=[]
-    for i in group2["track_id"].unique():
-
-        s= group2.get_group(i[0])
-        
-        full_track=list(s["msd"])
-        mean_msd, logD = logD_from_mean_MSD(full_track, dt)
-        lys.append(mean_msd)
-        lys2.append(logD)
-
-    track_means_df = pd.DataFrame(np.column_stack([lys, lys2]), columns=["msd", "logD"])
-    
-    return track_means_df
-
-
-
 
 ############## plot all features togheter (plus convex hull):
 def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag, dt): # add ture =1or false =0 for plotting yes or no
@@ -477,25 +379,18 @@ def convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_p
 ## here insert function for log D of only non-clsutered:
 
 def calculate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
-    #print(mean_msd_df)
-
-
     grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
     lys_logD_no_STA=[]
     for trackn in grouped_plot["tid"].unique():
         s= grouped_plot.get_group(trackn[0])
         pos_x=s["pos_x"]
         pos_y=s["pos_y"]
-        if sum(s["in_hull"])==len(s["in_hull"]): # only get trackcs without any clsuter: all are 1=no clsuter
-                
+        if sum(s["in_hull"])==len(s["in_hull"]): # only get trackcs without any clsuter: all are 1=no clsuter  
             m= np.column_stack(( pos_x, pos_y))
             msd, rmsd = compute_msd(m)
             mean_msd, logD = logD_from_mean_MSD(msd)
             #lys_logD_no_STA.append([logD]*len(pos_x))
             lys_logD_no_STA.append(logD)
-
-
-        
         else:
             #lys_logD_no_STA.append([0]*len(pos_x))
             lys_logD_no_STA.append(0)
@@ -505,245 +400,3 @@ def calculate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
     mean_msd_df["mean_logD_without_STA"]=lys_logD_no_STA
 
     return mean_msd_df
-
-
-################################################
-###insert new plotting function: 
-
-def plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_saving_flag):
-    final_pal=dict(zero= "#06fcde" , one= "#808080")
-    linecollection = []
-    colors = []
-    if image_saving_flag=="tiff":
-        lw1=0.1
-        s1=0.001
-    else:
-        lw1=1
-        s1=0.1
-    
-
-    fig = plt.figure() # was this before
-    #fig, ax = plt.subplots(1) #for tif?
-    ax = fig.add_subplot()
-    ax.set_aspect('equal', adjustable='box')
-    ax.set_box_aspect(1)
-
-    sns.set(style="ticks", context="talk")
-
-    grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
-    c2=0
-    for i in grouped_plot["tid"].unique():
-        s= grouped_plot.get_group(i[0])
-
-    
-        for i in range (len(s["pos_x"])-1):
-
-            line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
-            color = final_pal[deep_df_short["in_hull_level"][c2]]
-            linecollection.append(line)
-            colors.append(color)
-
-            c2+=1
-        c2+=1
-
-    lc = LineCollection(linecollection, color=colors, lw=lw1)
-
-    
-    plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=s1, alpha=0)
-    plt.gca().add_collection(lc)
-
-
-    for j in range (len(lys_points_big2)):
-        for i in range(len(lys_points_big2[j])):
-            points=lys_points_big2[j][i] 
-            hull = ConvexHull(points)
-            for simplex in hull.simplices:
-                plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=lw1, color="green") # all SA
-
-                #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
-                    #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
-                    
-    
-    for j in range (len(lys_points_big_only_middle2)):
-                for i in range(len(lys_points_big_only_middle2[j])):
-                    points=lys_points_big_only_middle2[j][i] 
-                    hull = ConvexHull(points)
-                    for simplex in hull.simplices:
-                        plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=lw1, color="red") # only middle STA
-
-                        #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="red")
-                            #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
-                            
-
-
-    if image_saving_flag=="svg":
-        plt.axis('equal') #before
-        #square_inches = 5  # You can choose another value
-        #fig.set_size_inches(square_inches, square_inches)
-        #ax.set_aspect('equal', adjustable='box')
-        plt.savefig(str(image_path), format="svg") # 
-        plt.show()
-    else:
-        #plt.axis('equal') # was this before
-        ax.axis("equal")
-        #axes = plt.gca()
-        xmin, xmax=ax.get_xlim()
-        ymin, ymax=ax.get_ylim()
-        print(xmin, xmax)
-        print(ymin, ymax)
-
-
-                    # draw vertical line from (70,100) to (70, 250)$
-        plt.plot([xmax-2, xmax-1], [ymin+1, ymin+1], 'k-', lw=1)
-
-        plt.savefig(str(image_path), dpi=1500,format="tiff") # was 3500
-        plt.show()
-
-###### make reuslts file for CASTA new HMM:
-def make_results_file(f2, out_dir, deep_df_short, dt, mean_msd_df):
-    #print("this is deepdfshort",deep_df_short)
-
-    f2_path = Path(f2)
-    name = f2_path.stem  # Gets filename without extension
-
-    # adding hull area and number of points in clusters
-    lys_nr_of_clusters=[]
-    lys_time_in_clusters=[]
-    lys_nr_of_unclustered=[]
-    lys_mean_area=[]
-    lys_sum_clusters=[]
-    lys_time_per_cluster=[]
-
-    lys_nr_of_clusters_middle=[]
-    lys_nr_of_unclustered_middle=[]
-    lys_time_in_clusters_middle=[]
-    lys_mean_area_middle=[]
-    lys_sum_clusters_middle=[]
-    lys_time_per_cluster_middle=[]
-
-    grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
-    for i in grouped_plot["tid"].unique():
-
-        s= grouped_plot.get_group(i[0])
-        clusters=s['in_hull'].value_counts()
-        areas=s["area"].value_counts()
-        lys_interm_area=[]
-
-        for i in areas.keys():
-            lys_interm_area.append(i)
-        lys_interm_area.sort()
-
-    
-        if len(clusters)>1:
-            # if track contains points both in clusters and not in clusters, assign each type
-            lys_nr_of_clusters.append(clusters[0])
-            lys_nr_of_unclustered.append(clusters[1])
-            lys_time_in_clusters.append(dt*clusters[0])
-            lys_mean_area.append(mean(lys_interm_area[1:]))
-            lys_sum_clusters.append(len(lys_interm_area[1:]))
-            lys_time_per_cluster.append(dt*clusters[0]/len(lys_interm_area[1:]))
-
-    
-
-        else:
-            # if track only has one type of point, the "clusters[i]" object has only one entry, either 0 (points in clusters) or 1 (points not in clusters)
-            ind=clusters.index[0]
-            arry=clusters.array
-            lys_mean_area.append(0)  ## why did I do this?
-
-            if ind==1:
-                # no cluster 
-                lys_nr_of_clusters.append(0)
-                lys_nr_of_unclustered.append(arry[0])
-                lys_time_in_clusters.append(dt*0)
-                lys_time_per_cluster.append(0)
-                lys_sum_clusters.append(0)
-
-
-            else:
-                # all points of track are cluster points
-                lys_nr_of_clusters.append(arry[0])
-                lys_nr_of_unclustered.append(0)
-                lys_time_in_clusters.append(dt*arry[0])
-                lys_time_per_cluster.append(dt*arry[0])
-                lys_sum_clusters.append(1)
-            
-        ##try separate loop:
-    for i in grouped_plot["tid"].unique():
-        s= grouped_plot.get_group(i[0])
-        clusters_middle=s['in_hull_middle'].value_counts()
-        areas_middle=s["area_middle"].value_counts()
-        lys_interm_area_middle=[]
-
-        for i in areas_middle.keys():
-            lys_interm_area_middle.append(i)
-        lys_interm_area_middle.sort()
-
-        if len(clusters_middle)>1:
-            lys_nr_of_clusters_middle.append(clusters_middle[0])
-            lys_nr_of_unclustered_middle.append(clusters_middle[1])
-            lys_time_in_clusters_middle.append(dt*clusters_middle[0])
-            lys_mean_area_middle.append(mean(lys_interm_area_middle[1:]))
-            lys_sum_clusters_middle.append(len(lys_interm_area_middle[1:]))
-            lys_time_per_cluster_middle.append(dt*clusters_middle[0]/len(lys_interm_area_middle[1:]))
-        
-        else:
-            ind=clusters_middle.index[0]
-            arry=clusters_middle.array
-            lys_mean_area_middle.append(0) 
-            if ind==1:
-                lys_nr_of_clusters_middle.append(0)
-                lys_nr_of_unclustered_middle.append(arry[0])
-                lys_time_in_clusters_middle.append(dt*0)
-                lys_time_per_cluster_middle.append(0)
-                lys_sum_clusters_middle.append(0)
-            
-            else:
-            
-                lys_nr_of_clusters_middle.append(0)
-                lys_nr_of_unclustered_middle.append(arry[0])
-                lys_time_in_clusters_middle.append(dt*0)
-                lys_time_per_cluster_middle.append(0)
-                lys_sum_clusters_middle.append(1)
-
-
-
-            
-    # print(lys_nr_of_clusters)
-    #print(lys_nr_of_clusters_middle)
-
-    ## below all the fully resolved ones: (only if cluster was in teh middle)
-    casta_df_out=pd.DataFrame(lys_nr_of_clusters_middle, columns=["nr_of_STA_points_per_track"])
-    casta_df_out["nr_of_non-STA_points_per_track"]=lys_nr_of_unclustered_middle
-    casta_df_out["tot_time_of_STA_per_track"]=lys_time_in_clusters_middle
-    casta_df_out["mean_area_of_STA"]=lys_mean_area_middle
-    casta_df_out["nr_of_STA_events_per_track"]=lys_sum_clusters_middle
-    casta_df_out["average_duration_of_STA_events_per_track"]=lys_time_per_cluster_middle
-    casta_df_out["MSD_STA"]=mean_msd_df["cluster_msd_middle"]
-    casta_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
-    casta_df_out["logD_whole_track"]=mean_msd_df["logD"]
-
-    casta_df_out["logD_tracks_without_STA"]=mean_msd_df["mean_logD_without_STA"]
-
-
-
-    # below including everything: also clusters in beginning and end
-    casta_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
-    casta_df_out["nr_of_non-SA_points_per_track"]=lys_nr_of_unclustered
-    casta_df_out["tot_time_of_SA_per_track"]=lys_time_in_clusters
-    casta_df_out["mean_area_of_SA"]=lys_mean_area
-    casta_df_out["nr_of_SA_events_per_track"]=lys_sum_clusters
-    casta_df_out["average_duration_of_SA_events_per_track"]=lys_time_per_cluster
-    casta_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
-    casta_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
-
-    if out_dir is not None:
-        outpath = Path(out_dir) / f"{name}_CASTA_results.xlsx"
-    else:
-        outpath = f2_path.parent / f"{name}_CASTA_results.xlsx"
-    print("Saving results to: ", outpath)
-    writer = pd.ExcelWriter(outpath, engine='xlsxwriter')
-    casta_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
-    writer.close()
-
-    return casta_df_out
