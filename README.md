@@ -50,7 +50,7 @@ casta.calculate_spatial_transient_wrapper(
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `dir` | str | *required* | Path to directory input containing track data |
+| `dir` | str | *required* | Path to directory containing input track data |
 | `--out_dir` | str | None | Path to output directory to save results, defaults to input directory |
 | `--dt` | float | 0.05 | Time step for analysis |
 | `--min-track-length` | int | 25 | Minimum track length for analysis |
