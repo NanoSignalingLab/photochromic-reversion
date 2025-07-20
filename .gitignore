@@ -4,3 +4,6 @@ dist/
 
 *.pyc
 *.xlsx
+*.svg
+*.ipynb
+*.tiff

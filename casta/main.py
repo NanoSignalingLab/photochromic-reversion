@@ -29,12 +29,11 @@ def calculate_sta(dir: str,
     for i in onlyfiles:
         if i.endswith(".csv"):
             path=os.path.join(dir, i)
-            print(path)
-            image_path_lys=path.split("csv")
-            if image_format=="svg":
-                image_path=image_path_lys[0] +"svg"
-            else:
-                image_path=image_path_lys[0] +"tiff"
+            csv_name = Path(i)
+            base_name = csv_name.stem  # Gets filename without extension
+
+            extension = "svg" if image_format == "svg" else "tiff"
+            image_path = Path(out_dir) / f"{base_name}.{extension}"
 
             tracks_input, df, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
             mean_msd_df=msd_mean_track(msd_df, dt)
