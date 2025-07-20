@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "casta"
-version = "0.0.3"
+version = "0.0.4"
 description = "Calculate spatial transient arrests"
 readme = "README.md"
 authors = [{ name = "Michelle von Arx", email = "michelle.vonarx@tum.de" },
