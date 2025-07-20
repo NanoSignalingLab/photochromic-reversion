@@ -14,7 +14,6 @@ def main():
     parser.add_argument('--dt', type=float, default=0.05, help='Time step for analysis')
     parser.add_argument('--min-track-length', type=int, default=25, help='Minimum track length for analysis')
     parser.add_argument('--plot', type=int, default=0, help='Enable plotting (0=off, 1=on)')
-    parser.add_argument('--save_plot', type=int, default=0, help='Enable plot image saving (0=off, 1=on)')
     parser.add_argument('--image-format', choices=['svg', 'tiff'], default='svg', help='Image saving format')
     
     args = parser.parse_args()
@@ -23,7 +22,7 @@ def main():
         args.dir,
         args.min_track_length,
         args.dt,
-        args.save_plot,
+        args.plot,
         args.image_format
     )
 

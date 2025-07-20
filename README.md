@@ -53,8 +53,7 @@ casta.calculate_spatial_transient_wrapper(
 | `--dt` | float | 0.05 | Time step for analysis |
 | `--min-track-length` | int | 25 | Minimum track length for analysis |
 | `--plot` | int | 0 | Enable plotting (0=off, 1=on) |
-| `--image-format` | str | svg | Image format (svg, tiff, png, pdf) |
-| `--save_plot` | int | 0 | Enable high-quality image output |
+| `--image-format` | str | svg | Image format (svg, tiff) |
 
 ## Input Data Format
 
