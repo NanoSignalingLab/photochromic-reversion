@@ -22,10 +22,10 @@ from math import nan
 
 
 from casta.features import run_hmm, calc_distance, calc_angles, calc_KDE, calc_intersections
-from casta.plot import plotting_final_image
 from casta.results import make_results_file
 from casta.hmm_functions import run_model
 from casta.utils import *
+from casta.plot import *
 
 warnings.filterwarnings('ignore')
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
         deep_df4=calc_KDE(lys_x, lys_y, deep_df3)
         deep_df5=calc_intersections(lys_x, lys_y, deep_df4)
         deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
-        grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+        grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag, dt)
         deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
         plotting_final_image(deep_df_short2,lys_points2, image_path)
         make_fingerprint_file(f2, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
@@ -126,41 +126,6 @@ if __name__ == '__main__':
 
 
         return df_final_parameters_out
-
-    #############################################
-    # for our own HMM for reading inmultiple csv files with real tracks, make one result excel per file
-
-    def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag):
-        onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
-        for i in onlyfiles:
-            
-            if i.endswith(".csv"):
-                path=os.path.join(folderpath1, i)
-                print(path)
-                image_path_lys=path.split("csv")
-                image_path=image_path_lys[0] +"svg"
-                tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
-                mean_msd_df=msd_mean_track(msd_df, dt)
-                plot_original_tracks(deep_df1)
-
-                deep_df2=run_traces_wrapper(deep_df1, dt)
-                deep_df3=computing_distance_wrapper(deep_df2)
-                deep_df4=calculate_angles_wrapper(deep_df3)
-                deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
-                deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
-
-                #plotting_final_image(deep_df_short2,lys_points2, image_path)
-                #plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path)
-                plot_values_on_track(deep_df_short, "in_hull_level")
-                plot_values_on_track_hull(deep_df_short, "in_hull_level", lys_points_big_only_middle2)
-                make_results_file(path, deep_df_short2, dt,mean_msd_df ) # run function to make excel with all parameters
-
-          
-
-
 
     ############################################
     # for our own HMM if we simulate groundtruth and test it on it
@@ -321,7 +286,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open("model_4.pkl", "rb") as file: 
+        with open("casta/data/model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -344,269 +309,6 @@ if __name__ == '__main__':
 
         return deep_df
 
-    ##################################################
-    # function for consecutive features:
-        
-    def consecutive(col, seg_len, threshold, deep_df): # col= string of cl indf, seg_len=segment length of consecutive, threshold number
-        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-        lys_final=[]
-        for i in grouped_plot["tid"].unique():
-            lys_six=[]
-            s= grouped_plot.get_group(i[0])
-            c3=0
-            seg1=seg_len-1
-            seg2=seg_len+1
-            
-            while c3<len(s["pos_x"]): 
-                if c3>=len(s["pos_x"])-seg_len: 
-                        lys_six.append([1]*1) 
-                else:
-                        
-                    if sum(s[col][c3:c3+seg2])<threshold: 
-                        lys_six.append([0]*1)
-                    elif sum(s[col][c3:c3+seg2])>=threshold and sum(s[col][c3:c3+seg_len])<threshold: 
-                        lys_six.append([0]*seg_len) 
-                        c3+=seg1 
-                    else:
-                        lys_six.append([1]*1)
-                c3+=1
-            lys_six_flat=list(chain.from_iterable(lys_six))
-            lys_final.append(lys_six_flat)
-            c3=0
-
-        lys_final_flat=list(chain.from_iterable(lys_final))
-        return lys_final_flat
-    
-    ################# end function for consecutive features
-
-    ################## plot feature values onto line segments ##############
-    def plot_values_on_track(deep_df, value):
-
-
-        if value == "KDE_invert":
-            plt.style.use("dark_background")
-        else:
-            plt.style.use("default")
-
-        fig, ax = plt.subplots(figsize=(6, 6))
-        sns.set(style="ticks", context="talk")
-
-        linecollection = []
-        colors = []
-        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-
-        custom_colors = ['#380282', '#440053', '#404388', '#2a788e', '#21a784', '#78d151', '#fde624', '#ff9933', '#ff3300']
-        custom_colors_short = ['#404688', '#c7e020']
-
-        custom_cmap = LinearSegmentedColormap.from_list("custom_continuous", custom_colors, N=256)
-        custom_cmap_r = custom_cmap.reversed()
-
-        custom_short = LinearSegmentedColormap.from_list("custom_short", custom_colors_short, N=256)
-        custom_short_r = custom_short.reversed()
-
-        if value != "in_hull_level":
-            norm = Normalize(vmin=deep_df[value].min(), vmax=deep_df[value].max())
-        cmap = plt.get_cmap("viridis_r")
-
-        h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.05
-        h2 = (deep_df["pos_y"].max() - deep_df["pos_y"].min())*0.05
-        xlim = (deep_df["pos_x"].min()-h1, deep_df["pos_x"].max()+h1)
-        ylim = (deep_df["pos_y"].min()-h2, deep_df["pos_y"].max()+h2)
-        ax.set_xlim(xlim)
-        ax.set_ylim(ylim)
-        #ax.set_aspect('equal', adjustable='box')
-        ax.set_aspect('equal')
-        ax.set_box_aspect(1)
-        
-        c2=0
-        final_pal=dict(zero="#c7e020", one="#404688")
-      
-        for i in grouped_plot["tid"].unique():
-            s= grouped_plot.get_group(i[0])
-            
-            for i in range (len(s["pos_x"])-1):
-                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
-                dist_val = deep_df[value].iloc[c2]
-
-                if value == "angles":
-                    color = "#D3D3D3"
-                elif value == "pos_x": #just used as a placeholder column name to get empty track picture
-                    color = "#000000" 
-                elif value == "all_intersect":
-                    color = custom_short_r(norm(dist_val))
-                elif value == "in_hull_level":
-                    color = final_pal[deep_df["in_hull_level"][c2]]
-                else:
-                    color = cmap(norm(dist_val))
-
-                linecollection.append(line)
-                colors.append(color)
-                c2+=1
-            c2+=1
-
-        lc = LineCollection(linecollection, color=colors, lw=1) # was 1
-    
-        plt.gca().add_collection(lc)
-
-        if value == "KDE_invert":
-                sns.kdeplot(data=s, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="mako",alpha=1, ax=ax)
-
-        if value == "angles":
-            deep_df["shifted_val"] = deep_df[value].shift(1)
-            df_sorted = deep_df.sort_values(by="shifted_val", ascending = False)
-            plt.scatter(
-                df_sorted["pos_x"],
-                df_sorted["pos_y"],
-                c=df_sorted["shifted_val"],
-                cmap=cmap,
-                norm=norm,
-                s=2,
-                zorder=10
-            )
-        else:
-            plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01, alpha=0) #was 0.00
-
-        img_path = str(folderpath1) + "\\" + value + ".tiff"
-        plt.savefig(img_path, dpi=500,format="tiff") # was 3500
-
-        plt.show()
-    
-    
-    def plot_values_on_track_hull(deep_df, value, lys_points_middle):
-
-        if value == "KDE_invert":
-            plt.style.use("dark_background")
-        else:
-            plt.style.use("default")
-
-        fig, ax = plt.subplots(figsize=(6, 6))
-        sns.set(style="ticks", context="talk")
-
-        linecollection = []
-        colors = []
-        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-
-        custom_colors = ['#380282', '#440053', '#404388', '#2a788e', '#21a784', '#78d151', '#fde624', '#ff9933', '#ff3300']
-        custom_colors_short = ['#404688', '#c7e020']
-
-        custom_cmap = LinearSegmentedColormap.from_list("custom_continuous", custom_colors, N=256)
-        custom_cmap_r = custom_cmap.reversed()
-
-        custom_short = LinearSegmentedColormap.from_list("custom_short", custom_colors_short, N=256)
-        custom_short_r = custom_short.reversed()
-
-        if value != "in_hull_level":
-            norm = Normalize(vmin=deep_df[value].min(), vmax=deep_df[value].max())
-        cmap = plt.get_cmap("viridis_r")
-
-        h1 = (deep_df["pos_x"].max() - deep_df["pos_x"].min())*0.05
-        h2 = (deep_df["pos_y"].max() - deep_df["pos_y"].min())*0.05
-        xlim = (deep_df["pos_x"].min()-h1, deep_df["pos_x"].max()+h1)
-        ylim = (deep_df["pos_y"].min()-h2, deep_df["pos_y"].max()+h2)
-        ax.set_xlim(xlim)
-        ax.set_ylim(ylim)
-        ax.set_aspect('equal', adjustable='box')
-        ax.set_box_aspect(1)
-
-        
-        c2=0
-        final_pal=dict(zero="#06fcde", one="#808080")
-      
-        for i in grouped_plot["tid"].unique():
-            s= grouped_plot.get_group(i[0])
-            
-            for i in range (len(s["pos_x"])-1):
-                line = [(s["pos_x"][c2], s["pos_y"][c2]), (s["pos_x"][c2+1], s["pos_y"][c2+1])]
-                dist_val = deep_df[value].iloc[c2]
-
-                if value == "angles":
-                    color = "#D3D3D3"
-                elif value == "pos_x": #just used as a placeholder column name to get empty track picture
-                    color = "#000000" 
-                elif value == "all_intersect":
-                    color = custom_short_r(norm(dist_val))
-                elif value == "in_hull_level":
-                    color = final_pal[deep_df["in_hull_level"][c2]]
-                else:
-                    color = cmap(norm(dist_val))
-
-                linecollection.append(line)
-                colors.append(color)
-                c2+=1
-            c2+=1
-
-        lc = LineCollection(linecollection, color=colors, lw=1) # was 1
-    
-        plt.gca().add_collection(lc)
-
-        if value == "KDE_invert":
-                sns.kdeplot(data=s, x="pos_x", y="pos_y",fill=True, thresh=0, levels=100, cmap="mako",alpha=1, ax=ax)
-
-        if value == "angles":
-            deep_df["shifted_val"] = deep_df[value].shift(1)
-            df_sorted = deep_df.sort_values(by="shifted_val", ascending = False)
-            plt.scatter(
-                df_sorted["pos_x"],
-                df_sorted["pos_y"],
-                c=df_sorted["shifted_val"],
-                cmap=cmap,
-                norm=norm,
-                s=2,
-                zorder=10
-            )
-        else:
-            plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.01, alpha=0) #was 0.00
-
-        for j in range (len(lys_points_middle)):
-                     for i in range(len(lys_points_middle[j])):
-                         points=lys_points_middle[j][i] 
-                         hull = ConvexHull(points)
-                         for simplex in hull.simplices:
-                             plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1, color="red") #,color="#c7e020") 
-                             #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
-
-        img_path = str(folderpath1) + "\\" + value + ".tiff"
-        plt.savefig(img_path, dpi=500,format="tiff") # was 3500
-
-        plt.show()
-    ########################################################################
-
-    def plot_original_tracks(deep_df):
-        
-        cmap = plt.get_cmap("viridis")  # Or "viridis_r" for reversed
-        sns.set(style="ticks", context="talk")
-
-        # Get unique track IDs and normalize to colormap range
-        unique_ids = deep_df["tid"].unique()
-        norm = plt.Normalize(vmin=min(unique_ids), vmax=max(unique_ids))
-
-        line_segments = []
-        colors = []
-
-        for tid in unique_ids:
-            track = deep_df[deep_df["tid"] == tid].sort_values("pos_t")
-            points = track[["pos_x", "pos_y"]].values
-
-            # Make segments from consecutive points
-            for i in range(len(points) - 1):
-                segment = [points[i], points[i + 1]]
-                line_segments.append(segment)
-                colors.append(cmap(norm(tid)))  # Assign color based on tid
-
-        lc = LineCollection(line_segments, colors=colors, linewidths=1.5)
-
-        fig, ax = plt.subplots(figsize=(8, 6))
-        ax.add_collection(lc)
-        ax.autoscale()
-        ax.set_aspect("equal")
-        plt.scatter(deep_df["pos_x"], deep_df["pos_y"], s=0.1, alpha=0.3, color="black")  # Optional: background points
-        plt.xlabel("X Position")
-        plt.ylabel("Y Position")
-        plt.title("Single Particle Tracks")
-        plt.show()
-        plt.close()
-
-  
     ########################## get fingertprint states:
 
     def fingerprints_states_wrapper(lys_states, deep_df):
@@ -662,7 +364,7 @@ if __name__ == '__main__':
     ########################################### end fingerprint states wrapper
 
     ############## plot all features togheter (plus convex hull):
-    def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag): # add ture =1or false =0 for plotting yes or no
+    def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag, dt): # add ture =1or false =0 for plotting yes or no
         print("plotting all features")
         #print("heere is deepdf",deep_df)
 
@@ -848,7 +550,7 @@ if __name__ == '__main__':
                      
                         if len(points)>5:
                             msd, rmsd = compute_msd(points)
-                            mean_msd, logD = logD_from_mean_MSD(msd)
+                            mean_msd, logD = logD_from_mean_MSD(msd, dt)
                 
                             lys_msd_cluster.append(mean_msd)
                             lys_logD_cluster.append(logD)
@@ -856,7 +558,7 @@ if __name__ == '__main__':
                         ####################
                             if lys_start_end_cluster2[j][i][0]!="B":
                                 msd_middle, rmsd_middle = compute_msd(points)
-                                mean_msd_middle, logD_middle = logD_from_mean_MSD(msd_middle)
+                                mean_msd_middle, logD_middle = logD_from_mean_MSD(msd_middle,dt)
 
                                 lys_msd_cluster_middle.append(mean_msd_middle)
                                 lys_logD_cluster_middle.append(logD_middle)
@@ -1863,10 +1565,8 @@ if __name__ == '__main__':
     tracks_saving_flag=0
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"C:\Users\Philip\Desktop\tracks"
+    folderpath1=r"/Users/schulzp9/Documents/casta"
 
-
-    calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
 
     ### for accuracy based on previosuly generated tracks in a folder:
 

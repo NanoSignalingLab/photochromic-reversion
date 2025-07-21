@@ -13,7 +13,7 @@ from os import listdir
 from os.path import isfile, join
 
 from casta.features import run_hmm, calc_distance, calc_angles, calc_KDE, calc_intersections
-from casta.plot import plotting_final_image
+from casta.plot import *
 from casta.results import make_results_file
 from casta.utils import *
 
@@ -53,6 +53,9 @@ def calculate_sta(dir: str,
             mean_msd_df2=calculate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
 
             plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_format)
+            plot_original_tracks(df)
+            plot_values_on_track(deep_df_short, "in_hull_level", image_path)
+            plot_values_on_track_hull(deep_df_short, "in_hull_level", lys_points_big_only_middle2, image_path)
             make_results_file(path, out_dir, deep_df_short2, dt,mean_msd_df2) # run function to make excel with all parameters
 
 ############## plot all features togheter (plus convex hull):

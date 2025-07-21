@@ -65,7 +65,7 @@ CASTA includes an example file.
 import os
 import casta
 
-example_df, path = casta.utils.load_example_data()
+example_df, path = casta.example.load_example_data()
 
 current_dir = os.getcwd()
 
