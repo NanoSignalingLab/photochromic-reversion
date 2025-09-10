@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "casta"
-version = "0.0.4"
+version = "0.0.6"
 description = "Calculate spatial transient arrests"
 readme = "README.md"
 authors = [{ name = "Michelle von Arx", email = "michelle.vonarx@tum.de" },
@@ -41,4 +41,4 @@ Homepage = "https://github.com/NanoSignalingLab/photochromic-reversion/"
 casta = "casta.main:main"
 
 [tool.setuptools.package-data]
-casta = ["files/example_track.csv", "files/model_4.pkl"]
+casta = ["data/example_track.csv", "data/model_4.pkl"]

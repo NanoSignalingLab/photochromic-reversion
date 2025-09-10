@@ -4,13 +4,14 @@ import pandas as pd
 from itertools import chain
 from shapely.geometry import LineString
 from shapely import intersection
+from importlib import resources
 
 from casta.hmm_functions import run_model
 from casta.utils import angle3pt, consecutive, make_KDE_per_track
 
 def run_hmm(deep_df, dt): 
 
-    with open("casta/data/model_4.pkl", "rb") as file: 
+    with resources.files('casta.data').joinpath('model_4.pkl').open('rb') as file:
         model = pickle.load(file)
     print("loading HMM model")
     window_size=10

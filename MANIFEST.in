@@ -1,7 +1,7 @@
 # MANIFEST.in
 
-include casta/files/model_4.pkl
-include casta/files/example_track.csv
+include casta/data/model_4.pkl
+include casta/data/example_track.csv
 
 exclude casta/model_3.pkl
 exclude casta/main_for_mva_hmm_STA_KDEplot_julien.py
