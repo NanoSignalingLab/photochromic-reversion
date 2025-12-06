@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib
-from casta.ml.my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
+from casta.ml_old.my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
 import pickle
 import os
-from pomegranate import *
 from functools import partial
 import numpy as np
 # import multiprocess as mp
@@ -50,8 +49,8 @@ if __name__ == '__main__':
     #################################
    
     import stochastic
-    stochastic.random.seed(3)
-    np.random.seed(7)
+    #stochastic.random.seed(3)
+    #np.random.seed(7)
 
     
     ##################################
@@ -178,7 +177,7 @@ if __name__ == '__main__':
             #print("here sim_tracks_3",sim_tracks_3)
             #sim_tracks_4, lys_distance, lys_GT_0, lys_GT_1 =plot_distances(sim_tracks_3)
             #print(sim_tracks_4) # hase distance in it maybe jsut save this one
-           
+        
             sim_tracks_4=calculate_angels_for_sim(sim_tracks_3)
             #print(sim_tracks_4)
             #plot_angles(sim_tracks_4)
@@ -192,7 +191,7 @@ if __name__ == '__main__':
             #print(sim_tracks_7)
 
             #sim_tracks_7.pivot(columns="GT", values="cont_angles_values").plot.hist(bins=100, alpha=0.5)
-           # plt.show()
+        # plt.show()
             #sim_tracks_7.pivot(columns="GT", values="cont_KDE_values").plot.hist(bins=100, alpha=0.5) # th is 13
             #plt.show()
             #sim_tracks_7.pivot(columns="GT", values="cont_intersect_values").plot.hist(bins=100, alpha=0.5) # th is 6
@@ -2168,5 +2167,9 @@ if __name__ == '__main__':
     tracks_saving_flag=0
     f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep1\values_pm_sweep_D0.005_N500_T200.csv"
     f1=r"Z:\Research\Members\Michelle\simulated_tracks\for_sim_paramters_distributionplots\parameter_sweep4\values_pm_sweep_D0.015_N500_T200.csv"
+    f1='/Volumes/z6p/Research/Members/Michelle/simulated_tracks/for_sim_paramters_distributionplots/parameter_sweep_new/parameter_sweep1/values_pm_sweep_D0.005_N500_T200.csv'
+    f1='/Volumes/z6p/Research/Members/Michelle/simulated_tracks/for_sim_paramters_distributionplots/parameter_sweep_new/parameter_sweep2/values_pm_sweep_D0.001_N500_T200.csv'
+    f1='/Volumes/z6p/Research/Members/Michelle/simulated_tracks/for_sim_paramters_distributionplots/parameter_sweep_new/parameter_sweep3/values_pm_sweep_D0.01_N500_T200.csv'
+    f1='/Volumes/z6p/Research/Members/Michelle/simulated_tracks/for_sim_paramters_distributionplots/parameter_sweep_new/parameter_sweep4/values_pm_sweep_D0.015_N500_T200.csv'
 
     calcualte_parameters_from_sim(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag)
