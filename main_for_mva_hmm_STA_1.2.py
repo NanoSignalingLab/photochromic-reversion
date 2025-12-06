@@ -944,7 +944,7 @@ if __name__ == '__main__':
                 points=lys_points_big2[j][i] 
                 hull = ConvexHull(points)
                 for simplex in hull.simplices:
-                    plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=lw1, color="green") # all SA
+                    plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=lw1, color="red") # all SA #before color=green
 
                     #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
@@ -955,7 +955,7 @@ if __name__ == '__main__':
                         points=lys_points_big_only_middle2[j][i] 
                         hull = ConvexHull(points)
                         for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=lw1, color="red") # only middle STA
+                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=lw1, color="red") # only middle STA #beforecolor=red
 
                             #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="red")
                                 #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
@@ -982,7 +982,7 @@ if __name__ == '__main__':
                       # draw vertical line from (70,100) to (70, 250)$
             plt.plot([xmax-2, xmax-1], [ymin+1, ymin+1], 'k-', lw=1)
 
-            plt.savefig(str(image_path), dpi=1500,format="tiff") # was 3500
+            plt.savefig(str(image_path), dpi=3500,format="tiff") # was 3500 #was 1500
             plt.show()
       
   
@@ -1155,11 +1155,13 @@ if __name__ == '__main__':
     min_track_length=25
     plotting_saving_nice_image_flag=0
    
-    image_saving_flag="svg"
     image_saving_flag="tiff"
+    image_saving_flag="svg"
+
+
+
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    #folderpath1=r"D:\photochromic_reversion_data\tst"
-    folderpath1=r"C:\Users\Philip\Desktop\tracks"
-
+    #folderpath1=r"D:\photochromic_reversion_data\ts
+    folderpath1=r"Z:\Research\Members\Michelle\TIRFM\24.11.28_At_MADs\2610-1\CASTA"
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
