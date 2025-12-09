@@ -66,7 +66,7 @@ if __name__ == '__main__':
     
         df_values= df_values.iloc[: , 1:]
         
-        for index, row in df_values[:2].iterrows():
+        for index, row in df_values.iterrows():
             print("running simulation nr: ", index)
             trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"], D)
             sim_tracks=make_dataset_csv(trajectories, labels)
@@ -1974,13 +1974,13 @@ if __name__ == '__main__':
 #### for our own hmm to evaulate while simualting tracks:
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
 
-    threshold_dists = [0.09, 0.3]
-    threshold_cont_angles = [593, 891]
-    threshold_cont_KDEs = [2, 52]
-    threshold_cont_intersections = [5, 10]
-    Ds = [0.001, 0.015]
+    threshold_dists = [0.09, 0.17, 0.3]
+    threshold_cont_angles = [593, 740, 891]
+    threshold_cont_KDEs = [2, 31, 52]
+    threshold_cont_intersections = [5, 8, 10]
+    Ds = [0.005]
 
-    f1 = '/Volumes/z6p/Research/Members/Michelle/simulated_tracks/threshold_benchmarking/sim_values/sim_values_N500_T200.csv'
+    f1 = r'Z:\Research\Members\Michelle\simulated_tracks\threshold_benchmarking\sim_values\values_pm_sweep_D0.005_N500_T200.csv'
 
     for threshold_dist in threshold_dists:
         for threshold_cont_angle in threshold_cont_angles:
