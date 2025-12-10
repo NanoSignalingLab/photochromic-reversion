@@ -40,6 +40,8 @@ from andi_datasets.models_phenom import models_phenom
 from sklearn import metrics
 from math import nan
 from hmm_functions import run_model
+import multiprocessing
+from itertools import product
 
 
 warnings.filterwarnings('ignore')
@@ -59,6 +61,8 @@ if __name__ == '__main__':
 
     def calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag,
                                                         threshold_dist, threshold_cont_angle, threshold_cont_KDE, threshold_cont_intersections, D):
+
+        print([threshold_dist, threshold_cont_angle, threshold_cont_KDE, threshold_cont_intersections, D])
 
         df_values=pd.read_csv(f1)
         image_path_lys=f1.split("csv")
@@ -268,7 +272,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open("model_4.pkl", "rb") as file: 
+        with open("/pstore/data/ihb-g-deco/USERS/schulzp9/git/casta/photochromic-reversion/model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -1963,31 +1967,70 @@ if __name__ == '__main__':
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
-    
-    #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
-    #f1=r"C:\Users\miche\Desktop\simualted tracks\plots\plot_values_D0.001_for_mean_clusters_plot.csv"
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\simulation_parameters_for_Sven\Sven_values_D0.001_N500_T200_test.csv"
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip_test.csv"
-    #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
-
-
-#### for our own hmm to evaulate while simualting tracks:
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
 
     threshold_dists = [0.09, 0.17, 0.3]
     threshold_cont_angles = [593, 740, 891]
     threshold_cont_KDEs = [2, 31, 52]
     threshold_cont_intersections = [5, 8, 10]
-    Ds = [0.005]
+    Ds = [0.001]
 
-    f1 = r'Z:\Research\Members\Michelle\simulated_tracks\threshold_benchmarking\sim_values\values_pm_sweep_D0.005_N500_T200.csv'
+    f1 = '/pstore/data/ihb-g-deco/USERS/schulzp9/git/casta/D_001/values_pm_sweep_D0.005_N500_T200.csv'
 
-    for threshold_dist in threshold_dists:
-        for threshold_cont_angle in threshold_cont_angles:
-            for threshold_cont_KDE in threshold_cont_KDEs:
-                for threshold_cont_intersection in threshold_cont_intersections:
-                    for D in Ds:
-                        calulate_hmm_precison_with_simulating_tracks(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag,threshold_dist, threshold_cont_angle, threshold_cont_KDE, threshold_cont_intersection, D)
+    loop_combinations = product(
+        threshold_dists,
+        threshold_cont_angles,
+        threshold_cont_KDEs,
+        threshold_cont_intersections,
+        Ds
+    )
+
+    # 2. Create the full list of arguments for each function call
+    # The order must exactly match the function signature!
+    jobs_list = []
+    for combo in loop_combinations:
+        (td, tca, tck, tci, d_val) = combo
+        
+        # The arguments must be ordered as expected by the function:
+        # (f1, min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag, 
+        #  td, tca, tck, tci, d_val)
+        
+        full_args_tuple = (
+            f1, min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, 
+            tracks_saving_flag, td, tca, tck, tci, d_val
+        )
+        jobs_list.append(full_args_tuple)
+
+    total_jobs = len(jobs_list)
+    print(f"Generated {total_jobs} total parameter combinations to process.")
+
+    if __name__ == '__main__':
+        #start_time = time.time()
+        
+        # Use the number of available CPU cores
+        num_processes = multiprocessing.cpu_count()
+        print(f"Starting parallel processing using {num_processes} cores...")
+
+        # Create the Pool and execute the jobs
+        # The 'starmap' unpacks each tuple in jobs_list as arguments to the function
+        with multiprocessing.Pool(processes=num_processes) as pool:
+            results = pool.starmap(calulate_hmm_precison_with_simulating_tracks, jobs_list)
+            
+        #end_time = time.time()
+
+        print("\n--- Processing Complete ---")
+        # You can now process the results, which is a list of all returned values
+        #for res in results:
+        #    print(len(res))
+            
+        #print(f"\nTotal time taken for {total_jobs} jobs: {end_time - start_time:.2f} seconds")
+        #print(f"Theoretical speedup factor: Approx. {total_jobs / ((end_time - start_time) * num_processes):.2f} (ignoring overhead)")
+
+    #for threshold_dist in threshold_dists:
+    #    for threshold_cont_angle in threshold_cont_angles:
+    #        for threshold_cont_KDE in threshold_cont_KDEs:
+    #            for threshold_cont_intersection in threshold_cont_intersections:
+    #                for D in Ds:
+    #                    calulate_hmm_precison_with_simulating_tracks(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag,threshold_dist, threshold_cont_angle, threshold_cont_KDE, threshold_cont_intersection, D)
 
 ### for files oin a folder with real tracak for our own hmm:
 ### working on implementaiton of julines STAs only in the middle
