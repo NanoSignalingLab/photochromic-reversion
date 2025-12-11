@@ -108,10 +108,15 @@ def calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plott
     df_final_parameters_out=pd.concat([df_final_parameters_out,df_treshold_values],axis=1)
     path_out_accuracy_lys=f1.split(".csv")
     path_out_accuracy=f'{path_out_accuracy_lys[0]}_sim_accuracy_results_{D}_{threshold_dist}_{threshold_cont_angle}_{threshold_cont_KDE}_{threshold_cont_intersections}.xlsx'
-    writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
-    df_final_parameters_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
-    writer.close()
-
+    try:
+        writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
+        df_final_parameters_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+        writer.close()
+        return f"Success: Wrote file {path_out_accuracy}"
+    except Exception as e:
+        print(f"!!! ERROR IN WORKER {multiprocessing.current_process().pid}: Failed to write file {path_out_accuracy}. Error: {e}")
+        # Return a status that indicates failure
+        return f"Failure: {e}"
 #############################################
 
 def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value, D):
@@ -266,7 +271,7 @@ def msd_mean_track(msd_df, dt):
 
 def run_traces_wrapper(deep_df, dt): 
 
-    with open("model_4.pkl", "rb") as file: 
+    with open("/pstore/data/ihb-g-deco/USERS/schulzp9/git/casta/photochromic-reversion/model_4.pkl", "rb") as file: 
         model = pickle.load(file)
     print("loading HMM model")
     window_size=10
@@ -1968,9 +1973,9 @@ if __name__ == '__main__':
     threshold_cont_angles = [593, 740, 891]
     threshold_cont_KDEs = [2, 31, 52]
     threshold_cont_intersections = [5, 8, 10]
-    Ds = [0.01]
+    Ds = [0.001]
 
-    f1 = '/Users/schulzp9/Desktop/D_01/values_pm_sweep_D0.005_N500_T200.csv'
+    f1 = '/pstore/data/ihb-g-deco/USERS/schulzp9/git/casta/D_001/values_pm_sweep_D0.005_N500_T200.csv'
 
     loop_combinations = product(
         threshold_dists,
