@@ -25,7 +25,6 @@ pip install -e .
 ```python
 import casta
 
-# Run analysis in notebook
 casta.calculate_sta(
     dir="/path/to/data/directory",
     out_dir="/path/to/output/directory",
