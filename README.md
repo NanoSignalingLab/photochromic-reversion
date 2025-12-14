@@ -20,17 +20,7 @@ pip install -e .
 
 ## Quick Start
 
-### Command Line Usage
-
-```bash
-# Basic usage
-python -m casta /path/to/your/track/data
-
-# With parameters
-python -m casta /path/to/data --dt 0.05 --min-track-length 25
-```
-
-### Jupyter Notebook Usage
+### Python
 
 ```python
 import casta
@@ -44,6 +34,16 @@ casta.calculate_sta(
     plot=True,
     image_format="svg"
 )
+```
+
+### Command Line
+
+```bash
+# Basic usage
+python -m casta /path/to/your/track/data
+
+# With parameters
+python -m casta /path/to/data --dt 0.05 --min-track-length 25
 ```
 
 ## Command Line Options
