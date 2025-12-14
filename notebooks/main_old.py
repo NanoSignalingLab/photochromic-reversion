@@ -1,17 +1,6 @@
-# %%
-
-from RandomWalkSims import (
-    Gen_normal_diff,
-    Gen_directed_diff,
-    Get_params,
-    Gen_confined_diff,
-    Gen_anomalous_diff,
-)
-
 import matplotlib.pyplot as plt
 import matplotlib
-from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
-from MLGeneral import ML, histogram
+from casta.ml.my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
 import pickle
 import os
 from pomegranate import *
@@ -45,11 +34,6 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
-       
-
-
-
-
 if __name__ == '__main__':
     
     #################################
@@ -62,7 +46,7 @@ if __name__ == '__main__':
 
     ##################################
     
-    f1=r"C:\Users\miche\Desktop\Test_deepSPT\cleaned_trackmate_1473_5_488.csv"
+    f1=r"C:\Users\miche\Downloads\c_P01_027.csv"
     f2=f1
     
     ##################################
@@ -635,7 +619,6 @@ if __name__ == '__main__':
         
         lys_the_last=[]
         lys_area_last=[]
-        lys_hull_path=[]
         
         c2=0
         
@@ -656,7 +639,6 @@ if __name__ == '__main__':
                    
                     hull=lys_hull2[c2][j]
                     hull_path = Path( points[hull.vertices] )
-                    lys_hull_path.append(hull_path)
                     
                     if hull_path.contains_point((lys_x[i], lys_y[i]))==True: 
 
@@ -679,14 +661,7 @@ if __name__ == '__main__':
         deep_df_short['in_hull_level'] = deep_df_short['in_hull_level'].astype(str)
        
         
-        
-
-
-
-
-
-
-
+              
 
         ################################################
         ### plotting hull and tracks togehter: as arrested vs not spatially arrested
@@ -741,7 +716,7 @@ if __name__ == '__main__':
                         
            
         plt.axis('equal') 
-        #plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
+        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
         plt.show()
      
         ########################### function to make a nice excel fiel with all the parameters per track:
@@ -833,73 +808,6 @@ if __name__ == '__main__':
         
         ############################### end function 
         
-        #make_fingerprint_file(f2, train_result) # run function to make excel with all parameters
+        make_fingerprint_file(f2, train_result) # run function to make excel with all parameters
 
         ################################
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-            
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              
-        
-
-
-
-
-
-
-
-
-
-
-
-      
-        
-
-
-                
-
-
-
-
-        
-
-
-       
-
-
-
-
-
-
-
-
-
-
-    

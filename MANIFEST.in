@@ -1,0 +1,20 @@
+# MANIFEST.in
+
+include casta/data/model_4.pkl
+include casta/data/example_track.csv
+
+exclude casta/model_3.pkl
+exclude casta/main_for_mva_hmm_STA_KDEplot_julien.py
+exclude casta/main_for_mva_hmm_STA.py
+exclude casta/main_for_mva_hmm.py
+exclude casta/main_for_simualted_tracks_getting_sim_pm.py
+exclude casta/main_for_simualted_tracks_working_on_diffusion.py
+exclude casta/main_for_simualted_tracks.py
+exclude casta/main_old.py
+exclude casta/main_working_overlappinghull.py
+exclude casta/MLGeneral.py
+exclude casta/MSD_plotting.py
+exclude casta/my_Fingerprint_feat_gen.py
+exclude casta/plot_simulation.py
+exclude casta/RandomWalkSims.py
+exclude casta/Usage_distance_working_on_overlapping_hulls.py

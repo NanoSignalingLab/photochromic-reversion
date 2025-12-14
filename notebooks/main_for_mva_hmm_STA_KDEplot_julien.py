@@ -1,82 +1,48 @@
-# %%
-
-from RandomWalkSims import (
-    Gen_normal_diff,
-    Gen_directed_diff,
-    Get_params,
-    Gen_confined_diff,
-    Gen_anomalous_diff,
-)
-
 import matplotlib.pyplot as plt
-import matplotlib
-from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
-from MLGeneral import ML, histogram
 import pickle
 import os
-from pomegranate import *
-from functools import partial
 import numpy as np
-# import multiprocess as mp
-from sklearn.metrics import confusion_matrix
-from mpl_toolkits.mplot3d import Axes3D
-from sklearn.model_selection import train_test_split
 from matplotlib.colors import LinearSegmentedColormap
-from tqdm import tqdm
 import pandas as pd
 import seaborn as sns
 from functools import reduce
 import operator 
-from matplotlib import rcParams
 from matplotlib.collections import LineCollection
+from matplotlib.colors import Normalize
 from itertools import chain
-import math
-from scipy.stats import gaussian_kde
-from sklearn.preprocessing import normalize
-import shapely
-from shapely.geometry import LineString, Point
-from shapely import intersection
-import itertools
 from statistics import mean 
 from scipy.spatial import ConvexHull
-from matplotlib.path import Path
 import os
 from os import listdir
 from os.path import isfile, join
 import warnings
-import andi_datasets
 from andi_datasets.models_phenom import models_phenom
 from sklearn import metrics
 from math import nan
-from hmm_functions import run_model
 
+
+from casta.features import run_hmm, calc_distance, calc_angles, calc_KDE, calc_intersections
+from casta.results import make_results_file
+from casta.hmm_functions import run_model
+from casta.utils import *
+from casta.plot import *
 
 warnings.filterwarnings('ignore')
 
 if __name__ == '__main__':
-    
-    #################################
-   
-    import stochastic
-    #stochastic.random.seed(3)
-    #np.random.seed(7)
-
-    
-    ##################################
     # if we have csv with tracks: for 1 file only:
-    
     def wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag): # works I guess
         image_path_lys=f1.split("csv")
         image_path=image_path_lys[0] +"svg"
         tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(f1, min_track_length) # execute this function to load the files
         mean_msd_df=msd_mean_track(msd_df, dt)
         train_result, states, lys_states = run_traces_wrapper(traces, dt)
-        deep_df2=computing_distance_wrapper(deep_df1)
-        deep_df3=calculate_angles_wrapper(deep_df2)
-        deep_df4=calculate_KDE_wrapper(lys_x, lys_y, deep_df3)
-        deep_df5=calculate_intersections_wrapper(lys_x, lys_y, deep_df4)
+        deep_df2=calc_distance(deep_df1)
+        deep_df3=calc_angles(deep_df2)
+        deep_df4=calc_KDE(lys_x, lys_y, deep_df3)
+        deep_df5=calc_intersections(lys_x, lys_y, deep_df4)
         deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
-        grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+        grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag, dt)
         deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
         plotting_final_image(deep_df_short2,lys_points2, image_path)
         make_fingerprint_file(f2, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
@@ -160,42 +126,6 @@ if __name__ == '__main__':
 
 
         return df_final_parameters_out
-
-    #############################################
-    # for our own HMM for reading inmultiple csv files with real tracks, make one result excel per file
-
-    def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag):
-        onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
-        for i in onlyfiles:
-            
-            if i.endswith(".csv"):
-                path=os.path.join(folderpath1, i)
-                print(path)
-                image_path_lys=path.split("csv")
-                image_path=image_path_lys[0] +"svg"
-                image_path_tiff=image_path_lys[0] +"tiff"
-
-                tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
-                mean_msd_df=msd_mean_track(msd_df, dt)
-
-                deep_df2= run_traces_wrapper(deep_df1, dt)
-                deep_df3=computing_distance_wrapper(deep_df2)
-                deep_df4=calculate_angles_wrapper(deep_df3)
-                deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
-                deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
-
-                #plotting_final_image(deep_df_short2,lys_points2, image_path)
-                mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
-
-                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_path_tiff)
-                make_results_file(path, deep_df_short2, dt,mean_msd_df2 ) # run function to make excel with all parameters
-
-          
-
-
 
     ############################################
     # for our own HMM if we simulate groundtruth and test it on it
@@ -350,113 +280,13 @@ if __name__ == '__main__':
 
         
         return tracks_df
-
-
-    ############################################
-  
-    ############################################
-    # function to directly load the cleaned trackmate files:
-
-    def load_file(path2, min_track_length):
-        df=pd.read_csv(path2)
-        deep_df, list_traces, lys_x, lys_y, msd_df= make_deep_df(df, min_track_length)
-        return df, deep_df, list_traces, lys_x, lys_y, msd_df
-
-    def make_deep_df(df, min_track_length):
-        grouped= df.sort_values(["FRAME"]).groupby("TRACK_ID")
-        count2=0
-        deep_all=[]
-        list_traces=[]
-        lys_x=[]
-        lys_y=[]
-
-        for i in grouped["TRACK_ID"].unique():
-            s= grouped.get_group(i[0])
-            
-            if s.shape[0]>min_track_length: # parameter to set threshold of minimun length of track duration (eg. 25 time points)
-                count2+=1
-                pos_x=list(s["POSITION_X"])
-                pos_y= list(s["POSITION_Y"])
-                pos_t=list(s["POSITION_T"])
-                tid=list(s["TRACK_ID"])
-                lys_x.append(pos_x)
-                lys_y.append(pos_y)
-                m= np.column_stack(( pos_x, pos_y ))
-                msd, rmsd = compute_msd(m)
-                frames= list(s["FRAME"])
-                n= np.column_stack((msd,(frames[1:]),tid[1:]))
-
-                if(count2== 1):
-                    msd_all = n
-                else:
-                    msd_all = np.vstack((msd_all, n))
-
-                msd_df=pd.DataFrame(msd_all, columns=["msd", "frame", "track_id"])
-
-                list_traces.append(m)
-                m2=np.column_stack(( tid, pos_x, pos_y, pos_t)) 
-
-                if(count2== 1):
-                    deep_all = m2
-                else:
-                
-                    deep_all = np.vstack((deep_all, m2))
-        deep_all_df=pd.DataFrame(deep_all, columns=["tid", "pos_x", "pos_y", "pos_t"])
-
-        return deep_all_df, list_traces, lys_x, lys_y, msd_df
-    #############################################
-    # function for MSD and diffusion:
-
-    def compute_msd(trajectory):
-        totalsize=len(trajectory)
-        msd=[]
-        for i in range(totalsize-1):
-            j=i+1
-            msd.append(np.sum((trajectory[0:-j]-trajectory[j::])**2)/float(totalsize-j)) # Distance that a particle moves for each time point divided by time
-        msd=np.array(msd)
-        rmsd = np.sqrt(msd)
-        return msd, rmsd 
     
-    ##############################################
-    # function for logDs:
-
-    def logD_from_mean_MSD(MSDs):
-
-        mean_msd = 0
-        logD = 0
-
-        mean_track=mean(MSDs[0:3])
-        if mean_track!=0:
-            mean_msd = mean_track
-        else:
-            mean_msd = 0.000000001
-    
-        logD = math.log10(mean_track/(dt*4)) # 2*2dimnesions* time
-        return mean_msd, logD
-
-    def msd_mean_track(msd_df, dt):
-        group2= msd_df.groupby("track_id")
-        lys=[]
-        lys2=[]
-        for i in group2["track_id"].unique():
-
-            s= group2.get_group(i[0])
-            
-            full_track=list(s["msd"])
-            mean_msd, logD = logD_from_mean_MSD(full_track)
-            lys.append(mean_msd)
-            lys2.append(logD)
-
-        track_means_df = pd.DataFrame(np.column_stack([lys, lys2]), columns=["msd", "logD"])
-        
-        return track_means_df
-
     ################################################
     # function loading HMM model:
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open("model_4.pkl", "rb") as file: 
+        with open("casta/data/model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -478,314 +308,6 @@ if __name__ == '__main__':
 
 
         return deep_df
-
-    ##################################################
-    # function for consecutive features:
-        
-    def consecutive(col, seg_len, threshold, deep_df): # col= string of cl indf, seg_len=segment length of consecutive, threshold number
-        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-        lys_final=[]
-        for i in grouped_plot["tid"].unique():
-            lys_six=[]
-            s= grouped_plot.get_group(i[0])
-            c3=0
-            seg1=seg_len-1
-            seg2=seg_len+1
-            
-            while c3<len(s["pos_x"]): 
-                if c3>=len(s["pos_x"])-seg_len: 
-                        lys_six.append([1]*1) 
-                else:
-                        
-                    if sum(s[col][c3:c3+seg2])<threshold: 
-                        lys_six.append([0]*1)
-                    elif sum(s[col][c3:c3+seg2])>=threshold and sum(s[col][c3:c3+seg_len])<threshold: 
-                        lys_six.append([0]*seg_len) 
-                        c3+=seg1 
-                    else:
-                        lys_six.append([1]*1)
-                c3+=1
-            lys_six_flat=list(chain.from_iterable(lys_six))
-            lys_final.append(lys_six_flat)
-            c3=0
-
-        lys_final_flat=list(chain.from_iterable(lys_final))
-        return lys_final_flat
-    
-    ################# end function for consecutive features
-    
-    ################# Calculate distance and add to dataframe
-    def computing_distance_wrapper(deep_df):
-    
-        print("Computing distance")
-
-        distance = []
-        distance_flag = []
-        threshold_dist = 0.09
-        for i in range(len(deep_df["pos_x"])-1):
-            x1, y1 = deep_df["pos_x"][i], deep_df["pos_y"][i]
-            x2, y2 = deep_df["pos_x"][i+1], deep_df["pos_y"][i+1]
-
-            p1 = [x1, y1]
-            p2 = [x2, y2]
-
-            dis = math.dist(p1, p2)
-            distance.append(dis)
-            if dis < threshold_dist:
-                distance_flag.append(0)
-            else:
-                distance_flag.append(1)
-
-        distance.append(0)
-        distance_flag.append(0)
-        deep_df["distance"] = distance
-        deep_df["distance_flag"] = distance_flag
-        
-
-    ################## End distance calculation
-
-    ################## Find consecutive short distances (4 in this case)
-    
-        tresh_l = 9
-        c2=0
-        dist_final=[]
-        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-
-        for i in grouped_plot["tid"].unique():
-            lys_six=[]
-            s= grouped_plot.get_group(i[0])
-            c3=0
-            while c3<len(s["pos_x"]): 
-
-                if c3>=len(s["pos_x"])-tresh_l:
-                    lys_six.append([1]*1) 
-                else:
-                    if sum(s["distance_flag"][c3:c3+tresh_l+1])==0:
-                        lys_six.append([0]*1)
-                    elif sum(s["distance_flag"][c3:c3+tresh_l+1])!=0 and sum(s["distance_flag"][c3:c3+tresh_l])==0:
-                        lys_six.append([0]*tresh_l)
-                        c2+=tresh_l-1
-                        c3+=tresh_l-1
-                    else:
-                        lys_six.append([1]*1)
-                c2+=1
-                c3+=1
-            lys_six_flat=list(chain.from_iterable(lys_six))
-            dist_final.append(lys_six_flat)
-            c2+=1
-            c3=0
-        
-        dist_final_flat=list(chain.from_iterable(dist_final))
-        deep_df["dist_cont"]=dist_final_flat
-
-        return deep_df
-
-    ################### end distance
-
-    ################### calulcate angles:
-
-    def angle3pt(a, b, c):
-        ang = math.degrees(
-        math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(a[1] - b[1], a[0] - b[0]))
-        return ang + 360 if ang < 0 else ang
-    
-
-    def calculate_angles_wrapper(deep_df):
-        n=deep_df["pos_t"]
-        x=deep_df["pos_x"]
-        y=deep_df["pos_y"]
-
-        lys_angles=[]
-        for i in range (len(x)-2):
-            a=(x[i], y[i])
-            b=(x[i+1], y[i+1])
-            c=(x[i+2], y[i+2])
-            angle1 = 180 - angle3pt(a, b, c)
-            angle=180-abs(angle1)
-
-            lys_angles.append(angle)
-
-        lys_angles.append(0)
-        lys_angles.append(0)
-        deep_df["angles"]=lys_angles
-
-        ### make consecutive angles:
-        print("Computing angles")
-
-        angle_cont_lys=consecutive("angles", 10, 600, deep_df)
-        
-        deep_df["angle_cont"]=angle_cont_lys
-        deep_df['angles_cont_level'] = pd.cut(deep_df["angle_cont"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
-        deep_df['angles_cont_level'] = deep_df['angles_cont_level'].astype(str)
-        #final_pal_only_0=dict(zero='#fde624' ,  one= '#380282') # zero=yellow=high angles
-
-        return deep_df
-
-    ###################### end anlges calc
-
-    ###################### function to calculate KDE:
-    def make_KDE_per_track(lys_x, lys_y):
-        lys_z=[]
-        lys_z_norm=[]
-        for i in range(len(lys_x)):    
-            x=lys_x[i]
-            y=lys_y[i]
-            xy= np.vstack([x,y])
-
-            z = gaussian_kde(xy)(xy)
-            lys_z.append(z)
-
-            normz=normalize([z])
-            lys_z_norm.append(normz[0])
-
-        out = np.concatenate(lys_z).ravel().tolist()
-        out2 = np.concatenate(lys_z_norm).ravel().tolist()
-        return out, out2
-        
-    #################### end function
-
-    #################### function for KDE:
-
-    def calculate_KDE_wrapper(lys_x, lys_y, deep_df):
-        print("Computing KDE")
-        out, out2 =make_KDE_per_track(lys_x, lys_y)
-
-        
-        deep_df["KDE"]=out
-        deep_df['KDE_level']=pd.qcut(deep_df["KDE"], 9,labels=["zero" , "one", "two", "three", "four", "five", "six", "seven", "eight"])
-        deep_df['KDE_values']=pd.qcut(deep_df["KDE"], 9,labels=False)
-        deep_df['KDE_level'] = deep_df['KDE_level'].astype(str)
-        #final_pal=dict(zero= '#380282',one= '#440053',two= '#404388', three= '#2a788e', four= '#21a784', five= '#78d151', six= '#fde624', seven="#ff9933", eight="#ff3300")
-
-        # invert KDE values: for consistency, low values = good
-        lys_invert=[]
-        for i in deep_df["KDE_values"]:
-            KDE_invert=8-i
-            lys_invert.append(KDE_invert)
-        deep_df["KDE_invert"]=lys_invert
-
-        ######################### find consecutive KDE:
-        KDE_cont_lys=consecutive("KDE_invert", 10, 13, deep_df)
-
-        deep_df["KDE_cont"]=KDE_cont_lys
-        deep_df["KDE_cont_level"] = pd.cut(deep_df["KDE_cont"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
-        deep_df["KDE_cont_level"] = deep_df["KDE_cont_level"].astype(str)
-        return deep_df
-
-        ########################## KDE done
-
-    ######################### function to calculate intersections:
-    # check line intersection: for consistency: 0 = intersection, 1 = not
-    def calc_intersections(lys_x, lys_y):
-
-        lys_x=list(chain.from_iterable(lys_x))
-        lys_y=list(chain.from_iterable(lys_y))
-
-        ### interection 1: between line 1 and line 4
-        intersect1=[]
-        count=3
-        intersect1.append([1]*4)
-        for i in range (len(lys_x)-4):
-            line1 = LineString([(lys_x[i], lys_y[i]), (lys_x[i+1], lys_y[i+1])])
-            line2 = LineString([(lys_x[count], lys_y[count]), (lys_x[count+1], lys_y[count+1])])
-            interp1=intersection(line1, line2)
-            count+=1
-            x1, x2, x3, x4=interp1.bounds
-            x1=str(x1)
-            if x1=="nan":
-                intersect1.append([1])
-            else:
-                intersect1.append([0])
-
-        inter_flat1=list(chain.from_iterable(intersect1))
-
-        ### interection 2: between line 1 and line 5
-        intersect2=[]
-        count=4 
-        intersect2.append([1]*5)
-        for i in range (len(lys_x)-5):
-            line1 = LineString([(lys_x[i], lys_y[i]), (lys_x[i+1], lys_y[i+1])])
-            line2 = LineString([(lys_x[count], lys_y[count]), (lys_x[count+1], lys_y[count+1])])
-            interp1=intersection(line1, line2)
-            count+=1
-            x1, x2, x3, x4=interp1.bounds
-            x1=str(x1)
-            if x1=="nan":
-                intersect2.append([1])
-            else:
-                intersect2.append([0])
-            
-        inter_flat2=list(chain.from_iterable(intersect2))
-
-        ### interection 3: between line 1 and line 6
-        intersect3=[]
-        count=5
-        intersect3.append([1]*6)
-        for i in range (len(lys_x)-6):
-            line1 = LineString([(lys_x[i], lys_y[i]), (lys_x[i+1], lys_y[i+1])])
-            line2 = LineString([(lys_x[count], lys_y[count]), (lys_x[count+1], lys_y[count+1])])
-            interp1=intersection(line1, line2)
-            count+=1
-            x1, x2, x3, x4=interp1.bounds
-            x1=str(x1)
-            if x1=="nan":
-                intersect3.append([1])
-            else:
-                intersect3.append([0])
-
-        inter_flat3=list(chain.from_iterable(intersect3))
-
-        ### interection 4: between line 1 and line 7
-        intersect4=[]
-        count=6
-        intersect4.append([1]*7)
-        for i in range (len(lys_x)-7):
-            line1 = LineString([(lys_x[i], lys_y[i]), (lys_x[i+1], lys_y[i+1])])
-            line2 = LineString([(lys_x[count], lys_y[count]), (lys_x[count+1], lys_y[count+1])])
-            interp1=intersection(line1, line2)
-            count+=1
-            x1, x2, x3, x4=interp1.bounds
-            x1=str(x1)
-            if x1=="nan":
-                intersect4.append([1])
-            else:
-                intersect4.append([0])
-
-        inter_flat4=list(chain.from_iterable(intersect4))
-
-        return inter_flat1, inter_flat2, inter_flat3, inter_flat4
-        
-    ########################## end intersection function
-        
-    def calculate_intersections_wrapper(lys_x, lys_y, deep_df):
-        print("Computing intersections")
-
-        inter_flat1, inter_flat2, inter_flat3, inter_flat4=calc_intersections(lys_x, lys_y)
-
-        ## add all intersections:
-        deep_df["intersect1"]=inter_flat1
-        deep_df["intersect2"]=inter_flat2
-        deep_df["intersect3"]=inter_flat3
-        deep_df["intersect4"]=inter_flat4
-
-        ## put all intersections together:
-        lys_all=[]
-        for i in range(len(deep_df["pos_x"])):
-            if deep_df["intersect1"][i]==0 or deep_df["intersect2"][i]==0 or deep_df["intersect3"][i]==0 or deep_df["intersect4"][i]==0:
-                lys_all.append(0)
-            else:
-                lys_all.append(1)
-
-        deep_df["all_intersect"]=lys_all
-
-        ######################### find consecutive intersections:
-
-        intersect_cont=consecutive("all_intersect", 10, 6, deep_df)
-        deep_df["intersect_cont"]=intersect_cont
-        return deep_df
-
-        ########################### end intersections
-    
 
     ########################## get fingertprint states:
 
@@ -842,7 +364,7 @@ if __name__ == '__main__':
     ########################################### end fingerprint states wrapper
 
     ############## plot all features togheter (plus convex hull):
-    def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag): # add ture =1or false =0 for plotting yes or no
+    def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag, dt): # add ture =1or false =0 for plotting yes or no
         print("plotting all features")
         #print("heere is deepdf",deep_df)
 
@@ -978,9 +500,6 @@ if __name__ == '__main__':
         #print(lys_start_end_cluster2[2], len(lys_start_end_cluster2[2]))
         #print(lys_points2[2], len(lys_points2[2]))
 
-        ## insert logD calucaltion of non-clustered tracks someweherre here:
-
-
         
         ######################### plot points together with above lines
         lys_area2=[]
@@ -1031,7 +550,7 @@ if __name__ == '__main__':
                      
                         if len(points)>5:
                             msd, rmsd = compute_msd(points)
-                            mean_msd, logD = logD_from_mean_MSD(msd)
+                            mean_msd, logD = logD_from_mean_MSD(msd, dt)
                 
                             lys_msd_cluster.append(mean_msd)
                             lys_logD_cluster.append(logD)
@@ -1039,7 +558,7 @@ if __name__ == '__main__':
                         ####################
                             if lys_start_end_cluster2[j][i][0]!="B":
                                 msd_middle, rmsd_middle = compute_msd(points)
-                                mean_msd_middle, logD_middle = logD_from_mean_MSD(msd_middle)
+                                mean_msd_middle, logD_middle = logD_from_mean_MSD(msd_middle,dt)
 
                                 lys_msd_cluster_middle.append(mean_msd_middle)
                                 lys_logD_cluster_middle.append(logD_middle)
@@ -1180,49 +699,8 @@ if __name__ == '__main__':
         deep_df_short['in_hull_level_middle'] = pd.cut(deep_df_short["in_hull_middle"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
         deep_df_short['in_hull_level_middle'] = deep_df_short['in_hull_level_middle'].astype(str)
     
+        #print(deep_df_short)
         return deep_df_short
-    
-
-    ## here insert function for log D of only non-clsutered:
-
-    def caluclate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
-        print(mean_msd_df)
-
-
-        grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
-        lys_logD_no_STA=[]
-        for trackn in grouped_plot["tid"].unique():
-            s= grouped_plot.get_group(trackn[0])
-            pos_x=s["pos_x"]
-            pos_y=s["pos_y"]
-            if sum(s["in_hull"])==len(s["in_hull"]): # only get trackcs without any clsuter: all are 1=no clsuter
-                   
-                m= np.column_stack(( pos_x, pos_y))
-                msd, rmsd = compute_msd(m)
-                mean_msd, logD = logD_from_mean_MSD(msd)
-                #lys_logD_no_STA.append([logD]*len(pos_x))
-                lys_logD_no_STA.append(logD)
-
-
-            
-            else:
-                #lys_logD_no_STA.append([0]*len(pos_x))
-                lys_logD_no_STA.append(0)
-        
-        #lys_logD_no_STA_flat=list(chain.from_iterable(lys_logD_no_STA))
-        #deep_df_short["mean_logD_without_STA"]=lys_logD_no_STA_flat
-        mean_msd_df["mean_logD_without_STA"]=lys_logD_no_STA
-        #print(mean_msd_df)
-
-        return mean_msd_df
-
-
-
-
-    
-
-
-
 
     ################################################
     ### plotting hull and tracks togehter: as arrested vs not spatially arrested
@@ -1281,22 +759,31 @@ if __name__ == '__main__':
         plt.show()
 
         #plt.axis('equal') 
-        #plt.savefig(str(image_path), dpi=3500,format="tiff") # uncomment this to save nice tiff
+        #plt.savefig(str(image_path), dpi=3500,format="tiff") # uncomment this to save nice svg
         #plt.show()
 
         ###insert new plotting function: 
 
-    def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_path_tiff):
-        final_pal=dict(zero= "#06fcde" , one= "#808080")
-        linecollection = []
-        colors = []
+    def plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path):
 
-        fig = plt.figure()
-        ax = fig.add_subplot()
-
+        fig, ax = plt.subplots(figsize=(6, 6))
         sns.set(style="ticks", context="talk")
 
+        linecollection = []
+        colors = []
         grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
+
+
+        h1 = (deep_df_short["pos_x"].max() - deep_df_short["pos_x"].min())*0.15
+        h2 = (deep_df_short["pos_y"].max() - deep_df_short["pos_y"].min())*0.15
+        xlim = (deep_df_short["pos_x"].min()-h1, deep_df_short["pos_x"].max()+h1)
+        ylim = (deep_df_short["pos_y"].min()-h2, deep_df_short["pos_y"].max()+h2)
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_aspect('equal', adjustable='box')
+
+        final_pal=dict(zero="#c7e020", one="#404688")
+
         c2=0
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
@@ -1312,47 +799,37 @@ if __name__ == '__main__':
                 c2+=1
             c2+=1
 
-        lc = LineCollection(linecollection, color=colors, lw=0.1) #was1
-
+        lc = LineCollection(linecollection, color=colors, lw=1)
         
-        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001, alpha=0)
+        plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.001)
         plt.gca().add_collection(lc)
 
 
-        for j in range (len(lys_points_big2)):
-            for i in range(len(lys_points_big2[j])):
-                points=lys_points_big2[j][i] 
-                hull = ConvexHull(points)
-                for simplex in hull.simplices:
-                    plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.1 ) #was 1
+        # for j in range (len(lys_points_big2)):
+        #     for i in range(len(lys_points_big2[j])):
+        #         points=lys_points_big2[j][i] 
+        #         hull = ConvexHull(points)
+        #         for simplex in hull.simplices:
+        #             plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1) 
 
                     #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="#008080")
                         #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
                         
        
-        for j in range (len(lys_points_big_only_middle2)):
-                    for i in range(len(lys_points_big_only_middle2[j])):
-                        points=lys_points_big_only_middle2[j][i] 
-                        hull = ConvexHull(points)
-                        for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.1, color="#008080") #was1
-
-                            #plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=1, color="red")
-                                #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
-                                
-
+        # for j in range (len(lys_points_big_only_middle2)):
+        #             for i in range(len(lys_points_big_only_middle2[j])):
+        #                 points=lys_points_big_only_middle2[j][i] 
+        #                 hull = ConvexHull(points)
+        #                 for simplex in hull.simplices:
+        #                     plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=1, color="red") #,color="#c7e020") 
+        #                     #plt.text(points[0][0], points[0][1],"#%d" %j, ha="center") # uncomment this to label the hull
 
         plt.axis('equal') 
-        plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
+        img_path = str(folderpath1) + "\\" + "clusters" + ".tiff"
+        plt.savefig(img_path, dpi=500,format="tiff")
+        #plt.savefig(str(image_path), format="svg") # uncomment this to save nice svg
         plt.show()
 
-        #plt.axis('equal') 
-        #plt.savefig(str(image_path_tiff), dpi=3500,format="tiff") # uncomment this to save nice tiff
-        #plt.show()
-      
-
-
-     
     ########################### function to make a nice excel fiel with all the parameters per track:
 
     def make_fingerprint_file(f2, train_result, deep_df_short, dt, mean_msd_df): 
@@ -1522,6 +999,8 @@ if __name__ == '__main__':
                     lys_sum_clusters.append(0)
 
 
+                    
+
                 else:
                     # all points of track are cluster points
                     lys_nr_of_clusters.append(arry[0])
@@ -1575,39 +1054,36 @@ if __name__ == '__main__':
         #print(lys_nr_of_clusters_middle)
 
         ## below all the fully resolved ones: (only if cluster was in teh middle)
-        casta_df_out=pd.DataFrame(lys_nr_of_clusters_middle, columns=["nr_of_STA_points_per_track"])
-        casta_df_out["nr_of_non-STA_points_per_trck"]=lys_nr_of_unclustered_middle
-        casta_df_out["tot_time_of_STA_per_track"]=lys_time_in_clusters_middle
-        casta_df_out["mean_area_of_STA"]=lys_mean_area_middle
-        casta_df_out["nr_of_STA_events_per_track"]=lys_sum_clusters_middle
-        casta_df_out["average_duration_of_STA_events_per_track"]=lys_time_per_cluster_middle
-        casta_df_out["MSD_STA"]=mean_msd_df["cluster_msd_middle"]
-        casta_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
-        casta_df_out["logD_whole_track"]=mean_msd_df["logD"]
-
-        casta_df_out["logD_tracks_without_STA"]=mean_msd_df["mean_logD_without_STA"]
-
+        fingerprints_df_out=pd.DataFrame(lys_nr_of_clusters_middle, columns=["nr_of_STA_points_per_track"])
+        fingerprints_df_out["nr_of_non-STA_points_per_trck"]=lys_nr_of_unclustered_middle
+        fingerprints_df_out["tot_time_of_STA_per_track"]=lys_time_in_clusters_middle
+        fingerprints_df_out["mean_area_of_STA"]=lys_mean_area_middle
+        fingerprints_df_out["nr_of_STA_events_per_track"]=lys_sum_clusters_middle
+        fingerprints_df_out["average_duration_of_STA_events_per_track"]=lys_time_per_cluster_middle
+        fingerprints_df_out["MSD_STA"]=mean_msd_df["cluster_msd_middle"]
+        fingerprints_df_out["logD_STA"]=mean_msd_df["cluster_logD_middle"]
+        fingerprints_df_out["logD_whole_track"]=mean_msd_df["logD"]
 
 
         # below including everything: also clusters in beginning and end
-        casta_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
-        casta_df_out["nr_of_non-SA_points_per_track"]=lys_nr_of_unclustered
-        casta_df_out["tot_time_of_SA_per_track"]=lys_time_in_clusters
-        casta_df_out["mean_area_of_SA"]=lys_mean_area
-        casta_df_out["nr_of_SA_events_per_track"]=lys_sum_clusters
-        casta_df_out["average_duration_of_SA_events_per_track"]=lys_time_per_cluster
-        casta_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
-        casta_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
+        fingerprints_df_out["nr_of_SA_points_per_track"]=lys_nr_of_clusters
+        fingerprints_df_out["nr_of_non-SA_points_per_track"]=lys_nr_of_unclustered
+        fingerprints_df_out["tot_time_of_SA_per_track"]=lys_time_in_clusters
+        fingerprints_df_out["mean_area_of_SA"]=lys_mean_area
+        fingerprints_df_out["nr_of_SA_events_per_track"]=lys_sum_clusters
+        fingerprints_df_out["average_duration_of_SA_events_per_track"]=lys_time_per_cluster
+        fingerprints_df_out["MSD_SA"]=mean_msd_df["cluster_msd"]
+        fingerprints_df_out["logD_SA"]=mean_msd_df["cluster_logD"]
 
 
 
 
-        outpath4=outpath3+"_CASTA_results"+".xlsx"
+        outpath4=outpath3+"_fingerprint_results"+".xlsx"
         writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
-        casta_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+        fingerprints_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
         writer.close()
 
-        return casta_df_out
+        return fingerprints_df_out
         
 
 
@@ -1983,7 +1459,6 @@ if __name__ == '__main__':
         c2=0
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
-
         
             for i in range (len(s["pos_x"])-1):
 
@@ -2001,6 +1476,7 @@ if __name__ == '__main__':
         plt.scatter(finger_tracks["pos_x"], finger_tracks["pos_y"], s=0.001)
         plt.gca().add_collection(lc)
         plt.axis('equal') 
+        print(image_path1)
         plt.savefig(str(image_path1), format="tiff") # uncomment this to save nice svg
 
         plt.show()
@@ -2035,7 +1511,7 @@ if __name__ == '__main__':
     # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
     
     # example:
-    #dt=0.1
+    #dt=0.05
     #plotting_flag=0
     #min_track_length=25
     #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
@@ -2061,11 +1537,11 @@ if __name__ == '__main__':
     
     # example:
 
-    #plotting_flag=0
-    #dt=0.1
-    #min_track_length=25
-   # plotting_saving_nice_image_flag=0
-    #tracks_saving_flag=0
+    plotting_flag=0
+    dt=0.1
+    min_track_length=25
+    plotting_saving_nice_image_flag=0
+    tracks_saving_flag=0
     
     #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
     #f1=r"C:\Users\miche\Desktop\simualted tracks\plots\plot_values_D0.001_for_mean_clusters_plot.csv"
@@ -2076,108 +1552,23 @@ if __name__ == '__main__':
 
 #### for our own hmm to evaulate while simualting tracks:
     #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
-    #f1=r"Z:\Research\Members\Michelle\simulated_tracks\sim_values_for_accruracy_new_HMM\sim_values_25.3.25_D0.001_N500_T200\sim_values1.1_D0.001_N500_T200_25.3.25.csv"
     #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 
 ### for files oin a folder with real tracak for our own hmm:
 ### working on implementaiton of julines STAs only in the middle
-
     plotting_flag=0
     dt=0.05
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
-    
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    folderpath1=r"Z:\Research\Members\Michelle\TIRFM\24.09.10_At_FLS2_MADs\pub10_FLS2_3248-4\cleaned_casta\t"
-
-
-    calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
+    folderpath1=r"/Users/schulzp9/Documents/casta"
 
 
     ### for accuracy based on previosuly generated tracks in a folder:
 
     #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\DC_MSS_1\DC_MSS_sim2_D0.015_N500_T200"
     #calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-            
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              
-        
-
-
-
-
-
-
-
-
-
-
-
-      
-        
-
-
-                
-
-
-
-
-        
-
-
-       
-
-
-
-
-
-
-
-
-
-
-    

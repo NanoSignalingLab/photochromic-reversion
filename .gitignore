@@ -1,0 +1,9 @@
+.DS_Store
+/casta.egg-info
+dist/
+
+*.pyc
+*.xlsx
+*.svg
+*.ipynb
+*.tiff
