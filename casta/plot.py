@@ -9,7 +9,7 @@ def plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_mid
     linecollection = []
     colors = []
     if image_format=="tiff":
-        lw1=1
+        lw1=0.1
         s1=0.001
     else:
         lw1=1
