@@ -50,19 +50,19 @@ def calculate_sta(dir: str,
             grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_calculate_hull(df, mean_msd_df, plot, dt)
             deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
-            mean_msd_df2=calculate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
+            mean_msd_df2=calculate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1, dt)
 
-            plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_format)
-            plot_original_tracks(df)
-            plot_values_on_track(deep_df_short, "in_hull_level", image_path)
-            plot_values_on_track_hull(deep_df_short, "in_hull_level", lys_points_big_only_middle2, image_path)
+            if plot:
+                plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_format)
+                #plot_original_tracks(df)
+                #plot_values_on_track(deep_df_short, "in_hull_level", image_path)
+                #plot_values_on_track_hull(deep_df_short, "in_hull_level", lys_points_big_only_middle2, image_path)
             make_results_file(path, out_dir, deep_df_short2, dt,mean_msd_df2) # run function to make excel with all parameters
 
 ############## plot all features togheter (plus convex hull):
 def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag, dt): # add ture =1or false =0 for plotting yes or no
-    print("plotting all features")
+    #print("plotting all features")
     #print("heere is deepdf",deep_df)
-
 
     deep_df_short=deep_df[["angle_cont", "hmm_states","dist_cont" ,"intersect_cont" , "KDE_cont"]]
     deep_df_short["sum_rows"] = deep_df_short.sum(axis=1)
@@ -81,6 +81,7 @@ def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag
     c2=0
     
     c2=0
+    '''
     if plotting_flag:
         for i in grouped_plot["tid"].unique():
             s= grouped_plot.get_group(i[0])
@@ -102,7 +103,7 @@ def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag
     
         plt.gca().add_collection(lc)
         plt.scatter(deep_df_short["pos_x"], deep_df_short["pos_y"], s=0.01) #was 0.001
-
+    '''
     
     ########################## calculate convex hull:
     # get red and green points: = where 5, 4 or 3 criteria agree for spatial arrest
@@ -246,11 +247,11 @@ def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag
                     lys_hull.append(hull)
                     lys_area.append(hull.volume) 
                     lys_perimeter.append(hull.area) 
-                    if plotting_flag:
-                        for simplex in hull.simplices:
-                            plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.5, color="red")
-
-                        plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=0.5, color="black") #was 1
+                    #if plotting_flag:
+                    #    for simplex in hull.simplices:
+                    #        plt.plot(points[simplex, 0], points[simplex, 1], 'k-', lw=0.5, color="red")
+                    #
+                    #    plt.plot(points[hull.vertices,0], points[hull.vertices,1], 'r--', lw=0.5, color="black") #was 1
             
 
         lys_area2.append(lys_area)
@@ -288,12 +289,10 @@ def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag
 
     mean_msd_df["cluster_msd_middle"] = lys_msd_cluster_middle2
     mean_msd_df["cluster_logD_middle"]=lys_logD_cluster_middle2
-    
-    
 
-    if plotting_flag:
-        plt.axis('equal') 
-        plt.show()
+    #if plotting_flag:
+    #    plt.axis('equal') 
+    #    plt.show()
     #print(mean_msd_df)
     return grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df, lys_begin_end_big2, lys_points_big_only_middle2
 
@@ -302,7 +301,7 @@ def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag
 
     
 def convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2):
-    print("calculating points in hull")
+    print("Calculating points in hull")
     ################# adding all the points that are additionally in the bounding area as cluster points
     
     lys_the_last=[]
@@ -381,7 +380,7 @@ def convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_p
 
 ## here insert function for log D of only non-clsutered:
 
-def calculate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
+def calculate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df, dt):
     grouped_plot= deep_df_short.sort_values(["pos_t"]).groupby("tid")
     lys_logD_no_STA=[]
     for trackn in grouped_plot["tid"].unique():
@@ -391,7 +390,7 @@ def calculate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df):
         if sum(s["in_hull"])==len(s["in_hull"]): # only get trackcs without any clsuter: all are 1=no clsuter  
             m= np.column_stack(( pos_x, pos_y))
             msd, rmsd = compute_msd(m)
-            mean_msd, logD = logD_from_mean_MSD(msd)
+            mean_msd, logD = logD_from_mean_MSD(msd, dt)
             #lys_logD_no_STA.append([logD]*len(pos_x))
             lys_logD_no_STA.append(logD)
         else:

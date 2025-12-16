@@ -9,7 +9,7 @@ def plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_mid
     linecollection = []
     colors = []
     if image_format=="tiff":
-        lw1=0.1
+        lw1=1
         s1=0.001
     else:
         lw1=1
@@ -78,10 +78,8 @@ def plotting_final_image(deep_df_short, lys_points_big2, lys_points_big_only_mid
         ax.axis("equal")
         xmin, xmax=ax.get_xlim()
         ymin, ymax=ax.get_ylim()
-        print(xmin, xmax)
-        print(ymin, ymax)
         # draw vertical line from (70,100) to (70, 250)$
-        plt.plot([xmax-2, xmax-1], [ymin+1, ymin+1], 'k-', lw=1)
+        #plt.plot([xmax-2, xmax-1], [ymin+1, ymin+1], 'k-', lw=1)
 
         plt.savefig(str(image_path), dpi=1500,format="tiff") # was 3500
         plt.show()

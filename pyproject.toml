@@ -11,9 +11,9 @@ description = "Calculate spatial transient arrests"
 readme = "README.md"
 authors = [{ name = "Michelle von Arx", email = "michelle.vonarx@tum.de" },
             { name = "Philip Schulz", email = "philip.schulz@outlook.com" }]
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
@@ -39,6 +39,9 @@ Homepage = "https://github.com/NanoSignalingLab/photochromic-reversion/"
 
 [project.scripts]
 casta = "casta.main:main"
+
+[tool.setuptools]
+packages = ["casta"]
 
 [tool.setuptools.package-data]
 casta = ["data/example_track.csv", "data/model_4.pkl"]
