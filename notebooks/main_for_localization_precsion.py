@@ -1,20 +1,12 @@
 # %%
 
-from RandomWalkSims import (
-    Gen_normal_diff,
-    Gen_directed_diff,
-    Get_params,
-    Gen_confined_diff,
-    Gen_anomalous_diff,
-)
-
 import matplotlib.pyplot as plt
 import matplotlib
-from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
-from MLGeneral import ML, histogram
+#from MLGeneral import ML, histogram
+#from casta.ml.my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
 import pickle
 import os
-from pomegranate import *
+#from pomegranate import *
 from functools import partial
 import numpy as np
 # import multiprocess as mp
@@ -298,11 +290,16 @@ if __name__ == '__main__':
                     
                 if index==0:
                     list_final_accuracy=[list_accuracy]
+
                 else:
                     list_final_accuracy.append(list_accuracy)
                 
+                ## need to add differnt simgas here:
+                list_final_accuracy.append(sigma_nm)
+
             
-            df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" ])
+            
+            df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" , "sigma_nm"])
     
             df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
             path_out_accuracy_lys=f1.split(".csv")
