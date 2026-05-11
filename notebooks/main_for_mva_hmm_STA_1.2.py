@@ -1,6 +1,6 @@
 # %%
 import sys
-sys.path.insert(1, r"C:\Users\bcgvm01\Desktop\photochromic-reversion\casta")
+sys.path.insert(1, r"casta")
 
 
 import matplotlib.pyplot as plt
