@@ -1,17 +1,10 @@
 # %%
+import sys
+sys.path.insert(1, r"C:\Users\bcgvm01\Desktop\photochromic-reversion\casta")
 
-from RandomWalkSims import (
-    Gen_normal_diff,
-    Gen_directed_diff,
-    Get_params,
-    Gen_confined_diff,
-    Gen_anomalous_diff,
-)
 
 import matplotlib.pyplot as plt
 import matplotlib
-from my_Fingerprint_feat_gen import ThirdAppender, GetStatesWrapper #, GetMSDWrapper
-from MLGeneral import ML, histogram
 import pickle
 import os
 #from pomegranate import *
@@ -204,7 +197,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open("model_4.pkl", "rb") as file: 
+        with open(r"C:\Users\bcgvm01\Desktop\photochromic-reversion\casta\data\model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -1163,5 +1156,5 @@ if __name__ == '__main__':
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
     #folderpath1=r"D:\photochromic_reversion_data\ts
-    folderpath1=r"Z:\Research\Members\Michelle\TIRFM\24.11.28_At_MADs\2610-1\CASTA"
+    folderpath1=r"C:\Users\bcgvm01\Desktop\test"
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
