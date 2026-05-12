@@ -1,5 +1,6 @@
 # %%
-
+import sys
+sys.path.insert(1, r"casta")
 import matplotlib.pyplot as plt
 import matplotlib
 #from MLGeneral import ML, histogram
@@ -41,6 +42,8 @@ from andi_datasets.models_phenom import models_phenom
 from sklearn import metrics
 from math import nan
 from hmm_functions import run_model
+
+
 
 
 warnings.filterwarnings('ignore')
@@ -254,11 +257,13 @@ if __name__ == '__main__':
         image_path=image_path_lys[0]
     
         df_values= df_values.iloc[: , 1:]
+        all_results=[]
         
         for index, row in df_values.iterrows():
             print("running simulation nr: ", index)
             trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
             sim_tracks=make_dataset_csv(trajectories, labels)
+            print(sim_tracks)
 
             #insert the noise part here: 
             for sigma_nm in noise_list:
@@ -273,8 +278,12 @@ if __name__ == '__main__':
                 deep_df4=calculate_angles_wrapper(deep_df3)
                 deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
                 deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
+                #grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+
+                #deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
+                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
+
                 
                 
                 sim_tracks_2=make_GT_consecutive(sim_tracks_noise)
@@ -288,20 +297,37 @@ if __name__ == '__main__':
                     path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
                     sim_tracks_2.to_csv(path_out_simualted_tracks)
                     
-                if index==0:
-                    list_final_accuracy=[list_accuracy]
+                #if index==0:
+                   # list_final_accuracy=[list_accuracy]
 
-                else:
-                    list_final_accuracy.append(list_accuracy)
+                #else:
+                    #list_final_accuracy.append(list_accuracy)
                 
                 ## need to add differnt simgas here:
-                list_final_accuracy.append(sigma_nm)
+                #list_final_accuracy.append(sigma_nm)
+                #print("thisislistfinalaccurac:",list_final_accuracy)
+                #flat_accuracy = [item for sub in list_final_accuracy for item in (sub if isinstance(sub, list) else [sub])]
+                #flat_accuracy = list_accuracy + [sigma_nm]
+                #print(flat_accuracy)
+                #print(flat_accuracy.shape())
+                #print(len(flat_accuracy))
+                # create ONE row
+                result_row = list_accuracy + [sigma_nm]
+
+                # store row
+                all_results.append(result_row)
 
             
             
-            df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" , "sigma_nm"])
-    
-            df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
+            df_final_accuracy=pd.DataFrame(all_results, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" , "sigma_nm"])
+            print(df_final_accuracy)
+            #print(df_final_accuracy.shape())
+            print("here values",df_values)
+            df_values_repeated = df_values.loc[df_values.index.repeat(len(noise_list))].reset_index(drop=True)
+            df_final_parameters_out = pd.concat( [df_values_repeated, df_final_accuracy],axis=1)
+
+
+            #df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
             path_out_accuracy_lys=f1.split(".csv")
             path_out_accuracy=path_out_accuracy_lys[0] +"_sim_accuracy_results_sigma_"+str(sigma_nm)+".xlsx"
             writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
@@ -390,7 +416,7 @@ if __name__ == '__main__':
     ###################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=500
+        N=5
         T=200
         D=0.001
         DS2=1
@@ -541,7 +567,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open("model_4.pkl", "rb") as file: 
+        with open(r"C:\Users\miche\Documents\photochromic-reversion\casta\data\model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -925,6 +951,9 @@ if __name__ == '__main__':
     
     
     ########################################### end fingerprint states wrapper
+
+
+
 
     ############## plot all features togheter (plus convex hull):
     def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag): # add ture =1or false =0 for plotting yes or no
@@ -1980,7 +2009,10 @@ if __name__ == '__main__':
             #logD_difference.append(abs(logD_means_finger[i]-logD_means_sim[i]))
             #logD_cluster_difference.append(abs(logD_mean_cluster_finger[i]-sim_cluster_logD))
         logD_mean_diff=mean(logD_difference)
-        logD_mean_cluster_diff=mean(logD_cluster_difference)
+        if mean_clustered_points!=0:
+            logD_mean_cluster_diff=mean(logD_cluster_difference)
+        else:
+            logD_mean_cluster_diff=0
         #print("differnce", logD_cluster_difference)
 
         print("percent_both_confined", percent_both_confined)
@@ -2194,7 +2226,8 @@ if __name__ == '__main__':
     f1=r"C:\Users\miche\Desktop\test_MSD\sim_values\sim_test.csv"
     calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
 
-    
+    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
+
 
 
 
