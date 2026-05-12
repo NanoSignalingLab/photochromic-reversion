@@ -55,198 +55,11 @@ if __name__ == '__main__':
     import stochastic
     #stochastic.random.seed(3)
     #np.random.seed(7)
+    # this main is for simulating tracks and evaluating them with added noise:
 
     
     ##################################
-    # if we have csv with tracks: for 1 file only:
-    
-    def wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag): # works I guess
-        image_path_lys=f1.split("csv")
-        image_path=image_path_lys[0] +"svg"
-        tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(f1, min_track_length) # execute this function to load the files
-        mean_msd_df=msd_mean_track(msd_df, dt)
-        train_result, states, lys_states = run_traces_wrapper(traces, dt)
-        deep_df2=computing_distance_wrapper(deep_df1)
-        deep_df3=calculate_angles_wrapper(deep_df2)
-        deep_df4=calculate_KDE_wrapper(lys_x, lys_y, deep_df3)
-        deep_df5=calculate_intersections_wrapper(lys_x, lys_y, deep_df4)
-        deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
-        grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-        deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
-        plotting_final_image(deep_df_short2,lys_points2, image_path)
-        make_fingerprint_file(f2, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
-
-    ####################################
-    # if we have multiple csv with tracks in a folder, makes one results excel per file: 
-
-    def wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag):
-        onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
-        for i in onlyfiles:
-            
-            if i.endswith(".csv"):
-                path=os.path.join(folderpath1, i)
-                print(path)
-                image_path_lys=path.split("csv")
-                image_path=image_path_lys[0] +"svg"
-                tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
-                mean_msd_df=msd_mean_track(msd_df, dt)
-                train_result, states, lys_states = run_traces_wrapper(traces, dt)
-                deep_df2=computing_distance_wrapper(deep_df1)
-                deep_df3=calculate_angles_wrapper(deep_df2)
-                deep_df4=calculate_KDE_wrapper(lys_x, lys_y, deep_df3)
-                deep_df5=calculate_intersections_wrapper(lys_x, lys_y, deep_df4)
-                deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
-                plotting_final_image(deep_df_short2,lys_points2, image_path)
-                make_fingerprint_file(path, train_result, deep_df_short2, dt, mean_msd_df) # run function to make excel with all parameters
-
-
-
-    ##########################################
-    # if we simulate tracks with ANDI and read in only values for grid paramters for simulation:
-
-    def read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag ):
-        df_values=pd.read_csv(f1)
-        image_path_lys=f1.split("csv")
-        image_path=image_path_lys[0]
-    
-        df_values= df_values.iloc[: , 1:]
-        
-        for index, row in df_values.iterrows():
-            print("running simulation nr: ", index)
-            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
-            sim_tracks=make_dataset_csv(trajectories, labels)
-            deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks, min_track_length)
-            mean_msd_df=msd_mean_track(msd_df, dt)
-            train_result, states, lys_states = run_traces_wrapper(traces, dt)
-            deep_df2=computing_distance_wrapper(deep_df1)
-            deep_df3=calculate_angles_wrapper(deep_df2)
-            deep_df4=calculate_KDE_wrapper(lys_x, lys_y, deep_df3)
-            deep_df5=calculate_intersections_wrapper(lys_x, lys_y, deep_df4)
-            deep_df6=fingerprints_states_wrapper(lys_states, deep_df5)
-            grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-            deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
-            sim_tracks_2=make_GT_consecutive(sim_tracks)
-            list_accuracy=calculate_accuracy(sim_tracks_2, deep_df_short2, mean_msd_df)
-            if plotting_saving_nice_image_flag==1:
-                image_path1=image_path+str(index)+".tiff"
-                plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
-            if tracks_saving_flag==1:
-                path_out_simulated_tracks_lys=f1.split(".csv")
-                path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
-                sim_tracks_2.to_csv(path_out_simualted_tracks)
-                
-            if index==0:
-                list_final_accuracy=[list_accuracy]
-            else:
-                list_final_accuracy.append(list_accuracy)
-            
-        
-        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" ])
-  
-        df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
-        path_out_accuracy_lys=f1.split(".csv")
-        path_out_accuracy=path_out_accuracy_lys[0] +"_sim_accuracy_results.xlsx"
-        writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
-        df_final_parameters_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
-        writer.close()
-
-
-
-        return df_final_parameters_out
-
-    #############################################
-    # for our own HMM for reading inmultiple csv files with real tracks, make one result excel per file
-
-    def calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag):
-        onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
-        for i in onlyfiles:
-            
-            if i.endswith(".csv"):
-                path=os.path.join(folderpath1, i)
-                print(path)
-                image_path_lys=path.split("csv")
-                image_path=image_path_lys[0] +"svg"
-                image_path_tiff=image_path_lys[0] +"tiff"
-
-                tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
-                mean_msd_df=msd_mean_track(msd_df, dt)
-
-                deep_df2= run_traces_wrapper(deep_df1, dt)
-                deep_df3=computing_distance_wrapper(deep_df2)
-                deep_df4=calculate_angles_wrapper(deep_df3)
-                deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
-                deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
-
-                #plotting_final_image(deep_df_short2,lys_points2, image_path)
-                mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
-
-                plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_path_tiff)
-                make_results_file(path, deep_df_short2, dt,mean_msd_df2 ) # run function to make excel with all parameters
-
-          
-
-
-
-    ############################################
-    # for our own HMM if we simulate groundtruth and test it on it
-
-
-    def calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag ):
-
-        df_values=pd.read_csv(f1)
-        image_path_lys=f1.split("csv")
-        image_path=image_path_lys[0]
-    
-        df_values= df_values.iloc[: , 1:]
-        
-        for index, row in df_values.iterrows():
-            print("running simulation nr: ", index)
-            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
-            sim_tracks=make_dataset_csv(trajectories, labels)
-            deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks, min_track_length)
-            mean_msd_df=msd_mean_track(msd_df, dt)
-            deep_df2= run_traces_wrapper(deep_df1, dt)
-          
-            deep_df3=computing_distance_wrapper(deep_df2)
-            deep_df4=calculate_angles_wrapper(deep_df3)
-            deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
-            deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-            grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-            deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
-            
-            
-            sim_tracks_2=make_GT_consecutive(sim_tracks)
-            list_accuracy=calculate_accuracy(sim_tracks_2, deep_df_short2, mean_msd_df)
-        
-            if plotting_saving_nice_image_flag==1:
-                image_path1=image_path+str(index)+".tiff"
-                plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
-            if tracks_saving_flag==1:
-                path_out_simulated_tracks_lys=f1.split(".csv")
-                path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
-                sim_tracks_2.to_csv(path_out_simualted_tracks)
-                
-            if index==0:
-                list_final_accuracy=[list_accuracy]
-            else:
-                list_final_accuracy.append(list_accuracy)
-            
-        
-        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" ])
-  
-        df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
-        path_out_accuracy_lys=f1.split(".csv")
-        path_out_accuracy=path_out_accuracy_lys[0] +"_sim_accuracy_results.xlsx"
-        writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
-        df_final_parameters_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
-        writer.close()
-
-    ##########################################
+    ##################################
     # for our own hmm to simulate trakcs based on parameters in file, with multiple noise levels,
     #  then directly evalualte and generate separate result accuracy tables in one loop:
 
@@ -264,12 +77,10 @@ if __name__ == '__main__':
             trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
             sim_tracks=make_dataset_csv(trajectories, labels)
             print(sim_tracks)
-
-            #insert the noise part here: 
+ 
             for sigma_nm in noise_list:
                 sim_tracks_noise=add_noise(sigma_nm, sim_tracks)
 
-            ####
                 deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks_noise, min_track_length)
                 mean_msd_df=msd_mean_track(msd_df, dt)
                 deep_df2= run_traces_wrapper(deep_df1, dt)
@@ -278,10 +89,7 @@ if __name__ == '__main__':
                 deep_df4=calculate_angles_wrapper(deep_df3)
                 deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
                 deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-                #grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
                 grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-
-                #deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
                 deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
 
                 
@@ -297,35 +105,15 @@ if __name__ == '__main__':
                     path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
                     sim_tracks_2.to_csv(path_out_simualted_tracks)
                     
-                #if index==0:
-                   # list_final_accuracy=[list_accuracy]
-
-                #else:
-                    #list_final_accuracy.append(list_accuracy)
                 
-                ## need to add differnt simgas here:
-                #list_final_accuracy.append(sigma_nm)
-                #print("thisislistfinalaccurac:",list_final_accuracy)
-                #flat_accuracy = [item for sub in list_final_accuracy for item in (sub if isinstance(sub, list) else [sub])]
-                #flat_accuracy = list_accuracy + [sigma_nm]
-                #print(flat_accuracy)
-                #print(flat_accuracy.shape())
-                #print(len(flat_accuracy))
-                # create ONE row
                 result_row = list_accuracy + [sigma_nm]
-
-                # store row
                 all_results.append(result_row)
 
             
             
             df_final_accuracy=pd.DataFrame(all_results, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" , "sigma_nm"])
-            print(df_final_accuracy)
-            #print(df_final_accuracy.shape())
-            print("here values",df_values)
             df_values_repeated = df_values.loc[df_values.index.repeat(len(noise_list))].reset_index(drop=True)
             df_final_parameters_out = pd.concat( [df_values_repeated, df_final_accuracy],axis=1)
-
 
             #df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
             path_out_accuracy_lys=f1.split(".csv")
@@ -338,56 +126,6 @@ if __name__ == '__main__':
 
 
     #############################################
-    ### mmmkae function that takes in previosuly generated tracks (with GT)and calculates accuracy:
-
-    def calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag):
-        onlyfiles = [f for f in listdir(folderpath1) if isfile(join(folderpath1, f))]
-        index=0
-        names_list=[]
-        for i in onlyfiles:
-            
-            if i.endswith(".csv"):
-                path=os.path.join(folderpath1, i)
-                print(path)
-                names_path_lys=path.split("\\")
-                names=names_path_lys[-1]
-                #print(names)
-                names_list.append(names)
-
-
-                #image_path=image_path_lys[0] +"svg"
-                tracks_input, deep_df1, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
-                #print(tracks_input)
-                mean_msd_df=msd_mean_track(msd_df, dt)
-
-                deep_df2= run_traces_wrapper(deep_df1, dt)
-                deep_df3=computing_distance_wrapper(deep_df2)
-                deep_df4=calculate_angles_wrapper(deep_df3)
-                deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
-                deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short)
-                list_accuracy=calculate_accuracy(tracks_input, deep_df_short2, mean_msd_df)
-
-                if index==0:
-                    list_final_accuracy=[list_accuracy]
-                    index=1
-                else:
-                    list_final_accuracy.append(list_accuracy)
-                
-            
-        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" ])
-        df_final_accuracy["track_name"]=names_list
-        print(df_final_accuracy)
-        path_out_accuracy=folderpath1+"\\tracks_accuracy_results.xlsx"
-        #path_out_accuracy=path_out_accuracy_lys[0] +"_sim_accuracy_results.xlsx"
-        writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
-        df_final_accuracy.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
-        writer.close()
-
-
-
     #############################################
     # add noise to given track dataframe:
 
@@ -416,7 +154,7 @@ if __name__ == '__main__':
     ###################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=5
+        N=500
         T=200
         D=0.001
         DS2=1
@@ -2125,108 +1863,23 @@ if __name__ == '__main__':
     ############################################
     # run final wrapper functions:
     ############################################
-    ## for one file with spt-tracks:
+    # for generating tracks aevualte them and also togheter with defined noise level:
+    # f1= input path to csv where simulation parameters are stored
+    # noise_list: eg. noise_list=[0, 5, 10, 15]: sigma values of noise to add to each timepoint
+    # wrapper function: calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
 
-    # f1= input path to file to be analyzed (see example below)
-    # f2= outpath where images should be stored (eg. here stored at same location as input file)
-    # min_track_length=25 # parameter to set threshold of minimun length of track duration (eg. 25 time points)
-    # dt = 0.05  # frame rate in seconds (eg. 50 milliseconds)
-    # plotting_flag =0 (0= no plotting, 1=plotting)
-    # function:
-    # wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
-
-    # example:
-    #f1=r"C:\Users\miche\Desktop\Test_deepSPT\tracks to check time in t0\Long_tracks_cell6-3_1476.csv"
-    #f1=r"C:\Users\miche\Desktop\simualted tracks\datasets_folder\confinement_0_tracks.csv"
-    #f2=f1
-    #dt=0.05
-    #plotting_flag=0
-    #min_track_length=25
-
-    #wrapper_one_file(f1, f2, min_track_length, dt, plotting_flag) 
-    ############################################
-    ## for folder with multiple real tracks:
-
-    # folderpath1 = path to folder, min_track_length=25, dt=0.05, plotting_flag(0=no plotting, 1=plotting)
-    # function:
-    # wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
-    
-    # example:
-    #dt=0.1
-    #plotting_flag=0
-    #min_track_length=25
-    #folderpath1=r"Z:\labs\Lab_Gronnier\Michelle\TIRFM\7.8.24_At_BAK1_mut\D122A_BL\cluster_diff_plant1"
-    #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\TIRFM\17.10.24_At_MADS_mut\3451-3\cleaned"
-    #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\test\track"
-
-    #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\TIRFM\HUAN\26.11.24_huan\3802_padbon_FLS2\cleaned"
-
-
-    #wrapper_multiple_files(folderpath1, min_track_length, dt, plotting_flag) 
-
-    ############################################
-    ## for simulating tracks based on parameters stored in a file:
-
-    # f1= input path to values for sim (a .csv file)
-    # dt=0.1 
-    # plotting_flag=0
-    # min_track_length=25
-    # plotting_saving_nice_image_flag=0 (0=no saving, 1=saving)
-    # tracks_saving_flag=0 (0= no saving, 1=saving tracks.csv)
-    # function:
-    # read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
-    
-    # example:
-
-    #plotting_flag=0
-    #dt=0.1
-    #min_track_length=25
-   # plotting_saving_nice_image_flag=0
-    #tracks_saving_flag=0
-    
-    #f1=r"Z:\labs\Lab_Gronnier\Michelle\simulated_tracks\test_values5.csv"
-    #f1=r"C:\Users\miche\Desktop\simualted tracks\plots\plot_values_D0.001_for_mean_clusters_plot.csv"
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\simulation_parameters_for_Sven\Sven_values_D0.001_N500_T200_test.csv"
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\tracks_16.1.25_test_D0.01\D0.01_N500_T200_for_philip_test.csv"
-    #read_in_values_and_execute(f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag, tracks_saving_flag)
-
-
-#### for our own hmm to evaulate while simualting tracks:
-    #f1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\HMM_model\test_model4\sim_values6.1_D0.001_N500_T200_6.12.24.csv"
-    #f1=r"Z:\Research\Members\Michelle\simulated_tracks\sim_values_for_accruracy_new_HMM\sim_values_25.3.25_D0.001_N500_T200\sim_values1.1_D0.001_N500_T200_25.3.25.csv"
-    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
-
-
-
-### for files oin a folder with real tracak for our own hmm:
-### working on implementaiton of julines STAs only in the middle
 
     plotting_flag=0
-    dt=0.05
+    dt=0.1
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
     
-
-    #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
-    #folderpath1=r"Z:\Research\Members\Michelle\TIRFM\24.09.10_At_FLS2_MADs\pub10_FLS2_3248-4\cleaned_casta\t"
-
-
-    #calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag)
-
-
-    ### for accuracy based on previosuly generated tracks in a folder:
-
-    #folderpath1=r"X:\labs\Lab_Gronnier\Michelle\simulated_tracks\DC_MSS_fingperprint\DC_MSS_1\DC_MSS_sim2_D0.015_N500_T200"
-    #calculating_HMM_accuracy_from_tracks(folderpath1, min_track_length, dt, plotting_flag)
-    
-    # for generating tracks aevualte them and also togheter with defined noise level:
     # noise_list is list of sigma values in nm to be checked!
     noise_list=[0, 5, 10, 15]
     f1=r"C:\Users\miche\Desktop\test_MSD\sim_values\sim_test.csv"
     calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
 
-    #calulate_hmm_precison_with_simulating_tracks( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
 
 
 
