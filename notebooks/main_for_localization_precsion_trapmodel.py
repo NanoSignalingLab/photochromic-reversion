@@ -63,7 +63,7 @@ if __name__ == '__main__':
     # for our own hmm to simulate trakcs based on parameters in file, with multiple noise levels,
     #  then directly evalualte and generate separate result accuracy tables in one loop:
 
-    def calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list ):
+    def calulate_hmm_precison_with_simulating_tracks_and_noise_trappmodel( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list ):
 
         df_values=pd.read_csv(f1)
         image_path_lys=f1.split("csv")
@@ -74,7 +74,7 @@ if __name__ == '__main__':
         
         for index, row in df_values.iterrows():
             print("running simulation nr: ", index)
-            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
+            trajectories, labels =make_simulation(row['traps'], row['radius'], row["prob_binding"], row["alphas"], row["prob_unbinding"])
             sim_tracks=make_dataset_csv(trajectories, labels)
             print(sim_tracks)
  
@@ -95,6 +95,7 @@ if __name__ == '__main__':
                 
                 
                 sim_tracks_2=make_GT_consecutive(sim_tracks_noise)
+                print("consecutive sim_tracks",sim_tracks_2)
                 list_accuracy=calculate_accuracy(sim_tracks_2, deep_df_short2, mean_msd_df)
             
                 if plotting_saving_nice_image_flag==1:
@@ -153,26 +154,33 @@ if __name__ == '__main__':
 
     ###################
 
-    def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=500
-        T=200
-        D=0.001
-        DS2=1
+    def make_simulation(number_traps, radius_traps, prob_binding, alphas_value, prob_unbinding):
+        N=1
+        T=500
+        D=0.01
         L = 1.5*128 # enalrge field of fiew to avoid boundy effects
-        compartments_center = models_phenom._distribute_circular_compartments(Nc = number_compartments, 
-                                                                            r = radius_compartments,
-                                                                            L = L)                                
 
-        trajs_model5, labels_model5 = models_phenom().confinement(N = N,
-                                                            L = L,
-                                                            Ds = [DS1*D, DS2*D],
-                                                            comp_center = compartments_center,
-                                                            r = radius_compartments,
-                                                            trans = trans_value, # Boundary transmittance
-                                                            T=T,
-                                                            alphas=[1, alphas_value])
-        return trajs_model5, labels_model5
-    ################################################
+        #number_traps = 350
+        print(number_traps)
+        number_traps=int(number_traps)
+        print(type(number_traps))
+        traps_positions = np.random.rand(number_traps, 2)*L
+
+        trajs_model4, labels_model4 = models_phenom().immobile_traps(N = N,
+                                                             T = T,                
+                                                             L = L,
+                                                             r = radius_traps, # Radius of the traps was 2
+                                                             Pu = prob_unbinding,#0.01, # Unbinding probability
+                                                             Pb = prob_binding,# 1, # Binding probability
+                                                             Ds = D, # Diffusion coefficients of moving state
+                                                             alphas = alphas_value, # Anomalous exponents of moving state # default was 1.6
+                                                             Nt = number_traps, # Number of traps
+                                                             traps_pos = traps_positions
+                                                             )
+
+
+        return trajs_model4, labels_model4
+    ###############################################
     def make_dataset_csv(traj, labels):
         for i in range (0, traj.shape[1]):
                 arry_temp=traj[:, i]
@@ -1470,8 +1478,10 @@ if __name__ == '__main__':
 
     def make_GT_consecutive(sim_tracks_test):
         sim_tracks = sim_tracks_test
+        print(sim_tracks["pm2"].tolist())
         sim_tracks["pm2"]= sim_tracks["pm2"].replace(1,0)
         sim_tracks["pm2"]= sim_tracks["pm2"].replace(2,1)
+        
         
         grouped_plot= sim_tracks.sort_values(["POSITION_T"]).groupby("TRACK_ID")
         c2=0
@@ -1509,6 +1519,10 @@ if __name__ == '__main__':
             c2+=1
             c3=0
         lys_final_flat=list(chain.from_iterable(lys_final))
+        print("GT list", lys_final_flat)
+        print(sim_tracks["pm2"].unique())
+        print(sim_tracks["pm2"].value_counts())
+
         
         sim_tracks["GT"]=lys_final_flat
         return sim_tracks
@@ -1525,6 +1539,7 @@ if __name__ == '__main__':
       
         arry_sim=sim_tracks2["GT"] # if 0= confined, 1= not
         arry_finger=finger_tracks["in_hull"] # if 0= confined, 1=not
+        print("CASTA",arry_finger.tolist() )
        
         both_confined=0
         both_unconfined=0
@@ -1747,7 +1762,7 @@ if __name__ == '__main__':
             #logD_difference.append(abs(logD_means_finger[i]-logD_means_sim[i]))
             #logD_cluster_difference.append(abs(logD_mean_cluster_finger[i]-sim_cluster_logD))
         logD_mean_diff=mean(logD_difference)
-        if mean_clustered_points!=0:
+        if logD_cluster_difference:
             logD_mean_cluster_diff=mean(logD_cluster_difference)
         else:
             logD_mean_cluster_diff=0
@@ -1869,16 +1884,17 @@ if __name__ == '__main__':
     # wrapper function: calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
 
 
-    plotting_flag=0
+    plotting_flag=1
     dt=0.1
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
     
     # noise_list is list of sigma values in nm to be checked!
-    noise_list=[0, 5, 10, 15]
-    f1=r"C:\Users\miche\Desktop\test_MSD\sim_values\sim_test.csv"
-    calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
+    #noise_list=[0, 5, 10, 15]
+    noise_list=[5]
+    f1=r"C:\Users\miche\Desktop\test_MSD\test_traps\sim_test.csv"
+    calulate_hmm_precison_with_simulating_tracks_and_noise_trappmodel( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
 
 
 
