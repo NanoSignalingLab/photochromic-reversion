@@ -154,7 +154,7 @@ if __name__ == '__main__':
     ###################
 
     def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
-        N=2
+        N=500
         T=200
         D=0.001
         DS2=1
@@ -1871,15 +1871,15 @@ if __name__ == '__main__':
 
 
     plotting_flag=0
-    dt=1
+    dt=0.1
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
     
     # noise_list is list of sigma values in nm to be checked!
     #noise_list=[0, 5, 10, 15]
-    noise_list=[0]
-    f1=r"C:\Users\miche\Desktop\test_MSD\sim_values\sim_test.csv"
+    noise_list=[0, 5, 10, 15, 20, 30, 40]
+    f1=r"C:\Users\miche\Desktop\test_MSD\test_conf\conf_N500_D0.001.csv"
     calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
 
 
