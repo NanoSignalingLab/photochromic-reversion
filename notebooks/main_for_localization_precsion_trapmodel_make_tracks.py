@@ -155,7 +155,7 @@ if __name__ == '__main__':
     ###################
 
     def make_simulation(number_traps, radius_traps, prob_binding, alphas_value, prob_unbinding):
-        N=500
+        N=100
         T=200
         D=0.01
         L = 1.5*128 # enalrge field of fiew to avoid boundy effects
@@ -1888,12 +1888,12 @@ if __name__ == '__main__':
     dt=0.1
     min_track_length=25
     plotting_saving_nice_image_flag=0
-    tracks_saving_flag=0
+    tracks_saving_flag=1
     
     # noise_list is list of sigma values in nm to be checked!
     #noise_list=[0, 5, 10, 15]
-    noise_list=[5, 10, 20, 30]
-    f1=r"C:\Users\miche\Desktop\test_MSD\test_traps\sim_test.csv"
+    noise_list=[1]
+    f1=r"Y:\Research\Members\Michelle\simulated_tracks\sim_values_for_noisetest\trapmodel_tracks\sim_test.csv"
     calulate_hmm_precison_with_simulating_tracks_and_noise_trappmodel( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
 
 
