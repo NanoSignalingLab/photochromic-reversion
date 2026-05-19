@@ -55,15 +55,15 @@ if __name__ == '__main__':
     import stochastic
     #stochastic.random.seed(3)
     #np.random.seed(7)
-    # this main is for simulating tracks and evaluating them with added noise:
+    # this main is for simulating tracks with different frame rates
 
     
     ##################################
     ##################################
-    # for our own hmm to simulate trakcs based on parameters in file, with multiple noise levels,
+    # for our own hmm to simulate trakcs based on parameters in file
     #  then directly evalualte and generate separate result accuracy tables in one loop:
 
-    def calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list ):
+    def calulate_hmm_precison_with_simulating_tracks_test_frame_rate( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, frame_i ):
 
         df_values=pd.read_csv(f1)
         image_path_lys=f1.split("csv")
@@ -74,86 +74,59 @@ if __name__ == '__main__':
         
         for index, row in df_values.iterrows():
             print("running simulation nr: ", index)
-            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"])
+            trajectories, labels =make_simulation(row['compartements'], row['radius'], row["DS1"], row["alphas"], row["trans"], frame_i)
             sim_tracks=make_dataset_csv(trajectories, labels)
-            print(sim_tracks)
+            #print(sim_tracks)
  
-            for sigma_nm in noise_list:
-                sim_tracks_noise=add_noise(sigma_nm, sim_tracks)
-
-                deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks_noise, min_track_length)
-                mean_msd_df=msd_mean_track(msd_df, dt)
-                deep_df2= run_traces_wrapper(deep_df1, dt)
-            
-                deep_df3=computing_distance_wrapper(deep_df2)
-                deep_df4=calculate_angles_wrapper(deep_df3)
-                deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
-                deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
-                grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
-                deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
-
-                
-                
-                sim_tracks_2=make_GT_consecutive(sim_tracks_noise)
-                list_accuracy=calculate_accuracy(sim_tracks_2, deep_df_short2, mean_msd_df)
-            
-                if plotting_saving_nice_image_flag==1:
-                    image_path1=image_path+str(index)+".tiff"
-                    plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
-                if tracks_saving_flag==1:
-                    path_out_simulated_tracks_lys=f1.split(".csv")
-                    path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
-                    sim_tracks_2.to_csv(path_out_simualted_tracks)
-                    
-                
-                result_row = list_accuracy + [sigma_nm]
-                all_results.append(result_row)
-
-            
-            
-            df_final_accuracy=pd.DataFrame(all_results, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" , "sigma_nm"])
-            df_values_repeated = df_values.loc[df_values.index.repeat(len(noise_list))].reset_index(drop=True)
-            df_final_parameters_out = pd.concat( [df_values_repeated, df_final_accuracy],axis=1)
-
-            #df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
-            path_out_accuracy_lys=f1.split(".csv")
-            path_out_accuracy=path_out_accuracy_lys[0] +"_sim_accuracy_results_sigma_"+str(sigma_nm)+".xlsx"
-            writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
-            df_final_parameters_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
-            writer.close()
-
-
-
-
-    #############################################
-    #############################################
-    # add noise to given track dataframe:
-
-    def add_noise(sigma_nm, tracks_df):
-        tracks_df_noisy = tracks_df.copy()
-
-        pixel_size_nm = 100
-        sigma = sigma_nm / pixel_size_nm
-
-        tracks_df_noisy["POSITION_X"] += np.random.normal(
-            loc=0,
-            scale=sigma,
-            size=len(tracks_df_noisy))
-
-        tracks_df_noisy["POSITION_Y"] += np.random.normal(
-            loc=0,
-            scale=sigma,
-            size=len(tracks_df_noisy) )
-
-        return tracks_df_noisy
         
+            deep_df1, traces, lys_x, lys_y, msd_df= make_deep_df(sim_tracks, min_track_length)
+            mean_msd_df=msd_mean_track(msd_df, dt)
+            deep_df2= run_traces_wrapper(deep_df1, dt)
+        
+            deep_df3=computing_distance_wrapper(deep_df2)
+            deep_df4=calculate_angles_wrapper(deep_df3)
+            deep_df5=calculate_KDE_wrapper(lys_x, lys_y, deep_df4)
+            deep_df6=calculate_intersections_wrapper(lys_x, lys_y, deep_df5)
+            grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_points2, mean_msd_df1, lys_begin_end_big2, lys_points_big_only_middle2=plotting_all_features_and_caculate_hull(deep_df6, mean_msd_df, plotting_flag)
+            deep_df_short2=convex_hull_wrapper(grouped_plot,lys_area2, lys_perimeter2, lys_hull2, lys_points_big2, deep_df_short, lys_begin_end_big2, lys_points_big_only_middle2)
+
+            
+            sim_tracks_2=make_GT_consecutive(sim_tracks)
+            list_accuracy=calculate_accuracy(sim_tracks_2, deep_df_short2, mean_msd_df)
+        
+            if plotting_saving_nice_image_flag==1:
+                image_path1=image_path+str(index)+".tiff"
+                plot_GT_and_finger(sim_tracks_2, deep_df_short2, image_path1)
+            if tracks_saving_flag==1:
+                path_out_simulated_tracks_lys=f1.split(".csv")
+                path_out_simualted_tracks=path_out_simulated_tracks_lys[0]+"_simulated_tracks_"+str(index)+"_.csv"
+                sim_tracks_2.to_csv(path_out_simualted_tracks)
 
 
+            if index==0:
+                list_final_accuracy=[list_accuracy]
+            else:
+                list_final_accuracy.append(list_accuracy)
+            
+        
+        df_final_accuracy=pd.DataFrame(list_final_accuracy, columns=["percent_both_confined", "percent_both_unconfined","percent_correct","percent_correct_confined","percent_correct_unconfined","percent_sim_confined","percent_sim_unconfined", "precision_confined",  "precision_unconfined","recall_confined", "recall_unconfined",  "fbeta_confined","fbeta_confined","fbeta_confined", "support_confined", "support_unconfined", "logD_mean_diff", "logD_mean_cluster_diff", "mean_clusters_per_track", "total_time_in_cluster_per_track", "mean_time_in_clusters_per_track", "mean_clustered_points" ])
+  
+        df_final_parameters_out=pd.concat([df_values,df_final_accuracy],axis=1)
+        path_out_accuracy_lys=f1.split(".csv")
+        path_out_accuracy=path_out_accuracy_lys[0] +"_sim_accuracy_results_frate_"+str(frame_i)+".xlsx"
+        writer = pd.ExcelWriter(path_out_accuracy , engine='xlsxwriter')
+        df_final_parameters_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
+        writer.close()
 
+            
+          
+
+
+    #############################################
 
     ###################
 
-    def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value):
+    def make_simulation(number_compartments, radius_compartments, DS1, alphas_value, trans_value, frame_i):
         N=500
         T=200
         D=0.001
@@ -170,7 +143,9 @@ if __name__ == '__main__':
                                                             r = radius_compartments,
                                                             trans = trans_value, # Boundary transmittance
                                                             T=T,
-                                                            alphas=[1, alphas_value])
+                                                            alphas=[1, alphas_value], deltaT=frame_i)
+        
+
         return trajs_model5, labels_model5
     ################################################
     def make_dataset_csv(traj, labels):
@@ -297,7 +272,7 @@ if __name__ == '__main__':
             lys2.append(logD)
 
         track_means_df = pd.DataFrame(np.column_stack([lys, lys2]), columns=["msd", "logD"])
-        print("msdx adn logDs",track_means_df)
+        #print("msdx adn logDs",track_means_df)
         
         return track_means_df
 
@@ -1866,21 +1841,22 @@ if __name__ == '__main__':
     ############################################
     # for generating tracks aevualte them and also togheter with defined noise level:
     # f1= input path to csv where simulation parameters are stored
-    # noise_list: eg. noise_list=[0, 5, 10, 15]: sigma values of noise to add to each timepoint
-    # wrapper function: calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
+    # 
+    # wrapper function: calulate_hmm_precison_with_simulating_tracks_test_frame_rate( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, frame_i )
 
 
     plotting_flag=0
-    dt=0.1
+    #dt=0.1 new dt is frame_i
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
     
-    # noise_list is list of sigma values in nm to be checked!
-    #noise_list=[0, 5, 10, 15]
-    noise_list=[0, 5, 10, 15, 20, 30, 40]
-    f1=r"C:\Users\miche\Desktop\test_MSD\test_conf\conf_N500_D0.001.csv"
-    calulate_hmm_precison_with_simulating_tracks_and_noise( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, noise_list)
+    # frame list is list of frame rates values in nm to be checked!
+    f1=r"C:\Users\miche\Desktop\test_MSD\sim_values\sim_test.csv"
+    frame_list=[1, 0.1, 0.05]
+    for frame_i in frame_list:
+        dt=frame_i
+        calulate_hmm_precison_with_simulating_tracks_test_frame_rate( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, frame_i)
 
 
 
