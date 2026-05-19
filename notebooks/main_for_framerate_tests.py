@@ -281,7 +281,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open(r"C:\Users\miche\Documents\photochromic-reversion\casta\data\model_4.pkl", "rb") as file: 
+        with open(r"C:\Users\bcgvm01\Desktop\photochromic-reversion\casta\data\model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -1852,8 +1852,8 @@ if __name__ == '__main__':
     tracks_saving_flag=0
     
     # frame list is list of frame rates values in nm to be checked!
-    f1=r"C:\Users\miche\Desktop\test_MSD\sim_values\sim_test.csv"
-    frame_list=[1, 0.1, 0.05]
+    f1=r"X:\Research\Members\Michelle\simulated_tracks\sim_values_for_frame_rate\D0.001_N500_T200\sim_values1_D0.001_N500_T200.csv"
+    frame_list=[1.0, 0.2, 0.15,0.1, 0.05, 0.25]
     for frame_i in frame_list:
         dt=frame_i
         calulate_hmm_precison_with_simulating_tracks_test_frame_rate( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, frame_i)
