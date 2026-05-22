@@ -768,7 +768,7 @@ if __name__ == '__main__':
 
                             #lys_starting_end_points.append(["E"]) # clsuter in end of track
                             lys_test1.append("E")
-                          
+                            lys_start_end_cluster.append(lys_test1)
 
                         else:
                             pos_all = np.vstack((pos_all,m))
