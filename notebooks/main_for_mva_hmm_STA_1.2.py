@@ -32,7 +32,7 @@ from shapely import intersection
 import itertools
 from statistics import mean 
 from scipy.spatial import ConvexHull
-from matplotlib.path import Path
+from pathlib import Path
 import os
 from os import listdir
 from os.path import isfile, join
@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open(r"C:\Users\bcgvm01\Desktop\photochromic-reversion\casta\data\model_4.pkl", "rb") as file: 
+        with open(r"/Users/schulzp9/Documents/git/photochromic-reversion/casta/data/model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -527,16 +527,10 @@ if __name__ == '__main__':
 
         ########################### end intersections
 
-    
-    
-    
-    ########################################### end fingerprint states wrapper
-
     ############## plot all features togheter (plus convex hull):
     def plotting_all_features_and_caculate_hull(deep_df, mean_msd_df, plotting_flag): # add ture =1or false =0 for plotting yes or no
         print("plotting all features")
         #print("heere is deepdf",deep_df)
-
 
         deep_df_short=deep_df[["angle_cont", "hmm_states","dist_cont" ,"intersect_cont" , "KDE_cont"]]
         deep_df_short["sum_rows"] = deep_df_short.sum(axis=1)
@@ -983,12 +977,10 @@ if __name__ == '__main__':
     def make_results_file(f2, deep_df_short, dt, mean_msd_df):
         #print("this is deepdfshort",deep_df_short)
 
-        lys_string=f2.split("\\")
-        outpath1=lys_string[:-1]
-        outpath2='\\'.join(outpath1)
-        name=lys_string[-1].split(".csv")[0]
-        outpath3=outpath2+"\\"+name
-        print("saving results file in:", outpath3 )
+        p = Path(f2)
+        name = p.stem
+        outpath3 = p.parent / name
+        print("saving results file in:", outpath3)
 
         # adding hull area and number of points in clusters
         lys_nr_of_clusters=[]
@@ -1127,7 +1119,7 @@ if __name__ == '__main__':
 
 
 
-        outpath4=outpath3+"_CASTA_results"+".xlsx"
+        outpath4 = str(outpath3) + "_CASTA_results" + ".xlsx"
         writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
         casta_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
         writer.close()
@@ -1152,9 +1144,8 @@ if __name__ == '__main__':
     image_saving_flag="svg"
 
 
-
-
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
     #folderpath1=r"D:\photochromic_reversion_data\ts
     folderpath1=r"C:\Users\bcgvm01\Desktop\test"
+    folderpath1=r"/Users/schulzp9/Desktop/sta_test"
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)

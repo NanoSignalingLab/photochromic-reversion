@@ -1852,8 +1852,8 @@ if __name__ == '__main__':
     tracks_saving_flag=0
     
     # frame list is list of frame rates values in nm to be checked!
-    f1=r"X:\Research\Members\Michelle\simulated_tracks\sim_values_for_frame_rate\D0.001_N500_T200\sim_values1_D0.001_N500_T200.csv"
-    frame_list=[1.0, 0.2, 0.15,0.1, 0.05, 0.25]
+    f1=r"/Volumes/z6p/Research/Members/Michelle/simulated_tracks/sim_values_for_frame_rate/D0.001_N500_T200_correct_deltaT/sim_values1_D0.001_N500_T200.csv"
+    frame_list=[0.25, 0.5, 1.0, 1.5, 2.0, 2.5]
     for frame_i in frame_list:
         dt=frame_i
         calulate_hmm_precison_with_simulating_tracks_test_frame_rate( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag, frame_i)
