@@ -32,7 +32,7 @@ from shapely import intersection
 import itertools
 from statistics import mean 
 from scipy.spatial import ConvexHull
-from matplotlib.path import Path
+from pathlib import Path
 import os
 from os import listdir
 from os.path import isfile, join
@@ -91,20 +91,49 @@ if __name__ == '__main__':
 
                 mean_msd_df2=caluclate_diffusion_non_STA_tracks(deep_df_short2,mean_msd_df1 )
 
-                #insert resuilts file for point wise reuslts here:
+                #insert results file for point wise results here:
 
-
+                per_pos_df = save_per_position_file(path, deep_df_short2)
                 #plotting_final_image2(deep_df_short, lys_points_big2, lys_points_big_only_middle2, image_path, image_saving_flag)
                 casta_df_out=make_results_file(path, deep_df_short2, dt,mean_msd_df2 ) # run function to make excel with all parameters
 
-
-        
-           
-            
-          
-
-
-    #############################################
+    def save_per_position_file(path, deep_df_short):
+        """
+        Save per-position model decisions as a CSV that the Track Annotator can load.
+    
+        Columns in output:
+            TRACK_ID:    original track identifier (renamed from 'tid')
+            POSITION_X:  x coordinate
+            POSITION_Y: y coordinate
+            MODEL: model decision: 0 = confined, 1 = free  (from in_hull)
+            GT: empty column for human annotation (filled in the annotator)
+    
+        Parameters
+        ----------
+        path : str
+            Full path of the input CSV (same one passed to load_file / make_results_file).
+        deep_df_short : pd.DataFrame
+            The dataframe returned by convex_hull_wrapper, containing at least
+            'tid', 'pos_x', 'pos_y', 'in_hull'.
+        """
+        print(path)
+        p = Path(path)
+        name = p.stem
+        outpath3 = p.parent / name
+    
+        per_pos = deep_df_short[["tid", "pos_x", "pos_y", "in_hull"]].copy()
+        per_pos = per_pos.rename(columns={
+            "tid":     "TRACK_ID",
+            "pos_x":   "POSITION_X",
+            "pos_y":   "POSITION_Y",
+            "in_hull": "MODEL",
+        })
+        per_pos["GT"] = ""          # blank — to be filled by human annotator
+    
+        out_csv = str(outpath3) + "_per_position.csv"
+        per_pos.to_csv(out_csv, index=False)
+        print("Saved per-position file:", out_csv)
+        return per_pos
 
     ###################
 
@@ -263,7 +292,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open(r"C:\Users\miche\Documents\photochromic-reversion\casta\data\model_4.pkl", "rb") as file: 
+        with open(r"/Users/schulzp9/Documents/git/photochromic-reversion/casta/data/model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -592,63 +621,6 @@ if __name__ == '__main__':
         return deep_df
 
         ########################### end intersections
-    
-
-    ########################## get fingertprint states:
-
-    def fingerprints_states_wrapper(lys_states, deep_df):
-
-        for i in range(len(lys_states)): 
-            lys_states[i].append(1)
-        flat_lys=reduce(operator.concat, lys_states)
-        deep_df["fingerprint_state"]=flat_lys
-
-        ## all fingerprint states
-        deep_df['state_level'] = pd.cut(deep_df["fingerprint_state"], [-1.0, 0.0, 1.0, 2.0,  3.0], labels=["zero" , "one", "two", "three"], include_lowest=True, ordered= False)
-        deep_df['state_level'] = deep_df['state_level'].astype(str)
-        
-        ## change state 1 to state zero: 
-        deep_df.loc[deep_df['fingerprint_state'] == 1, 'fingerprint_state'] = 0 
-
-        ########## find consecutive zero state fingerprints:
-        grouped_plot= deep_df.sort_values(["pos_t"]).groupby("tid")
-        c2=0
-        lys_final=[]
-        for i in grouped_plot["tid"].unique():
-            lys_six=[]
-            s= grouped_plot.get_group(i[0])
-            c3=0
-            while c3<len(s["pos_x"]): 
-
-                if c3>=len(s["pos_x"])-11:
-                    lys_six.append([1]*1) 
-                else:
-                    if sum(s["fingerprint_state"][c3:c3+12])==0:
-                        lys_six.append([0]*1)
-                    elif sum(s["fingerprint_state"][c3:c3+12])!=0 and sum(s["fingerprint_state"][c3:c3+11])==0:
-                        lys_six.append([0]*11)
-                        c2+=10
-                        c3+=10
-                    else:
-                        lys_six.append([1]*1)
-                c2+=1
-                c3+=1
-            lys_six_flat=list(chain.from_iterable(lys_six))
-            lys_final.append(lys_six_flat)
-            c2+=1
-            c3=0
-
-        lys_final_flat=list(chain.from_iterable(lys_final))
-        deep_df["state_0_cont"]=lys_final_flat
-        deep_df['state_0_cont_level'] = pd.cut(deep_df["state_0_cont"], [-1.0, 0.0, 1.0], labels=["zero" , "one"], include_lowest=True, ordered= False)
-        deep_df['state_0_cont_level'] = deep_df['state_0_cont_level'].astype(str)
-
-        return deep_df
-    
-    
-    ########################################### end fingerprint states wrapper
-
-
 
 
     ############## plot all features togheter (plus convex hull):
@@ -1171,12 +1143,10 @@ if __name__ == '__main__':
     def make_results_file(f2, deep_df_short, dt, mean_msd_df):
         print("this is deepdfshort",deep_df_short)
 
-        lys_string=f2.split("\\")
-        outpath1=lys_string[:-1]
-        outpath2='\\'.join(outpath1)
-        name=lys_string[-1].split(".csv")[0]
-        outpath3=outpath2+"\\"+name
-        print("saving results file in:", outpath3 )
+        p = Path(f2)
+        name = p.stem
+        outpath3 = p.parent / name
+        print("saving results file in:", outpath3)
 
         # adding hull area and number of points in clusters
         lys_nr_of_clusters=[]
@@ -1315,7 +1285,7 @@ if __name__ == '__main__':
 
 
 
-        outpath4=outpath3+"_CASTA_results"+".xlsx"
+        outpath4=str(outpath3)+"_CASTA_results"+".xlsx"
         writer = pd.ExcelWriter(outpath4 , engine='xlsxwriter')
         casta_df_out.to_excel(writer, sheet_name='Sheet1', header=True, index=False)
         writer.close()
@@ -1738,88 +1708,5 @@ if __name__ == '__main__':
     dt=0.1
     
     # folder of real tracks ot analyze
-    f1=r"C:\Users\miche\Desktop\test_MSD\test_real_tracks"
+    f1=r"/Users/schulzp9/Desktop/sta_test"
     calulate_hmm_STA_per_timepoint( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-            
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              
-        
-
-
-
-
-
-
-
-
-
-
-
-      
-        
-
-
-                
-
-
-
-
-        
-
-
-       
-
-
-
-
-
-
-
-
-
-
-    
