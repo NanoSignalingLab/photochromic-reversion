@@ -292,7 +292,7 @@ if __name__ == '__main__':
 
     def run_traces_wrapper(deep_df, dt): 
 
-        with open(r"/Users/schulzp9/Documents/git/photochromic-reversion/casta/data/model_4.pkl", "rb") as file: 
+        with open(r"C:\Users\miche\Documents\photochromic-reversion\casta\data\model_4.pkl", "rb") as file: 
             model = pickle.load(file)
         print("loading HMM model")
         window_size=10
@@ -1705,8 +1705,8 @@ if __name__ == '__main__':
     min_track_length=25
     plotting_saving_nice_image_flag=0
     tracks_saving_flag=0
-    dt=0.1
+    dt=0.05
     
     # folder of real tracks ot analyze
-    f1=r"/Users/schulzp9/Desktop/sta_test"
+    f1=r"Y:\Research\Members\Michelle\CASTA_MS\MS_new\CASTA_handlabeled_groundtruth\1474\18.5.25_2610_BL"
     calulate_hmm_STA_per_timepoint( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
