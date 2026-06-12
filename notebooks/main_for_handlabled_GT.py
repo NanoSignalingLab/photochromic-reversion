@@ -107,6 +107,7 @@ if __name__ == '__main__':
             POSITION_Y: y coordinate
             MODEL: model decision: 0 = confined, 1 = free  (from in_hull)
             GT: empty column for human annotation (filled in the annotator)
+            need to add frame!
     
         Parameters
         ----------
@@ -121,12 +122,14 @@ if __name__ == '__main__':
         name = p.stem
         outpath3 = p.parent / name
     
-        per_pos = deep_df_short[["tid", "pos_x", "pos_y", "in_hull"]].copy()
+        per_pos = deep_df_short[["tid", "pos_x", "pos_y", "in_hull", "pos_t"]].copy() # added frame
         per_pos = per_pos.rename(columns={
             "tid":     "TRACK_ID",
             "pos_x":   "POSITION_X",
             "pos_y":   "POSITION_Y",
+            "pos_t": "POSITION_T",
             "in_hull": "MODEL",
+            
         })
         per_pos["GT"] = ""          # blank — to be filled by human annotator
     
@@ -1708,5 +1711,5 @@ if __name__ == '__main__':
     dt=0.05
     
     # folder of real tracks ot analyze
-    f1=r"Y:\Research\Members\Michelle\CASTA_MS\MS_new\CASTA_handlabeled_groundtruth\1474\18.5.25_2610_BL"
+    f1=r"C:\Users\miche\Desktop\track_annotator\test"
     calulate_hmm_STA_per_timepoint( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )

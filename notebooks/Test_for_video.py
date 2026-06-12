@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.collections import LineCollection
 import numpy as np
+
+import tifffile as tiff   # added 
+
 def animate_track(df, track_id, frame_rate=30, trail_length=10, save_path=None):
     """
     Animate a single track as a video-like playback.
