@@ -134,7 +134,7 @@ def animate_track(
     track_id,
     tiff_path,
     dt=0.05,               # seconds per frame
-    frame_rate=30,
+    frame_rate=5,
     trail_length=None,     # None = show full history
     track_scale=10,        # use 10 if your coordinates need scaling
     save_path=None
@@ -154,6 +154,14 @@ def animate_track(
     x = track["POSITION_X"].values * track_scale
     y = track["POSITION_Y"].values * track_scale
     t = track["POSITION_T"].values
+
+    padding = 20  # pixels
+
+    xmin = x.min() - padding
+    xmax = x.max() + padding
+
+    ymin = y.min() - padding
+    ymax = y.max() + padding
 
     # Convert time -> TIFF frame
     frame_idx = np.round(t / dt).astype(int)
@@ -205,6 +213,10 @@ def animate_track(
 
     ax.set_aspect("equal")
 
+
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)  # origin='upper'
+
     # -------------------------
     # Update
     # -------------------------
@@ -233,10 +245,10 @@ def animate_track(
         # -------------------------
         # Zoom around particle
         # -------------------------
-        zoom = 80
+        zoom = 10
 
-        ax.set_xlim(cx - zoom, cx + zoom)
-        ax.set_ylim(cy + zoom, cy - zoom)
+        #ax.set_xlim(cx - zoom, cx + zoom)
+        #ax.set_ylim(cy + zoom, cy - zoom)
 
         # -------------------------
         # Fading trail
@@ -314,7 +326,9 @@ if __name__ == "__main__":
     # Or save it as a video file
     #animate_track(df, track_id=1, frame_rate=30, save_path="track_1.gif")
     df = pd.read_csv(r"C:\Users\miche\Desktop\track_annotator\test\cleaned_trackmate_p1_001_allspots_per_position.csv")
-    tiff_p=r"C:\Users\miche\Desktop\track_annotator\test\p1_001.tif"
+
+    df=pd.read_csv(r"C:\Users\miche\Desktop\track_annotator\1474\cleaned_trackmate_1474_25_488_per_position.csv")
+    tiff_p=r"Y:\Research\Members\Michelle\CASTA_MS\TIRFM\231130\1474\1474-025_20uWConv.tif"
 
 
     
@@ -322,8 +336,8 @@ if __name__ == "__main__":
     #animate_track(df,track_id=118,tiff_path=tiff_p, frame_rate=30   )
     animate_track(
     df,
-    track_id=118,
-    tiff_path=r"C:\Users\miche\Desktop\track_annotator\test\p1_001.tif",
+    track_id=0,
+    tiff_path=tiff_p,
     dt=0.05,
     track_scale=10,   # set to 1 if scaling is not needed
     save_path=None

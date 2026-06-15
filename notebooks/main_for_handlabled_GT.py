@@ -1711,5 +1711,5 @@ if __name__ == '__main__':
     dt=0.05
     
     # folder of real tracks ot analyze
-    f1=r"C:\Users\miche\Desktop\track_annotator\test"
+    f1=r"C:\Users\miche\Desktop\track_annotator\1474"
     calulate_hmm_STA_per_timepoint( f1,min_track_length, dt, plotting_flag, plotting_saving_nice_image_flag,tracks_saving_flag )
