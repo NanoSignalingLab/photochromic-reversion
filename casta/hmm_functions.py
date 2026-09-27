@@ -41,7 +41,7 @@ def logD_from_mean_MSD(MSDs, dt):
         else:
             mean_msd = 0.000000001
     
-        logD = math.log10(mean_track/(dt*4)) # 2*2dimnesions* time
+        logD = math.log10(mean_msd/(dt*4)) # 2*2dimnesions* time
         return mean_msd, logD
 
 

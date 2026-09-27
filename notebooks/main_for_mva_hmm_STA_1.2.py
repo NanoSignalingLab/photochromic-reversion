@@ -32,6 +32,7 @@ from shapely import intersection
 import itertools
 from statistics import mean 
 from scipy.spatial import ConvexHull
+from scipy.spatial import QhullError
 from pathlib import Path
 import os
 from os import listdir
@@ -172,7 +173,7 @@ if __name__ == '__main__':
         else:
             mean_msd = 0.000000001
     
-        logD = math.log10(mean_track/(dt*4)) # 2*2dimnesions* time
+        logD = math.log10(mean_msd/(dt*4)) # 2*2dimnesions* time
         return mean_msd, logD
 
     def msd_mean_track(msd_df, dt):
@@ -371,9 +372,16 @@ if __name__ == '__main__':
         for i in range(len(lys_x)):    
             x=lys_x[i]
             y=lys_y[i]
-            xy= np.vstack([x,y])
+            xy= np.vstack([x,y]).astype(float)
 
-            z = gaussian_kde(xy)(xy)
+            try:
+                z = gaussian_kde(xy)(xy)
+            except np.linalg.LinAlgError:
+                # immobile particle: zero variance in an axis -> singular covariance.
+                # jitter far below the data precision so KDE is well-posed; near-coincident
+                # points then read as maximally dense (correctly scored as confined/arrested).
+                xy_j = xy + np.random.normal(0, 1e-9, xy.shape)
+                z = gaussian_kde(xy_j)(xy_j)
             lys_z.append(z)
 
             normz=normalize([z])
@@ -679,8 +687,13 @@ if __name__ == '__main__':
                 points=lys_points2[j][i] 
                 
                 if len(points)>5:
-                    
-                    hull = ConvexHull(points)
+
+                    try:
+                        hull = ConvexHull(points)
+                    except QhullError:
+                        # immobile particle: all points coincident/collinear -> zero-area hull.
+                        # such a cluster would fail the ratio<105 thinness filter below anyway, so skip it.
+                        continue
 
                     ratio=hull.area/hull.volume
                     if ratio<105:
@@ -1146,6 +1159,6 @@ if __name__ == '__main__':
 
     #folderpath1=r"C:\Users\miche\Desktop\simualted tracks\test_real_tracks"
     #folderpath1=r"D:\photochromic_reversion_data\ts
-    folderpath1=r"C:\Users\bcgvm01\Desktop\test"
-    folderpath1=r"/Users/schulzp9/Desktop/sta_test"
+    #folderpath1=r"C:\Users\bcgvm01\Desktop\test"
+    folderpath1=r"/Users/schulzp9/Desktop/Different_laser_int/1474/CASTA/problem"
     calculate_spatial_transient_wrapper(folderpath1, min_track_length, dt, plotting_flag, image_saving_flag)
