@@ -11,103 +11,7 @@ import numpy as np
 
 import tifffile as tiff   # added 
 
-#def animate_track(df, track_id, frame_rate=30, trail_length=10, save_path=None):
-""" def animate_track(df, track_id, tiff_path, frame_rate=30, trail_length=10, save_path=None):
 
-    
-    Animate a single track as a video-like playback.
-    
-    Parameters:
-        df: DataFrame with TRACK_ID, POSITION_X, POSITION_Y columns
-        track_id: The track to animate
-        frame_rate: Frames per second for playback
-        trail_length: Number of past positions to show as a fading trail
-        save_path: If provided, saves animation to this path (e.g., 'track.mp4')
-
-    track = df[df['TRACK_ID'] == track_id].reset_index(drop=True)
-    
-    if len(track) < 2:
-        print(f"Track {track_id} has fewer than 2 points, skipping.")
-        return
-    
-    x = track['POSITION_X'].values
-    y = track['POSITION_Y'].values
-
-    ## added
-     # OPTIONAL: if you have frame column, use it
-    if 'POSITION_T' in track.columns:
-        #frames = track['POSITION_T'].values.astype(int)
-        dt = 0.05  # seconds per frame
-
-        frames = np.round(track['POSITION_T'].values / dt).astype(int)
-
-    tiff_stack = tiff.imread(tiff_path)
- 
-    
-    # Set up the figure
-    fig, ax = plt.subplots(figsize=(8, 8))
-    
-    # Calculate bounds with padding
-    padding = 0.1 * max(x.ptp(), y.ptp()) or 1
-    ax.set_xlim(x.min() - padding, x.max() + padding)
-    ax.set_ylim(y.min() - padding, y.max() + padding)
-    ax.set_aspect('equal')
-    ax.set_xlabel('X Position')
-    ax.set_ylabel('Y Position')
-    ax.set_title(f'Track {track_id}')
-    
-    # Plot full trajectory as faint background
-    ax.plot(x, y, 'lightgray', linewidth=0.5, alpha=0.5)
-    
-    # Current position marker
-    point, = ax.plot([], [], 'ro', markersize=10)
-    
-    # Trail as a LineCollection for color gradient
-    trail = LineCollection([], cmap='hot', linewidths=2)
-    ax.add_collection(trail)
-    
-    # Frame counter
-    frame_text = ax.text(0.02, 0.98, '', transform=ax.transAxes, 
-                         verticalalignment='top', fontsize=10)
-     """
-    
-
-""" def init():
-        point.set_data([], [])
-        trail.set_segments([])
-        frame_text.set_text('')
-        return point, trail, frame_text
-    
-    def update(frame):
-        # Current position
-        point.set_data([x[frame]], [y[frame]])
-        
-        # Trail with fading effect
-        start = max(0, frame - trail_length)
-        if frame > 0:
-            segments = []
-            colors = []
-            for i in range(start, frame):
-                segments.append([[x[i], y[i]], [x[i+1], y[i+1]]])
-                # Color intensity increases toward current position
-                colors.append((i - start) / trail_length)
-            trail.set_segments(segments)
-            trail.set_array(np.array(colors))
-        
-        frame_text.set_text(f'Frame: {frame + 1}/{len(x)}')
-        return point, trail, frame_text
-    
-    interval = 1000 / frame_rate  # milliseconds between frames
-    anim = FuncAnimation(fig, update, frames=len(x), init_func=init,
-                         blit=True, interval=interval, repeat=True)
-    
-    if save_path:
-        anim.save(save_path, writer='ffmpeg', fps=frame_rate)
-        print(f"Saved to {save_path}")
-    else:
-        plt.show()
-    
-    return anim """
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -155,7 +59,7 @@ def animate_track(
     y = track["POSITION_Y"].values * track_scale
     t = track["POSITION_T"].values
 
-    padding = 20  # pixels
+    padding = 10 # pixels
 
     xmin = x.min() - padding
     xmax = x.max() + padding
@@ -264,7 +168,8 @@ def animate_track(
         for j in range(start_idx, current):
 
             segments.append([[x[j], y[j]], [x[j + 1], y[j + 1]]])
-            alpha = (j - start_idx + 1) / (current - start_idx + 1)
+            #alpha = (j - start_idx + 1) / (current - start_idx + 1)
+            alpha=1
 
             colors.append((1, 0, 0, alpha))
 
@@ -304,44 +209,136 @@ def animate_track(
     
 
 
+    
+    #df = pd.read_csv(r"C:\Users\miche\Desktop\track_annotator\test\cleaned_trackmate_p1_001_allspots_per_position.csv")
 
-def animate_all_tracks(csv_path, frame_rate=30, save_dir=None):
-    """Animate all tracks in the CSV file."""
-    df = pd.read_csv(csv_path)
-    track_ids = df['TRACK_ID'].unique()
-    
-    print(f"Found {len(track_ids)} tracks")
-    
-    for tid in track_ids:
-        save_path = f"{save_dir}/track_{tid}.gif" if save_dir else None
-        animate_track(df, tid, frame_rate=frame_rate, save_path=save_path)
-# Usage
-if __name__ == "__main__":
-    # Load your data
-    #df = pd.read_csv(r"Y:\Research\Members\Michelle\CASTA_MS\MS_new\CASTA_handlabeled_groundtruth\1474\cleaned_trackmate_1474_25_488_per_position.csv")
-    
-    # Animate a specific track at 30 fps
-    #animate_track(df, track_id=1, frame_rate=30)
-    
-    # Or save it as a video file
-    #animate_track(df, track_id=1, frame_rate=30, save_path="track_1.gif")
-    df = pd.read_csv(r"C:\Users\miche\Desktop\track_annotator\test\cleaned_trackmate_p1_001_allspots_per_position.csv")
-
-    df=pd.read_csv(r"C:\Users\miche\Desktop\track_annotator\1474\cleaned_trackmate_1474_25_488_per_position.csv")
-    tiff_p=r"Y:\Research\Members\Michelle\CASTA_MS\TIRFM\231130\1474\1474-025_20uWConv.tif"
-
+df=pd.read_csv(r"C:\Users\miche\Desktop\track_annotator\1474\cleaned_trackmate_1474_25_488_per_position.csv")
+tiff_p=r"Y:\Research\Members\Michelle\CASTA_MS\TIRFM\231130\1474-025_20uWConv-1_50-1000.tif"
+save_p=r"Y:\Research\Members\Michelle\CASTA_MS\TIRFM\231130\track0_987.gif"
 
     
-
-    #animate_track(df,track_id=118,tiff_path=tiff_p, frame_rate=30   )
-    animate_track(
-    df,
-    track_id=0,
-    tiff_path=tiff_p,
-    dt=0.05,
-    track_scale=10,   # set to 1 if scaling is not needed
-    save_path=None
-)
+    # works below for getting TIRFs 
+    #animate_track(df,track_id=987,tiff_path=tiff_p,dt=0.05, track_scale=10,   save_path=save_p) # scaling: set to 1 if scaling is not needed
     
-    # Or animate all tracks
-    # animate_all_tracks("your_sptpalm_data.csv", frame_rate=30, save_dir="animations")
+
+
+
+    #### add function to also animate track without background image:
+
+
+    #def animate_track(df, track_id, frame_rate=30, trail_length=10, save_path=None):
+
+
+    # Animate a single track as a video-like playback.
+    
+    # Parameters:
+    #     df: DataFrame with TRACK_ID, POSITION_X, POSITION_Y columns
+    #     track_id: The track to animate
+    #     frame_rate: Frames per second for playback
+    #     trail_length: Number of past positions to show as a fading trail
+    #     save_path: If provided, saves animation to this path (e.g., 'track.mp4')
+
+def animate_track_blank(df, track_id,frame_rate,trail_length, save_path):
+
+    # Select one track
+    track = df[df['TRACK_ID'] == track_id].reset_index(drop=True)
+
+    # Extract coordinates
+    x = track['POSITION_X'].to_numpy()
+    y = track['POSITION_Y'].to_numpy()
+
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(6, 6))
+
+    # Set axis limits
+    padding = 1
+    ax.set_xlim(x.min() - padding, x.max() + padding)
+    ax.set_ylim(y.min() - padding, y.max() + padding)
+
+    ax.set_xlabel("X position")
+    ax.set_ylabel("Y position")
+    ax.set_title(f"Track {track_id}")
+
+    # Current particle position
+    point, = ax.plot([], [], 'ro', markersize=8)
+
+    # Trail object
+    trail = LineCollection([], cmap='hot', linewidths=2)
+    ax.add_collection(trail)
+
+    # Frame text
+    frame_text = ax.text(
+        0.02, 0.95, '',
+        transform=ax.transAxes,
+        fontsize=10
+    )
+
+    # Initialization
+    def init_blank():
+        point.set_data([], [])
+        trail.set_segments([])
+        frame_text.set_text('')
+        return point, trail, frame_text
+
+    # Update function
+    def update_blank(frame):
+
+        # Current point
+        point.set_data([x[frame]], [y[frame]])
+
+        # Trail
+        start = max(0, frame - trail_length)
+
+        segments = []
+        colors = []
+
+        for i in range(start, frame):
+
+            seg = [[x[i], y[i]], [x[i + 1], y[i + 1]]]
+            segments.append(seg)
+
+            colors.append(i - start)
+
+        trail.set_segments(segments)
+
+        if len(colors) > 0:
+            trail.set_array(np.array(colors))
+
+        frame_text.set_text(f'Frame: {frame + 1}/{len(x)}')
+
+        return point, trail, frame_text
+
+    # Animation
+    interval = 1000 / frame_rate
+
+    anim = FuncAnimation(
+        fig,
+        update_blank,
+        frames=len(x),
+        init_func=init_blank,
+        interval=interval,
+        blit=True,
+        repeat=True
+    )
+
+    # Save or display
+    if save_path is not None:
+
+        anim.save(save_path, writer='ffmpeg', fps=frame_rate)
+
+        print(f"Saved animation to: {save_path}")
+
+    else:
+        plt.show()
+
+    return anim
+
+
+
+df=pd.read_csv(r"C:\Users\miche\Desktop\track_annotator\1474\cleaned_trackmate_1474_25_488_per_position.csv")
+outpath=r"Y:\Research\Members\Michelle\CASTA_MS\TIRFM\231130\cell_25\track84_blank.gif"
+animate_track_blank(df, track_id=84,frame_rate=30, trail_length=200, save_path=outpath)
+
+
+
+
