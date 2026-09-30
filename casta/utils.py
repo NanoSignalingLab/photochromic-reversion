@@ -19,6 +19,7 @@ def make_deep_df(df, min_track_length):
     list_traces=[]
     lys_x=[]
     lys_y=[]
+    msd_df=pd.DataFrame(columns=["msd", "frame", "track_id"])
 
     for i in grouped["TRACK_ID"].unique():
         s= grouped.get_group(i[0])
@@ -80,7 +81,7 @@ def logD_from_mean_MSD(MSDs, dt):
     else:
         mean_msd = 0.000000001
 
-    logD = math.log10(mean_track/(dt*4)) # 2*2dimnesions* time
+    logD = math.log10(mean_msd/(dt*4)) # 2*2dimnesions* time
     return mean_msd, logD
 
 def msd_mean_track(msd_df, dt):
@@ -135,9 +136,16 @@ def make_KDE_per_track(lys_x, lys_y):
     for i in range(len(lys_x)):    
         x=lys_x[i]
         y=lys_y[i]
-        xy= np.vstack([x,y])
+        xy= np.vstack([x,y]).astype(float)
 
-        z = gaussian_kde(xy)(xy)
+        try:
+            z = gaussian_kde(xy)(xy)
+        except np.linalg.LinAlgError:
+            # immobile particle: zero variance in an axis -> singular covariance.
+            # jitter far below the data precision so KDE is well-posed; near-coincident
+            # points then read as maximally dense (correctly scored as confined/arrested).
+            xy_j = xy + np.random.normal(0, 1e-9, xy.shape)
+            z = gaussian_kde(xy_j)(xy_j)
         lys_z.append(z)
 
         normz=normalize([z])

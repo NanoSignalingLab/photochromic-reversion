@@ -5,9 +5,11 @@ import seaborn as sns
 
 from matplotlib.collections import LineCollection
 from scipy.spatial import ConvexHull
-from statistics import mean 
+from scipy.spatial import QhullError
+from statistics import mean
 from pathlib import Path
 
+import argparse
 import os
 from os import listdir
 from os.path import isfile, join
@@ -27,6 +29,11 @@ def calculate_sta(dir: str,
                   plot: bool = False,
                   image_format: str = "svg"):
     
+    # default outputs next to the input files; create the target folder if needed
+    image_dir = Path(out_dir) if out_dir is not None else Path(dir)
+    if out_dir is not None:
+        os.makedirs(out_dir, exist_ok=True)
+
     onlyfiles = [f for f in listdir(dir) if isfile(join(dir, f))]
 
     for i in onlyfiles:
@@ -36,9 +43,12 @@ def calculate_sta(dir: str,
             base_name = csv_name.stem  # Gets filename without extension
 
             extension = "svg" if image_format == "svg" else "tiff"
-            image_path = Path(out_dir) / f"{base_name}.{extension}"
+            image_path = image_dir / f"{base_name}.{extension}"
 
             tracks_input, df, traces, lys_x, lys_y, msd_df = load_file(path, min_track_length) # execute this function to load the files
+            if df.empty:
+                print(f"Skipping {i}: no tracks longer than min_track_length ({min_track_length} frames).")
+                continue
             mean_msd_df=msd_mean_track(msd_df, dt)
 
             df=run_hmm(df, dt)
@@ -212,8 +222,13 @@ def plotting_all_features_and_calculate_hull(deep_df, mean_msd_df, plotting_flag
             points=lys_points2[j][i] 
             
             if len(points)>5:
-                
-                hull = ConvexHull(points)
+
+                try:
+                    hull = ConvexHull(points)
+                except QhullError:
+                    # immobile particle: all points coincident/collinear -> zero-area hull.
+                    # such a cluster would fail the ratio<105 thinness filter below anyway, so skip it.
+                    continue
 
                 ratio=hull.area/hull.volume
                 if ratio<105:
@@ -402,3 +417,37 @@ def calculate_diffusion_non_STA_tracks(deep_df_short, mean_msd_df, dt):
     mean_msd_df["mean_logD_without_STA"]=lys_logD_no_STA
 
     return mean_msd_df
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Calculate spatial transient arrests (CASTA)',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument('dir', help='Path to the folder containing input CSV track files')
+    parser.add_argument('--out_dir', type=str, default=None,
+                        help='Output directory for results (default: same as input directory)')
+    parser.add_argument('--dt', type=float, default=0.05,
+                        help='Time between frames in seconds')
+    parser.add_argument('--min-track-length', type=int, default=25,
+                        help='Minimum track length in frames; shorter tracks are discarded')
+    parser.add_argument('--plot', action='store_true',
+                        help='Generate and save visualisation plots')
+    parser.add_argument('--image-format', choices=['svg', 'tiff'], default='svg',
+                        help='Format for saved plots')
+
+    args = parser.parse_args()
+
+    calculate_sta(
+        dir=args.dir,
+        out_dir=args.out_dir,
+        min_track_length=args.min_track_length,
+        dt=args.dt,
+        plot=args.plot,
+        image_format=args.image_format,
+    )
+
+
+if __name__ == "__main__":
+    main()

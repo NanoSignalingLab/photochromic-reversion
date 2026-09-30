@@ -86,8 +86,9 @@ The analysis generates:
 - SciPy 1.15.0
 - Scikit-learn 1.6.1
 - Seaborn 0.13.2
-- hmm-learn 0.3.3
+- hmmlearn 0.3.3
 - Shapely 2.0.6
+- tqdm 4.67.1
 - xlsxwriter 3.2.3
 
 ## Contributing
